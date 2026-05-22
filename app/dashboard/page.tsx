@@ -1,227 +1,432 @@
 // app/dashboard/page.tsx
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { 
-    FolderGit2, Briefcase, Award, TrendingUp,
-    LogOut, Bell, ChevronRight, Code, Star
-} from "lucide-react";
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { toast } from 'sonner';
+import {
+  LayoutDashboard,
+  Briefcase,
+  FolderOpen,
+  GraduationCap,
+  TrendingUp,
+  Award,
+  Star,
+  Clock,
+  Calendar,
+  ArrowRight,
+  CheckCircle,
+  Loader2,
+  Code2,
+  Users,
+  Building,
+  Rocket,
+  Target,
+  Zap,
+  Crown,
+  Sparkles,
+  Medal,
+  Trophy,
+  Gift,
+  Bell,
+  AlertCircle,
+  FileText,
+  ExternalLink,
+  Mail as Github,
+  Heart,
+  ThumbsUp,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface UserStats {
-    totalProjects: number;
-    totalInternshipApplications: number;
-    totalCareerApplications: number;
-    totalApplications: number;
+// Types based on API response
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  phoneNo: string | null;
+  description: string | null;
+  profileImgUrl: string | null;
+  verified: boolean;
+  memberSince: string;
+  roleType: string;
 }
 
-export default function UserDashboard() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState<UserStats | null>(null);
-    const [userName, setUserName] = useState("");
+interface DashboardStats {
+  totalProjects: number;
+  totalInternshipApplications: number;
+  totalCareerApplications: number;
+  totalApplications: number;
+  totalCertificates: number;
+  applicationSuccessRate: number;
+  activeApplications: number;
+}
 
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
+interface Project {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  isPublic: boolean;
+  githubId: string | null;
+  postsCount: number;
+}
 
-    const fetchDashboardData = async () => {
-        try {
-            const profileRes = await fetch("/api/user/profile", { credentials: "include" });
-            const profileData = await profileRes.json();
-            if (profileRes.ok) {
-                setUserName(profileData.user?.name || "User");
-            }
+interface InternshipApplication {
+  id: number;
+  internshipId: number;
+  internshipTitle: string;
+  internshipDuration: string;
+  internshipStatus: boolean;
+  companyId: number;
+  companyName: string;
+  companyLogo: string | null;
+  appliedAt: number;
+  certificateUnlocked: boolean;
+  lastApplyDate: string | null;
+}
 
-            const dashboardRes = await fetch("/api/user/dashboard", { credentials: "include" });
-            const dashboardData = await dashboardRes.json();
-            if (dashboardRes.ok) {
-                setStats(dashboardData.stats);
-            }
-        } catch (error) {
-            console.error("Error fetching dashboard:", error);
-        } finally {
-            setLoading(false);
+interface CareerApplication {
+  id: number;
+  careerId: number;
+  careerName: string;
+  careerPosition: string;
+  careerSalary: number | null;
+  careerTierScore: number | null;
+  companyId: number;
+  companyName: string;
+  companyLogo: string | null;
+  appliedAt: number;
+}
+
+interface UpcomingDeadline {
+  id: number;
+  title: string;
+  companyName: string;
+  lastApplyDate: string;
+  duration: string;
+}
+
+interface Certificate {
+  id: number;
+  internshipTitle: string;
+  companyName: string;
+  companyLogo: string | null;
+  unlockedAt: number;
+}
+
+interface Activity {
+  type: string;
+  id: number;
+  title: string;
+  description: string;
+  date: number;
+  icon: string;
+  color: string;
+}
+
+interface Recommendations {
+  suggestedSkills: string[];
+  suggestedProjects: string[];
+  nextSteps: string[];
+}
+
+interface DashboardData {
+  success: boolean;
+  user: UserProfile;
+  stats: DashboardStats;
+  recentProjects: Project[];
+  recentInternshipApplications: InternshipApplication[];
+  recentCareerApplications: CareerApplication[];
+  upcomingDeadlines: UpcomingDeadline[];
+  certificates: Certificate[];
+  recentActivities: Activity[];
+  recommendations: Recommendations;
+}
+
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 17) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+
+    const fetchDashboard = async () => {
+      try {
+        const response = await fetch('/api/user/dashboard', {
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard');
         }
+        
+        const dashboardData = await response.json();
+        setData(dashboardData);
+      } catch (error) {
+        console.error('Error fetching dashboard:', error);
+        toast.error('Failed to load dashboard');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const handleLogout = async () => {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-        router.push("/login");
-    };
+    fetchDashboard();
+  }, []);
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        );
+  const formatDate = (timestamp: number | string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+  };
+
+  const getActivityIcon = (iconName: string, color: string) => {
+    const iconProps = { className: `h-4 w-4 text-${color}-600` };
+    switch (iconName) {
+      case 'FolderGit2':
+        return <Code2 {...iconProps} />;
+      case 'Briefcase':
+        return <Briefcase {...iconProps} />;
+      default:
+        return <Star {...iconProps} />;
     }
+  };
 
+  if (loading) {
     return (
-        <div className="min-h-screen bg-black">
-            {/* Header */}
-            <header className="border-b border-gray-800 bg-black/95 backdrop-blur sticky top-0 z-50">
-                <div className="container mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Code className="w-8 h-8 text-blue-500" />
-                            <div>
-                                <h1 className="text-xl font-bold">Dashboard</h1>
-                                <p className="text-sm text-gray-400">Welcome back, {userName}</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button className="p-2 hover:bg-gray-800 rounded-lg transition">
-                                <Bell className="w-5 h-5 text-gray-400" />
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div className="container mx-auto px-6 py-8">
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <StatCard
-                        icon={<FolderGit2 className="w-6 h-6" />}
-                        label="Projects"
-                        value={stats?.totalProjects || 0}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={<Briefcase className="w-6 h-6" />}
-                        label="Internship Apps"
-                        value={stats?.totalInternshipApplications || 0}
-                        color="green"
-                    />
-                    <StatCard
-                        icon={<Briefcase className="w-6 h-6" />}
-                        label="Career Apps"
-                        value={stats?.totalCareerApplications || 0}
-                        color="purple"
-                    />
-                    <StatCard
-                        icon={<Award className="w-6 h-6" />}
-                        label="Total Apps"
-                        value={stats?.totalApplications || 0}
-                        color="orange"
-                    />
-                </div>
-
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <QuickActionCard
-                        title="My Projects"
-                        description="View and manage your projects"
-                        icon={<FolderGit2 className="w-5 h-5" />}
-                        href="/projects"
-                        color="blue"
-                    />
-                    <QuickActionCard
-                        title="Browse Internships"
-                        description="Find your next opportunity"
-                        icon={<Briefcase className="w-5 h-5" />}
-                        href="/internships"
-                        color="green"
-                    />
-                    <QuickActionCard
-                        title="My Applications"
-                        description="Track your applications"
-                        icon={<Award className="w-5 h-5" />}
-                        href="/applications"
-                        color="purple"
-                    />
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-                    <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-                    <div className="space-y-4">
-                        <ActivityItem
-                            icon={<Briefcase className="w-4 h-4" />}
-                            title="Applied for Internship"
-                            description="Frontend Developer Intern at Tech Corp"
-                            time="2 days ago"
-                            color="blue"
-                        />
-                        <ActivityItem
-                            icon={<FolderGit2 className="w-4 h-4" />}
-                            title="Created New Project"
-                            description="E-commerce App - A full-stack application"
-                            time="5 days ago"
-                            color="green"
-                        />
-                        <ActivityItem
-                            icon={<Star className="w-4 h-4" />}
-                            title="Certificate Earned"
-                            description="React Development Internship Certificate"
-                            time="1 week ago"
-                            color="yellow"
-                        />
-                    </div>
-                </div>
-            </div>
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-48 mt-2" />
         </div>
-    );
-}
-
-// Reuse StatCard, QuickActionCard, ActivityItem components from above
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: "blue" | "green" | "purple" | "orange" }) {
-    const colors = {
-        blue: "from-blue-500/20 to-blue-600/20 border-blue-500/30",
-        green: "from-green-500/20 to-green-600/20 border-green-500/30",
-        purple: "from-purple-500/20 to-purple-600/20 border-purple-500/30",
-        orange: "from-orange-500/20 to-orange-600/20 border-orange-500/30"
-    };
-
-    return (
-        <div className={`bg-gradient-to-br ${colors[color]} rounded-xl border p-4`}>
-            <div className="flex items-center justify-between mb-2">
-                <div className="text-gray-400">{icon}</div>
-                <TrendingUp className="w-4 h-4 text-green-400" />
-            </div>
-            <div className="text-2xl font-bold">{value}</div>
-            <div className="text-sm text-gray-400">{label}</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-lg" />
+          ))}
         </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-96 rounded-lg" />
+          </div>
+          <Skeleton className="h-96 rounded-lg" />
+        </div>
+      </div>
     );
-}
+  }
 
-function QuickActionCard({ title, description, icon, href, color }: any) {
+  if (!data) {
     return (
-        <Link href={href}>
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 hover:border-blue-500/50 p-4 transition cursor-pointer">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 bg-${color}-500/20 rounded-lg`}>
-                        {icon}
-                    </div>
-                    <h3 className="font-semibold">{title}</h3>
+      <div className="flex items-center justify-center h-96">
+        <Card className="p-12 text-center">
+          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-600">Failed to load dashboard</h3>
+          <p className="text-gray-400 mt-1">Please try refreshing the page</p>
+          <Button className="mt-4" onClick={() => window.location.reload()}>
+            Refresh
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const { user, stats, recentProjects, recentInternshipApplications, recentCareerApplications, upcomingDeadlines, certificates, recentActivities, recommendations } = data;
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 border-2 border-white">
+                  <AvatarImage src={user.profileImgUrl || ''} />
+                  <AvatarFallback className="bg-white/20 text-white text-xl">
+                    {user.name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-white/80 text-sm">{greeting}!</p>
+                  <h1 className="text-3xl font-bold mt-1">{user.name}</h1>
+                  <p className="text-white/90 mt-1 text-sm">{user.email}</p>
+                  {user.verified && (
+                    <Badge className="mt-2 bg-green-500 text-white border-none">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Verified Account
+                    </Badge>
+                  )}
                 </div>
-                <p className="text-sm text-gray-400">{description}</p>
+              </div>
+              <div className="hidden lg:block">
+                <div className="bg-white/20 rounded-full p-4 backdrop-blur-sm">
+                  <Crown className="h-12 w-12" />
+                </div>
+              </div>
             </div>
-        </Link>
-    );
-}
+          </CardContent>
+        </Card>
+      </motion.div>
 
-function ActivityItem({ icon, title, description, time, color }: any) {
-    return (
-        <div className="flex items-start gap-3">
-            <div className={`p-2 bg-${color}-500/20 rounded-lg mt-1`}>
-                {icon}
-            </div>
-            <div className="flex-1">
-                <p className="font-medium">{title}</p>
-                <p className="text-sm text-gray-400">{description}</p>
-                <p className="text-xs text-gray-500 mt-1">{time}</p>
-            </div>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card className="hover:shadow-lg transition-all">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="rounded-lg bg-blue-100 p-3"><FolderOpen className="h-6 w-6 text-blue-600" /></div>
+              <div><p className="text-xs text-gray-500">Projects</p><p className="text-2xl font-bold">{stats.totalProjects}</p></div>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="hover:shadow-lg transition-all">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="rounded-lg bg-green-100 p-3"><GraduationCap className="h-6 w-6 text-green-600" /></div>
+              <div><p className="text-xs text-gray-500">Internships</p><p className="text-2xl font-bold">{stats.totalInternshipApplications}</p></div>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card className="hover:shadow-lg transition-all">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="rounded-lg bg-purple-100 p-3"><Briefcase className="h-6 w-6 text-purple-600" /></div>
+              <div><p className="text-xs text-gray-500">Career Jobs</p><p className="text-2xl font-bold">{stats.totalCareerApplications}</p></div>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <Card className="hover:shadow-lg transition-all bg-orange-50">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="rounded-lg bg-orange-100 p-3"><TrendingUp className="h-6 w-6 text-orange-600" /></div>
+              <div><p className="text-xs text-gray-500">Total Apps</p><p className="text-2xl font-bold">{stats.totalApplications}</p></div>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="hover:shadow-lg transition-all bg-yellow-50">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="rounded-lg bg-yellow-100 p-3"><Award className="h-6 w-6 text-yellow-600" /></div>
+              <div><p className="text-xs text-gray-500">Certificates</p><p className="text-2xl font-bold">{stats.totalCertificates}</p></div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Recent Activity */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" />Recent Activity</CardTitle>
+              <CardDescription>Your latest projects and applications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recentActivities.length === 0 ? (
+                <div className="text-center py-8"><Rocket className="h-12 w-12 text-gray-300 mx-auto mb-3" /><p className="text-gray-500">No activity yet</p></div>
+              ) : (
+                <div className="space-y-4">
+                  {recentActivities.slice(0, 5).map((activity) => (
+                    <div key={`${activity.type}-${activity.id}`} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="mt-0.5">{getActivityIcon(activity.icon, activity.color)}</div>
+                      <div className="flex-1"><p className="font-medium text-sm">{activity.title}</p><p className="text-xs text-gray-500">{activity.description}</p></div>
+                      <span className="text-xs text-gray-400">{formatDate(activity.date)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Projects */}
+          {recentProjects.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><FolderOpen className="h-5 w-5" />Recent Projects</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {recentProjects.map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div><p className="font-medium text-sm">{project.name}</p><p className="text-xs text-gray-500">{project.description?.slice(0, 60)}</p></div>
+                    <Badge variant="outline">{formatDate(project.createdAt)}</Badge>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full mt-2" asChild><a href="/dashboard/projects">View All Projects <ArrowRight className="h-4 w-4 ml-2" /></a></Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
-    );
+
+        {/* Right Column - Stats & Recommendations */}
+        <div className="space-y-6">
+          {/* Success Rate */}
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50">
+            <CardContent className="p-4 text-center">
+              <Medal className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <p className="text-2xl font-bold text-green-700">{stats.applicationSuccessRate}%</p>
+              <p className="text-xs text-gray-600">Application Success Rate</p>
+              <Progress value={stats.applicationSuccessRate} className="mt-2 h-1" />
+              <p className="text-xs text-gray-500 mt-2">{stats.totalCertificates} certificates earned</p>
+            </CardContent>
+          </Card>
+
+          {/* Certificates */}
+          {certificates.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-yellow-500" />Earned Certificates</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {certificates.map((cert) => (
+                  <div key={cert.id} className="flex items-center gap-3 p-2 bg-yellow-50 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <div className="flex-1"><p className="text-sm font-medium">{cert.internshipTitle}</p><p className="text-xs text-gray-500">{cert.companyName}</p></div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recommendations */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-purple-500" />Recommendations</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {recommendations.nextSteps.length > 0 && (<div><h4 className="text-sm font-semibold mb-2">Next Steps</h4><div className="space-y-1">{recommendations.nextSteps.map((step, i) => (<div key={i} className="flex items-center gap-2 text-sm text-gray-600"><Target className="h-3 w-3" />{step}</div>))}</div></div>)}
+              {recommendations.suggestedSkills.length > 0 && (<div><h4 className="text-sm font-semibold mb-2 mt-3">Suggested Skills</h4><div className="flex flex-wrap gap-1">{recommendations.suggestedSkills.map((skill) => (<Badge key={skill} variant="secondary">{skill}</Badge>))}</div></div>)}
+              {recommendations.suggestedProjects.length > 0 && (<div><h4 className="text-sm font-semibold mb-2 mt-3">Project Ideas</h4><div className="space-y-1">{recommendations.suggestedProjects.map((proj, i) => (<div key={i} className="flex items-center gap-2 text-sm text-gray-600"><Code2 className="h-3 w-3" />{proj}</div>))}</div></div>)}
+            </CardContent>
+            <div className="px-6 pb-4"><Button className="w-full gap-2" asChild><a href="/dashboard/careers">Find Jobs <Briefcase className="h-4 w-4" /></a></Button></div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Upcoming Deadlines */}
+      {upcomingDeadlines.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5 text-red-500" />Upcoming Deadlines</CardTitle><CardDescription>Internships closing soon</CardDescription></CardHeader>
+          <CardContent><div className="grid gap-3 md:grid-cols-3">{upcomingDeadlines.map((deadline) => (<div key={deadline.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg"><div><p className="font-medium text-sm">{deadline.title}</p><p className="text-xs text-gray-500">{deadline.companyName}</p></div><Badge className="bg-red-100 text-red-700">Closing soon</Badge></div>))}</div></CardContent>
+        </Card>
+      )}
+
+      {/* Member Since Footer */}
+      <Card><CardContent className="p-4 text-center text-sm text-gray-500">Member since {new Date(user.memberSince).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} • {stats.totalApplications + stats.totalProjects} total contributions</CardContent></Card>
+    </div>
+  );
 }

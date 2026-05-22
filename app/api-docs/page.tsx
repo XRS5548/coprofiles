@@ -46,11 +46,11 @@ export default function ApiDocs() {
                                 <span className="text-sm text-green-400">API Ready</span>
                             </div>
                             <button 
-                                onClick={() => window.open("http://localhost:3000", "_blank")}
+                                onClick={() => window.open("https://coprofiles.sqrock.cloud", "_blank")}
                                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition flex items-center gap-2"
                             >
                                 <ExternalLink className="w-4 h-4" />
-                                Base URL: localhost:3000
+                                Base URL: coprofiles.sqrock.cloud
                             </button>
                         </div>
                     </div>

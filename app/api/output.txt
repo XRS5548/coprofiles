@@ -1,0 +1,4850 @@
+FOLDER STRUCTURE
+================================================================================
+.
+├── auth
+│   ├── login
+│   │   └── route.ts
+│   ├── logout
+│   │   └── route.ts
+│   └── register
+│       └── route.ts
+├── manager
+│   ├── careers
+│   │   ├── [id]
+│   │   │   ├── applications
+│   │   │   │   └── route.ts
+│   │   │   └── route.ts
+│   │   ├── bulk-create
+│   │   │   └── route.ts
+│   │   ├── create
+│   │   │   └── route.ts
+│   │   ├── route.ts
+│   │   └── stats
+│   │       └── route.ts
+│   ├── companies
+│   │   ├── [id]
+│   │   │   ├── members
+│   │   │   │   └── route.ts
+│   │   │   ├── route.ts
+│   │   │   └── verify-access
+│   │   │       └── route.ts
+│   │   ├── create
+│   │   │   └── route.ts
+│   │   └── route.ts
+│   ├── dashboard
+│   │   └── route.ts
+│   └── internships
+│       ├── [id]
+│       │   ├── applications
+│       │   │   ├── [applicationId]
+│       │   │   │   └── certificate
+│       │   │   │       └── route.ts
+│       │   │   └── route.ts
+│       │   └── route.ts
+│       ├── create
+│       │   └── route.ts
+│       └── route.ts
+├── out.py
+├── output.txt
+├── search
+│   └── route.ts
+└── user
+    ├── careers
+    │   ├── [id]
+    │   │   └── apply
+    │   │       └── route.ts
+    │   ├── applications
+    │   │   └── route.ts
+    │   ├── apply
+    │   │   └── route.ts
+    │   └── route.ts
+    ├── dashboard
+    │   └── route.ts
+    ├── internships
+    │   ├── [id]
+    │   │   └── apply
+    │   │       └── route.ts
+    │   ├── applications
+    │   │   └── route.ts
+    │   ├── apply
+    │   │   └── route.ts
+    │   └── route.ts
+    ├── profile
+    │   ├── [id]
+    │   │   └── route.ts
+    │   ├── image
+    │   │   └── route.ts
+    │   └── route.ts
+    └── projects
+        ├── [id]
+        │   ├── add-post
+        │   │   └── route.ts
+        │   ├── route.ts
+        │   └── stats
+        │       └── route.ts
+        ├── create
+        │   └── route.ts
+        ├── github
+        │   └── [githubId]
+        │       └── route.ts
+        ├── public
+        │   └── route.ts
+        ├── route.ts
+        └── search
+            └── route.ts
+
+
+FILE CONTENTS
+================================================================================
+
+================================================================================
+
+FILE: out.py
+
+================================================================================
+import os
+
+OUTPUT_FILE = "output.txt"
+
+# Ignore large/unnecessary folders
+IGNORE_DIRS = {
+    ".git",
+    "__pycache__",
+    "node_modules",
+    ".next",
+    "venv",
+    ".idea",
+    ".vscode",
+}
+
+# Ignore binary file extensions
+IGNORE_EXT = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp",
+    ".mp4", ".mp3", ".exe", ".dll", ".zip",
+    ".rar", ".pdf", ".ico", ".ttf", ".woff",
+}
+
+def create_tree(path, prefix=""):
+    items = sorted(os.listdir(path))
+
+    items = [
+        item for item in items
+        if item not in IGNORE_DIRS
+    ]
+
+    tree = []
+
+    for i, item in enumerate(items):
+        full_path = os.path.join(path, item)
+
+        connector = "└── " if i == len(items)-1 else "├── "
+
+        tree.append(prefix + connector + item)
+
+        if os.path.isdir(full_path):
+            extension = "    " if i == len(items)-1 else "│   "
+            tree.extend(
+                create_tree(
+                    full_path,
+                    prefix + extension
+                )
+            )
+
+    return tree
+
+
+def read_all_files(path):
+    content = []
+
+    for root, dirs, files in os.walk(path):
+
+        dirs[:] = [
+            d for d in dirs
+            if d not in IGNORE_DIRS
+        ]
+
+        for file in files:
+            full_path = os.path.join(root, file)
+
+            ext = os.path.splitext(file)[1].lower()
+
+            if ext in IGNORE_EXT:
+                continue
+
+            rel_path = os.path.relpath(full_path)
+
+            content.append("\n")
+            content.append("=" * 80)
+            content.append(f"\nFILE: {rel_path}\n")
+            content.append("=" * 80)
+
+            try:
+                with open(
+                    full_path,
+                    "r",
+                    encoding="utf-8"
+                ) as f:
+
+                    text = f.read()
+
+                    content.append(text)
+
+            except Exception as e:
+                content.append(
+                    f"\n[Cannot read file: {e}]"
+                )
+
+            content.append("\n")
+
+    return "\n".join(content)
+
+
+with open(
+    OUTPUT_FILE,
+    "w",
+    encoding="utf-8"
+) as out:
+
+    out.write("FOLDER STRUCTURE\n")
+    out.write("=" * 80)
+    out.write("\n.\n")
+
+    tree = create_tree(".")
+    out.write("\n".join(tree))
+
+    out.write("\n\n\n")
+    out.write("FILE CONTENTS\n")
+    out.write("=" * 80)
+
+    all_files = read_all_files(".")
+    out.write(all_files)
+
+print(f"Done! Output saved in {OUTPUT_FILE}")
+
+
+
+
+================================================================================
+
+FILE: output.txt
+
+================================================================================
+
+
+
+
+
+================================================================================
+
+FILE: auth\login\route.ts
+
+================================================================================
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+    const { email, password } = await request.json();
+    const user = await db.select().from(users).where(eq(users.email, email));
+    if (!user) {
+        return new Response(JSON.stringify({ message: "Invalid email or password" }), {
+            status: 401,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+    }
+    else{
+        const testpassword = await bcrypt.compare(password, user[0].password!);
+        if (!testpassword) {
+            return new Response(JSON.stringify({ message: "Invalid email or password" }), {
+                status: 401,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+        }
+        const token = jwt.sign({ id: user[0].id, email: user[0].email, roleType: user[0].roleType }, process.env.JWT_SECRET!, { expiresIn: "1h" });
+        
+        const response = new NextResponse(JSON.stringify({ message: "Login successful", token }), {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        response.cookies.set("token", token, {
+            httpOnly: true,
+            sameSite: "strict",
+            maxAge: 604800, // 7 days in seconds
+        });
+        return response;
+    }
+}
+
+
+// example response body
+// {
+//     "message": "Login successful
+//     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0dXNlckBnbWFpbC5jb20iLCJpYXQiOjE2ODg4ODQ4MDAsImV4cCI6MTY4ODg4ODQwMH0.8sKj3n7v8z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u9X9z5m9u"
+// }        
+
+
+
+
+================================================================================
+
+FILE: auth\logout\route.ts
+
+================================================================================
+// app/api/auth/logout/route.ts
+import { NextResponse } from "next/server";
+
+export async function POST() {
+    const response = NextResponse.json({ message: "Logged out successfully" });
+    response.cookies.delete("token");
+    return response;
+}
+
+
+
+
+================================================================================
+
+FILE: auth\register\route.ts
+
+================================================================================
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import bcrypt from "bcryptjs";
+
+// example request body
+// {
+//     "name": "John Doe",
+//     "email": "
+//     "password": "password123"
+// }
+
+// example request code in js fetch
+// fetch("/api/auth/register", {
+//     method: "POST",
+//     headers: {
+//         "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//         name: "John Doe",
+//         email: "testuser@gmail.com",
+//         password: "password123",
+//     }),
+// })
+//     .then((res) => res.json())
+//     .then((data) => console.log(data))
+//     .catch((err) => console.error(err));
+
+
+export  async function POST(request: Request) {
+    const { name, email, password } = await request.json();
+    const hash = await bcrypt.hash(password, 10);
+    const result = await db.insert(users).values({
+        name,
+        email,
+        roleType: "user",
+        "password": hash,
+    })
+    if (result) {
+        return new Response(JSON.stringify({ message: "User registered successfully" }), {
+            status: 201,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+    } else {
+        return new Response(JSON.stringify({ message: "Failed to register user" }), {
+            status: 500,
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+    }
+}
+
+
+
+
+
+================================================================================
+
+FILE: manager\careers\route.ts
+
+================================================================================
+// app/api/manager/careers/route.ts
+import { db } from "@/db";
+import { careerApplications, careers, companies, roles } from "@/db/schema";
+import { eq, desc, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can access" }, { status: 403 });
+        }
+
+        // Get all companies where user is a manager
+        const myCompanies = await db.select({ companyId: roles.companyId })
+            .from(roles)
+            .where(eq(roles.userId, user.id));
+
+        const companyIds = myCompanies.map(c => c.companyId);
+
+        if (companyIds.length === 0) {
+            return NextResponse.json({ careers: [], message: "No companies found" });
+        }
+
+        // Get careers from these companies - FIXED: use inArray
+        const allCareers = await db.select({
+            id: careers.id,
+            name: careers.name,
+            position: careers.position,
+            salary: careers.salary,
+            tierScore: careers.tierScore,
+            content: careers.content,
+            companyId: careers.companyId,
+            companyName: companies.name,
+        }).from(careers)
+            .innerJoin(companies, eq(careers.companyId, companies.id))
+            .where(inArray(careers.companyId, companyIds))
+            .orderBy(desc(careers.id));
+
+        // Get all applications in one go (more efficient)
+        const careerIds = allCareers.map(c => c.id);
+        let allApplications: any[] = [];
+        
+        if (careerIds.length > 0) {
+            allApplications = await db.select()
+                .from(careerApplications)
+                .where(inArray(careerApplications.careerId, careerIds));
+        }
+
+        // Map applications count to each career
+        const careersWithCounts = allCareers.map(career => ({
+            ...career,
+            applicationsCount: allApplications.filter(app => app.careerId === career.id).length
+        }));
+
+        return NextResponse.json({ careers: careersWithCounts });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch careers" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\careers\bulk-create\route.ts
+
+================================================================================
+// app/api/manager/careers/bulk-create/route.ts
+import { db } from "@/db";
+import { careers, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+interface CareerInput {
+    name: string;
+    position?: string;
+    content?: string;
+    salary?: number;
+    tierScore?: number;
+    tierListId?: number;
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can create careers" }, { status: 403 });
+        }
+
+        const { careers: careersList, companyId } = await request.json();
+
+        if (!careersList || !Array.isArray(careersList) || careersList.length === 0) {
+            return NextResponse.json({ error: "Careers array is required" }, { status: 400 });
+        }
+
+        if (!companyId) {
+            return NextResponse.json({ error: "Company ID is required" }, { status: 400 });
+        }
+
+        // Validate permission for this company (check once for all careers)
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ 
+                error: "You don't have permission to create careers for this company" 
+            }, { status: 403 });
+        }
+
+        // Insert all careers
+        const insertedCareers = await db.insert(careers)
+            .values(careersList.map((career: CareerInput) => ({
+                name: career.name,
+                position: career.position || null,
+                content: career.content || null,
+                salary: career.salary || null,
+                tierScore: career.tierScore || null,
+                tierListId: career.tierListId || null,
+                companyId: companyId
+            })))
+            .returning();
+        
+        return NextResponse.json({
+            message: `${insertedCareers.length} careers created successfully`,
+            careers: insertedCareers
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Bulk create error:", error);
+        return NextResponse.json({ 
+            error: "Failed to create careers",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\careers\create\route.ts
+
+================================================================================
+// app/api/manager/careers/create/route.ts
+import { db } from "@/db";
+import { careers, companies, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can create careers" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { 
+            name, 
+            position,
+            companyId, 
+            content, 
+            salary,
+            tierScore,
+            tierListId
+        } = body;
+
+        // Validation
+        if (!name || !companyId) {
+            return NextResponse.json({ error: "Name and companyId are required" }, { status: 400 });
+        }
+
+        // Check if user has permission for this company
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to create careers for this company" }, { status: 403 });
+        }
+
+        // Check if company exists
+        const company = await db.select().from(companies)
+            .where(eq(companies.id, companyId))
+            .then(res => res[0]);
+
+        if (!company) {
+            return NextResponse.json({ error: "Company not found" }, { status: 404 });
+        }
+
+        // Create career
+        const [newCareer] = await db.insert(careers).values({
+            name,
+            position: position || null,
+            companyId,
+            content: content || null,
+            salary: salary || null,
+            tierScore: tierScore || null,
+            tierListId: tierListId || null
+        }).returning();
+
+        return NextResponse.json({
+            message: "Career created successfully",
+            career: newCareer
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to create career" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\careers\stats\route.ts
+
+================================================================================
+// app/api/manager/careers/stats/route.ts
+import { db } from "@/db";
+import { careers, careerApplications, companies, roles } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can access stats" }, { status: 403 });
+        }
+
+        // Get all companies where user is manager
+        const myCompanies = await db.select({ companyId: roles.companyId })
+            .from(roles)
+            .where(eq(roles.userId, user.id));
+
+        const companyIds = myCompanies.map(c => c.companyId);
+
+        if (companyIds.length === 0) {
+            return NextResponse.json({ 
+                totalCareers: 0,
+                totalApplications: 0,
+                companiesWithCareers: 0,
+                topCareers: []
+            });
+        }
+
+        // Get all careers from these companies - FIXED: use inArray
+        const allCareers = await db.select()
+            .from(careers)
+            .where(inArray(careers.companyId, companyIds));
+
+        // Get all applications for these careers
+        const careerIds = allCareers.map(c => c.id);
+        let allApplications: any[] = [];
+        
+        if (careerIds.length > 0) {
+            // FIXED: use inArray instead of .in
+            allApplications = await db.select()
+                .from(careerApplications)
+                .where(inArray(careerApplications.careerId, careerIds));
+        }
+
+        // Calculate stats per career
+        const careersWithStats = allCareers.map(career => {
+            const applications = allApplications.filter(app => app.careerId === career.id);
+            return {
+                id: career.id,
+                name: career.name,
+                position: career.position,
+                applicationsCount: applications.length,
+                salary: career.salary
+            };
+        });
+
+        // Sort by applications count
+        const topCareers = careersWithStats
+            .sort((a, b) => b.applicationsCount - a.applicationsCount)
+            .slice(0, 5);
+
+        return NextResponse.json({
+            totalCareers: allCareers.length,
+            totalApplications: allApplications.length,
+            companiesWithCareers: new Set(allCareers.map(c => c.companyId)).size,
+            averageApplicationsPerCareer: allCareers.length > 0 
+                ? Math.round(allApplications.length / allCareers.length) 
+                : 0,
+            topCareers
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\careers\[id]\route.ts
+
+================================================================================
+// app/api/manager/careers/[id]/route.ts
+import { db } from "@/db";
+import { careers, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+// GET - Fetch single career
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        const career = await db.select()
+            .from(careers)
+            .where(eq(careers.id, careerId))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career not found" }, { status: 404 });
+        }
+
+        // Check if user has permission to view (optional - based on your requirements)
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, career.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole) {
+            return NextResponse.json({ error: "You don't have permission to view this career" }, { status: 403 });
+        }
+
+        return NextResponse.json({ career });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch career" }, { status: 500 });
+    }
+}
+
+// PUT - Update career
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can update careers" }, { status: 403 });
+        }
+
+        const career = await db.select().from(careers)
+            .where(eq(careers.id, careerId))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career not found" }, { status: 404 });
+        }
+
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, career.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to update this career" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { name, position, content, salary, tierScore, tierListId } = body;
+
+        const updatedCareer = await db.update(careers)
+            .set({
+                name: name || undefined,
+                position: position !== undefined ? position : undefined,
+                content: content !== undefined ? content : undefined,
+                salary: salary !== undefined ? salary : undefined,
+                tierScore: tierScore !== undefined ? tierScore : undefined,
+                tierListId: tierListId !== undefined ? tierListId : undefined
+            })
+            .where(eq(careers.id, careerId))
+            .returning();
+
+        return NextResponse.json({
+            message: "Career updated successfully",
+            career: updatedCareer[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to update career" }, { status: 500 });
+    }
+}
+
+// DELETE - Delete career
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can delete careers" }, { status: 403 });
+        }
+
+        const career = await db.select().from(careers)
+            .where(eq(careers.id, careerId))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career not found" }, { status: 404 });
+        }
+
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, career.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || userRole.permission !== "f") {
+            return NextResponse.json({ error: "You don't have permission to delete this career" }, { status: 403 });
+        }
+
+        await db.delete(careers).where(eq(careers.id, careerId));
+
+        return NextResponse.json({
+            message: "Career deleted successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to delete career" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\careers\[id]\applications\route.ts
+
+================================================================================
+// app/api/manager/careers/[id]/applications/route.ts
+import { db } from "@/db";
+import { careers, careerApplications, users, roles } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        
+        // Await params because in Next.js 15+ params is a Promise
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can view applications" }, { status: 403 });
+        }
+
+        // Get career details
+        const career = await db.select().from(careers)
+            .where(eq(careers.id, careerId))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career not found" }, { status: 404 });
+        }
+
+        // Check permission
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, career.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to view applications" }, { status: 403 });
+        }
+
+        // Get all applications with user details
+        const applications = await db.select({
+            id: careerApplications.id,
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            userPhone: users.phoneNo,
+            userProfileImg: users.profileImgUrl,
+            appliedAt: careerApplications.id
+        }).from(careerApplications)
+            .innerJoin(users, eq(careerApplications.userId, users.id))
+            .where(eq(careerApplications.careerId, careerId));
+
+        return NextResponse.json({
+            career: {
+                id: career.id,
+                name: career.name,
+                position: career.position
+            },
+            totalApplications: applications.length,
+            applications
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\companies\route.ts
+
+================================================================================
+// app/api/manager/companys/route.ts
+import { db } from "@/db";
+import { companies, roles } from "@/db/schema";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        
+        if (!token) {
+            return NextResponse.json(
+                { error: "Unauthorized" }, 
+                { status: 401 }
+            );
+        }
+
+        // Verify token
+        let user;
+        try {
+            user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; email: string; roleType: string };
+        } catch (error) {
+            return NextResponse.json(
+                { error: "Invalid token" }, 
+                { status: 401 }
+            );
+        }
+
+        const userId = user.id;
+
+        // Get all roles for this user
+        const myRoles = await db
+            .select()
+            .from(roles)
+            .where(eq(roles.userId, userId));
+
+        if (myRoles.length === 0) {
+            return NextResponse.json({ companies: [] });
+        }
+
+        // Get all companies using Promise.all
+        const companyPromises = myRoles.map(async (role) => {
+            const company = await db
+                .select()
+                .from(companies)
+                .where(eq(companies.id, role.companyId))
+                .then(res => res[0]);
+            
+            // Add role info to company
+            if (company) {
+                return {
+                    ...company,
+                    userRole: role.role,
+                    userPermission: role.permission
+                };
+            }
+            return null;
+        });
+
+        const companiesList = await Promise.all(companyPromises);
+        const validCompanies = companiesList.filter(company => company !== null);
+
+        return NextResponse.json({ 
+            companies: validCompanies,
+            total: validCompanies.length 
+        });
+        
+    } catch (error) {
+        console.error("Error in GET /api/manager/companys:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch companies" }, 
+            { status: 500 }
+        );
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\companies\create\route.ts
+
+================================================================================
+// app/api/manager/company/create/route.ts
+import { db } from "@/db";
+import { companies, roles } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        // Check if user is manager
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can create companies" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { name, description, logoUrl, category } = body;
+
+        if (!name) {
+            return NextResponse.json({ error: "Company name is required" }, { status: 400 });
+        }
+
+        // Check if company already exists
+        const existingCompany = await db.select()
+            .from(companies)
+            .where(eq(companies.name, name))
+            .then(res => res[0]);
+
+        if (existingCompany) {
+            return NextResponse.json({ error: "Company with this name already exists" }, { status: 409 });
+        }
+
+        // Create company
+        const [newCompany] = await db.insert(companies).values({
+            name,
+            description: description || null,
+            logoUrl: logoUrl || null,
+            category: category || null,
+            verified: false
+        }).returning();
+
+        // Assign the creator as Founder with full access
+        await db.insert(roles).values({
+            userId: user.id,
+            companyId: newCompany.id,
+            role: "Founder",
+            permission: "f" // full access
+        });
+
+        return NextResponse.json({
+            message: "Company created successfully",
+            company: newCompany
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Create company error:", error);
+        return NextResponse.json({ 
+            error: "Failed to create company",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\companies\[id]\route.ts
+
+================================================================================
+// app/api/manager/company/[id]/route.ts
+import { db } from "@/db";
+import { companies, roles, internships, careers, users } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        
+        // Await params - Next.js 15+ requirement
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        // Check if user has access to this company
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        // Get company details
+        const company = await db.select()
+            .from(companies)
+            .where(eq(companies.id, companyId))
+            .then(res => res[0]);
+
+        if (!company) {
+            return NextResponse.json({ error: "Company not found" }, { status: 404 });
+        }
+
+        // Get company stats
+        const internshipsCount = await db.select()
+            .from(internships)
+            .where(eq(internships.companyId, companyId))
+            .then(res => res.length);
+
+        const careersCount = await db.select()
+            .from(careers)
+            .where(eq(careers.companyId, companyId))
+            .then(res => res.length);
+
+        // Get team members
+        const team = await db.select({
+            userId: users.id,
+            userName: users.name,
+            userRole: roles.role,
+            userImg: users.profileImgUrl
+        }).from(roles)
+            .innerJoin(users, eq(roles.userId, users.id))
+            .where(eq(roles.companyId, companyId))
+            .limit(5);
+
+        return NextResponse.json({
+            ...company,
+            stats: {
+                internshipsCount,
+                careersCount,
+                teamSize: team.length
+            },
+            team,
+            userRole: {
+                role: userRole.role,
+                permission: userRole.permission
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch company" }, { status: 500 });
+    }
+}
+
+// PUT - Update company
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can update companies" }, { status: 403 });
+        }
+
+        // Check permission
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to update this company" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { name, description, logoUrl, category } = body;
+
+        const updatedCompany = await db.update(companies)
+            .set({
+                name: name || undefined,
+                description: description || undefined,
+                logoUrl: logoUrl || undefined,
+                category: category || undefined
+            })
+            .where(eq(companies.id, companyId))
+            .returning();
+
+        return NextResponse.json({
+            message: "Company updated successfully",
+            company: updatedCompany[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to update company" }, { status: 500 });
+    }
+}
+
+// DELETE - Delete company
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can delete companies" }, { status: 403 });
+        }
+
+        // Check permission (only founder/CEO with full access can delete)
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || userRole.permission !== "f") {
+            return NextResponse.json({ error: "You don't have permission to delete this company" }, { status: 403 });
+        }
+
+        // Delete company (cascade will handle related records)
+        await db.delete(companies).where(eq(companies.id, companyId));
+
+        return NextResponse.json({
+            message: "Company deleted successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to delete company" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\companies\[id]\members\route.ts
+
+================================================================================
+// app/api/manager/company/[id]/members/route.ts
+import { db } from "@/db";
+import { roles, users } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+// GET - Fetch all members
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        // Check if user has access to this company
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const members = await db.select({
+            userId: users.id,
+            name: users.name,
+            email: users.email,
+            role: roles.role,
+            permission: roles.permission,
+            profileImgUrl: users.profileImgUrl,
+        }).from(roles)
+            .innerJoin(users, eq(roles.userId, users.id))
+            .where(eq(roles.companyId, companyId))
+            .orderBy(roles.role);
+
+        return NextResponse.json({ members });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });
+    }
+}
+
+// POST - Add member to company (Manager only)
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can add members" }, { status: 403 });
+        }
+
+        // Check if current user has permission
+        const currentUserRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!currentUserRole || (currentUserRole.permission !== "f" && currentUserRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to add members" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { userId, role, permission } = body;
+
+        if (!userId || !role) {
+            return NextResponse.json({ error: "userId and role are required" }, { status: 400 });
+        }
+
+        // Check if user exists
+        const targetUser = await db.select().from(users)
+            .where(eq(users.id, userId))
+            .then(res => res[0]);
+
+        if (!targetUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Check if user is already a member
+        const existingRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, userId),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (existingRole) {
+            return NextResponse.json({ error: "User is already a member of this company" }, { status: 409 });
+        }
+
+        // Add member
+        const [newRole] = await db.insert(roles).values({
+            userId,
+            companyId,
+            role,
+            permission: permission || "v"
+        }).returning();
+
+        return NextResponse.json({
+            message: "Member added successfully",
+            member: newRole
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to add member" }, { status: 500 });
+    }
+}
+
+
+// DELETE - Remove member from company
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const companyId = parseInt(id);
+
+        const url = new URL(request.url);
+        const userId = parseInt(url.searchParams.get("userId") || "0");
+
+        if (!userId) {
+            return NextResponse.json({ error: "userId is required" }, { status: 400 });
+        }
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can remove members" }, { status: 403 });
+        }
+
+        // Check if current user has permission
+        const currentUserRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!currentUserRole || currentUserRole.permission !== "f") {
+            return NextResponse.json({ error: "You don't have permission to remove members" }, { status: 403 });
+        }
+
+        // Cannot remove yourself
+        if (user.id === userId) {
+            return NextResponse.json({ error: "You cannot remove yourself" }, { status: 400 });
+        }
+
+        // Remove member
+        await db.delete(roles)
+            .where(and(
+                eq(roles.userId, userId),
+                eq(roles.companyId, companyId)
+            ));
+
+        return NextResponse.json({
+            message: "Member removed successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to remove member" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\companies\[id]\verify-access\route.ts
+
+================================================================================
+// app/api/manager/company/[id]/verify-access/route.ts
+import { db } from "@/db";
+import { roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        
+        // Await params - Next.js 15+ requirement
+        const { id } = await params;
+        const companyId = parseInt(id);
+        
+        if (!token) {
+            return NextResponse.json({ hasAccess: false, role: null });
+        }
+
+        let user;
+        try {
+            user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        } catch (error) {
+            return NextResponse.json({ hasAccess: false, role: null });
+        }
+
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        return NextResponse.json({
+            hasAccess: !!userRole,
+            role: userRole?.role || null,
+            permission: userRole?.permission || null
+        });
+
+    } catch (error) {
+        console.error("Error verifying access:", error);
+        return NextResponse.json({ hasAccess: false, role: null });
+    }
+}
+
+// POST - Verify access with body token (alternative)
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const companyId = parseInt(id);
+        
+        const body = await request.json();
+        const token = body.token || request.cookies.get("token")?.value;
+        
+        if (!token) {
+            return NextResponse.json({ hasAccess: false, role: null });
+        }
+
+        let user;
+        try {
+            user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        } catch (error) {
+            return NextResponse.json({ hasAccess: false, role: null });
+        }
+
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        return NextResponse.json({
+            hasAccess: !!userRole,
+            role: userRole?.role || null,
+            permission: userRole?.permission || null
+        });
+
+    } catch (error) {
+        console.error("Error verifying access:", error);
+        return NextResponse.json({ hasAccess: false, role: null });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\dashboard\route.ts
+
+================================================================================
+// app/api/manager/dashboard/route.ts
+import { db } from "@/db";
+import { companies, roles, internships, internshipApplications, careers, careerApplications } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can access" }, { status: 403 });
+        }
+
+        // Get all companies managed by this user
+        const myCompanies = await db.select({ companyId: roles.companyId })
+            .from(roles)
+            .where(eq(roles.userId, user.id));
+
+        const companyIds = myCompanies.map(c => c.companyId);
+
+        if (companyIds.length === 0) {
+            return NextResponse.json({
+                companiesCount: 0,
+                totalInternships: 0,
+                totalCareers: 0,
+                totalApplications: 0,
+                activeInternships: 0,
+                recentInternships: []
+            });
+        }
+
+        // Get internships - FIXED: use inArray
+        const internshipsList = await db.select()
+            .from(internships)
+            .where(inArray(internships.companyId, companyIds));
+
+        const internshipIds = internshipsList.map(i => i.id);
+
+        // Get applications - FIXED: use inArray
+        let internshipApplicationsCount = 0;
+        if (internshipIds.length > 0) {
+            internshipApplicationsCount = await db.select()
+                .from(internshipApplications)
+                .where(inArray(internshipApplications.internshipId, internshipIds))
+                .then(res => res.length);
+        }
+
+        // Get careers - FIXED: use inArray
+        const careersList = await db.select()
+            .from(careers)
+            .where(inArray(careers.companyId, companyIds));
+
+        const careerIds = careersList.map(c => c.id);
+
+        // Get career applications - FIXED: use inArray
+        let careerApplicationsCount = 0;
+        if (careerIds.length > 0) {
+            careerApplicationsCount = await db.select()
+                .from(careerApplications)
+                .where(inArray(careerApplications.careerId, careerIds))
+                .then(res => res.length);
+        }
+
+        return NextResponse.json({
+            companiesCount: companyIds.length,
+            totalInternships: internshipsList.length,
+            totalCareers: careersList.length,
+            totalApplications: internshipApplicationsCount + careerApplicationsCount,
+            activeInternships: internshipsList.filter(i => i.active && i.isLive).length,
+            recentInternships: internshipsList.slice(0, 5).map(i => ({
+                id: i.id,
+                title: i.title,
+                active: i.active,
+                isLive: i.isLive,
+                applicationsCount: internshipApplicationsCount // You might want to calculate per internship
+            }))
+        });
+
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        return NextResponse.json({ error: "Failed to fetch dashboard" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\internships\route.ts
+
+================================================================================
+// app/api/manager/internships/route.ts
+import { db } from "@/db";
+import { internships, companies, roles, internshipApplications } from "@/db/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can access" }, { status: 403 });
+        }
+
+        // Get all companies where user is a manager
+        const myCompanies = await db.select({ companyId: roles.companyId })
+            .from(roles)
+            .where(eq(roles.userId, user.id));
+
+        const companyIds = myCompanies.map(c => c.companyId);
+
+        if (companyIds.length === 0) {
+            return NextResponse.json({ internships: [], message: "No companies found" });
+        }
+
+        // Get internships from these companies - FIXED: use inArray
+        const allInternships = await db.select({
+            id: internships.id,
+            title: internships.title,
+            active: internships.active,
+            isLive: internships.isLive,
+            lastApplyDate: internships.lastApplyDate,
+            duration: internships.duration,
+            autoCancel: internships.autoCancel,
+            createdAt: internships.createdAt,
+            companyId: internships.companyId,
+            companyName: companies.name,
+        }).from(internships)
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(inArray(internships.companyId, companyIds))
+            .orderBy(desc(internships.createdAt));
+
+        // Get all applications in one go (more efficient)
+        const internshipIds = allInternships.map(i => i.id);
+        let allApplications: any[] = [];
+        
+        if (internshipIds.length > 0) {
+            allApplications = await db.select()
+                .from(internshipApplications)
+                .where(inArray(internshipApplications.internshipId, internshipIds));
+        }
+
+        // Map applications count to each internship
+        const internshipsWithCounts = allInternships.map(internship => ({
+            ...internship,
+            applicationsCount: allApplications.filter(app => app.internshipId === internship.id).length
+        }));
+
+        return NextResponse.json({ internships: internshipsWithCounts });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch internships" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\internships\create\route.ts
+
+================================================================================
+// app/api/manager/internships/create/route.ts
+import { db } from "@/db";
+import { internships, companies, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can create internships" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { 
+            title, 
+            companyId, 
+            content, 
+            lastApplyDate, 
+            duration,
+            autoCancel,
+            isLive 
+        } = body;
+
+        // Validation
+        if (!title || !companyId) {
+            return NextResponse.json({ error: "Title and companyId are required" }, { status: 400 });
+        }
+
+        // Check if user has permission for this company
+        const userRole = await db.select().from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to create internships for this company" }, { status: 403 });
+        }
+
+        // Check if company exists
+        const company = await db.select().from(companies)
+            .where(eq(companies.id, companyId))
+            .then(res => res[0]);
+
+        if (!company) {
+            return NextResponse.json({ error: "Company not found" }, { status: 404 });
+        }
+
+        // Create internship
+        const [newInternship] = await db.insert(internships).values({
+            title,
+            companyId,
+            content: content || null,
+            lastApplyDate: lastApplyDate ? new Date(lastApplyDate) : null,
+            duration: duration || null,
+            autoCancel: autoCancel || false,
+            isLive: isLive || false,
+            active: true
+        }).returning();
+
+        return NextResponse.json({
+            message: "Internship created successfully",
+            internship: newInternship
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to create internship" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\internships\[id]\route.ts
+
+================================================================================
+// app/api/manager/internships/[id]/route.ts
+import { db } from "@/db";
+import { internships, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+// GET - Fetch single internship
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check if user has permission to view (optional)
+        if (user.roleType === "manager") {
+            const userRole = await db.select()
+                .from(roles)
+                .where(and(
+                    eq(roles.userId, user.id),
+                    eq(roles.companyId, internship.companyId)
+                ))
+                .then(res => res[0]);
+            
+            if (!userRole) {
+                return NextResponse.json({ error: "You don't have permission to view this internship" }, { status: 403 });
+            }
+        }
+
+        return NextResponse.json({ internship });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch internship" }, { status: 500 });
+    }
+}
+
+// PUT - Update internship
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can update internships" }, { status: 403 });
+        }
+
+        // Get internship details
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check permission
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, internship.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to update this internship" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { title, content, lastApplyDate, duration, autoCancel, isLive, active } = body;
+
+        const updatedInternship = await db.update(internships)
+            .set({
+                title: title || undefined,
+                content: content || undefined,
+                lastApplyDate: lastApplyDate ? new Date(lastApplyDate) : undefined,
+                duration: duration !== undefined ? duration : undefined,
+                autoCancel: autoCancel !== undefined ? autoCancel : undefined,
+                isLive: isLive !== undefined ? isLive : undefined,
+                active: active !== undefined ? active : undefined
+            })
+            .where(eq(internships.id, internshipId))
+            .returning();
+
+        return NextResponse.json({
+            message: "Internship updated successfully",
+            internship: updatedInternship[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to update internship" }, { status: 500 });
+    }
+}
+
+// DELETE - Delete internship
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can delete internships" }, { status: 403 });
+        }
+
+        // Get internship details
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check permission (only full access can delete)
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, internship.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || userRole.permission !== "f") {
+            return NextResponse.json({ error: "You don't have permission to delete this internship" }, { status: 403 });
+        }
+
+        // Delete internship (applications will be handled by cascade)
+        await db.delete(internships).where(eq(internships.id, internshipId));
+
+        return NextResponse.json({
+            message: "Internship deleted successfully"
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to delete internship" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\internships\[id]\applications\route.ts
+
+================================================================================
+// app/api/manager/internships/[id]/applications/route.ts
+import { db } from "@/db";
+import { internships, internshipApplications, users, roles } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        
+        // Await params - Next.js 15+ requirement
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can view applications" }, { status: 403 });
+        }
+
+        // Get internship details
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check permission
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, internship.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission to view applications" }, { status: 403 });
+        }
+
+        // Get all applications with user details
+        const applications = await db.select({
+            id: internshipApplications.id,
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            userPhone: users.phoneNo,
+            userProfileImg: users.profileImgUrl,
+            certificateUnlocked: internshipApplications.certificateUnlocked,
+            appliedAt: internshipApplications.id
+        }).from(internshipApplications)
+            .innerJoin(users, eq(internshipApplications.userId, users.id))
+            .where(eq(internshipApplications.internshipId, internshipId));
+
+        return NextResponse.json({
+            internship: {
+                id: internship.id,
+                title: internship.title,
+                companyId: internship.companyId
+            },
+            totalApplications: applications.length,
+            applications
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
+    }
+}
+
+// POST - Add application (Admin/Manager adding on behalf of user)
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can add applications" }, { status: 403 });
+        }
+
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, internship.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { userId } = body;
+
+        if (!userId) {
+            return NextResponse.json({ error: "userId is required" }, { status: 400 });
+        }
+
+        // Check if already applied
+        const existingApplication = await db.select()
+            .from(internshipApplications)
+            .where(and(
+                eq(internshipApplications.userId, userId),
+                eq(internshipApplications.internshipId, internshipId)
+            ))
+            .then(res => res[0]);
+
+        if (existingApplication) {
+            return NextResponse.json({ error: "User already applied for this internship" }, { status: 409 });
+        }
+
+        // Add application
+        const [application] = await db.insert(internshipApplications).values({
+            userId,
+            internshipId,
+            certificateUnlocked: false
+        }).returning();
+
+        return NextResponse.json({
+            message: "Application added successfully",
+            application
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to add application" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: manager\internships\[id]\applications\[applicationId]\certificate\route.ts
+
+================================================================================
+// app/api/manager/internships/[id]/applications/[applicationId]/certificate/route.ts
+import { db } from "@/db";
+import { internships, internshipApplications, roles } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string; applicationId: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        
+        // Await params - Next.js 15+ requirement
+        const { id, applicationId } = await params;
+        const internshipId = parseInt(id);
+        const appId = parseInt(applicationId);
+
+        if (user.roleType !== "manager") {
+            return NextResponse.json({ error: "Only managers can unlock certificates" }, { status: 403 });
+        }
+
+        // Get internship details
+        const internship = await db.select()
+            .from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check permission
+        const userRole = await db.select()
+            .from(roles)
+            .where(and(
+                eq(roles.userId, user.id),
+                eq(roles.companyId, internship.companyId)
+            ))
+            .then(res => res[0]);
+
+        if (!userRole || (userRole.permission !== "f" && userRole.permission !== "c")) {
+            return NextResponse.json({ error: "You don't have permission" }, { status: 403 });
+        }
+
+        // Update certificate
+        const updated = await db.update(internshipApplications)
+            .set({ certificateUnlocked: true })
+            .where(and(
+                eq(internshipApplications.id, appId),
+                eq(internshipApplications.internshipId, internshipId)
+            ))
+            .returning();
+
+        if (updated.length === 0) {
+            return NextResponse.json({ error: "Application not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            message: "Certificate unlocked successfully",
+            application: updated[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to unlock certificate" }, { status: 500 });
+    }
+}
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string; applicationId: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+        const { id, applicationId } = await params;
+        const internshipId = parseInt(id);
+        const appId = parseInt(applicationId);
+
+        // Get application
+        const application = await db.select({
+            id: internshipApplications.id,
+            certificateUnlocked: internshipApplications.certificateUnlocked,
+            userId: internshipApplications.userId,
+            internshipId: internshipApplications.internshipId
+        }).from(internshipApplications)
+            .where(and(
+                eq(internshipApplications.id, appId),
+                eq(internshipApplications.internshipId, internshipId)
+            ))
+            .then(res => res[0]);
+
+        if (!application) {
+            return NextResponse.json({ error: "Application not found" }, { status: 404 });
+        }
+
+        // Check if user has permission (either manager or the applicant)
+        const isApplicant = application.userId === user.id;
+        const isManager = user.roleType === "manager";
+
+        if (!isApplicant && !isManager) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        return NextResponse.json({
+            certificateUnlocked: application.certificateUnlocked,
+            applicationId: application.id
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch certificate status" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: search\route.ts
+
+================================================================================
+// app/api/search/route.ts
+import { db } from "@/db";
+import { companies, internships, careers, projects } from "@/db/schema";
+import { and, eq, like, or } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const query = searchParams.get("q");
+        const type = searchParams.get("type"); // companies, internships, careers, projects, all
+
+        if (!query || query.length < 2) {
+            return NextResponse.json({ error: "Search query must be at least 2 characters" }, { status: 400 });
+        }
+
+        const searchTerm = `%${query}%`;
+        let results: any = {};
+
+        // Search companies
+        if (!type || type === "companies" || type === "all") {
+            const companiesResult = await db.select()
+                .from(companies)
+                .where(or(
+                    like(companies.name, searchTerm),
+                    like(companies.description, searchTerm),
+                    like(companies.category, searchTerm)
+                ))
+                .limit(5);
+            results.companies = companiesResult;
+        }
+
+        // Search internships
+        if (!type || type === "internships" || type === "all") {
+            const internshipsResult = await db.select({
+                id: internships.id,
+                title: internships.title,
+                content: internships.content,
+                companyId: internships.companyId
+            }).from(internships)
+                .where(like(internships.title, searchTerm))
+                .limit(5);
+            results.internships = internshipsResult;
+        }
+
+        // Search careers
+        if (!type || type === "careers" || type === "all") {
+            const careersResult = await db.select({
+                id: careers.id,
+                name: careers.name,
+                position: careers.position,
+                content: careers.content
+            }).from(careers)
+                .where(or(
+                    like(careers.name, searchTerm),
+                    like(careers.position, searchTerm)
+                ))
+                .limit(5);
+            results.careers = careersResult;
+        }
+
+        // Search projects (only public)
+        if (!type || type === "projects" || type === "all") {
+            const projectsResult = await db.select()
+                .from(projects)
+                .where(and(
+                    eq(projects.isPublic, true),
+                    or(
+                        like(projects.name, searchTerm),
+                        like(projects.description, searchTerm)
+                    )
+                ))
+                .limit(5);
+            results.projects = projectsResult;
+        }
+
+        return NextResponse.json({
+            query,
+            results,
+            total: Object.values(results).flat().length
+        });
+
+    } catch (error) {
+        return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\careers\route.ts
+
+================================================================================
+// app/api/user/careers/route.ts
+import { db } from "@/db";
+import { careers, companies } from "@/db/schema";
+import { eq, desc, like, gte, lte, and, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+        const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "10")));
+        const search = searchParams.get("search");
+        const companyId = searchParams.get("companyId");
+        const minSalary = searchParams.get("minSalary");
+        const maxSalary = searchParams.get("maxSalary");
+        const minTierScore = searchParams.get("minTierScore");
+        const position = searchParams.get("position");
+        const offset = (page - 1) * limit;
+
+        // Build where conditions
+        const conditions = [];
+
+        // Search filter (title or position)
+        if (search && search.trim()) {
+            conditions.push(
+                like(careers.name, `%${search.trim()}%`)
+            );
+        }
+
+        // Company filter
+        if (companyId && !isNaN(parseInt(companyId))) {
+            conditions.push(eq(careers.companyId, parseInt(companyId)));
+        }
+
+        // Salary range filter
+        if (minSalary && !isNaN(parseInt(minSalary))) {
+            conditions.push(gte(careers.salary, parseInt(minSalary)));
+        }
+        if (maxSalary && !isNaN(parseInt(maxSalary))) {
+            conditions.push(lte(careers.salary, parseInt(maxSalary)));
+        }
+
+        // Tier score filter
+        if (minTierScore && !isNaN(parseInt(minTierScore))) {
+            conditions.push(gte(careers.tierScore, parseInt(minTierScore)));
+        }
+
+        // Position filter
+        if (position && position.trim()) {
+            conditions.push(like(careers.position, `%${position.trim()}%`));
+        }
+
+        // Build base query
+        let baseQuery = db.select({
+            id: careers.id,
+            name: careers.name,
+            position: careers.position,
+            salary: careers.salary,
+            tierScore: careers.tierScore,
+            content: careers.content,
+            createdAt: careers.id,
+            companyId: companies.id,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl,
+            companyCategory: companies.category,
+            companyVerified: companies.verified
+        }).from(careers)
+            .innerJoin(companies, eq(careers.companyId, companies.id));
+
+        // Apply conditions if any
+        const finalQuery = conditions.length > 0 
+            ? baseQuery.where(and(...conditions))
+            : baseQuery;
+
+        // Get total count
+        const totalResult = await finalQuery;
+        const total = totalResult.length;
+
+        // Get paginated results
+        const allCareers = await finalQuery
+            .orderBy(desc(careers.id))
+            .limit(limit)
+            .offset(offset);
+
+        // Get application counts for each career
+        const careerIds = allCareers.map(c => c.id);
+        let applicationsMap = new Map();
+        
+        if (careerIds.length > 0) {
+            // You'll need to import careerApplications
+            const { careerApplications } = await import("@/db/schema");
+            const allApplications = await db.select({
+                careerId: careerApplications.careerId,
+                id: careerApplications.id
+            }).from(careerApplications)
+                .where(inArray(careerApplications.careerId, careerIds));
+            
+            allApplications.forEach(app => {
+                applicationsMap.set(
+                    app.careerId,
+                    (applicationsMap.get(app.careerId) || 0) + 1
+                );
+            });
+        }
+
+        // Format careers with additional info
+        const careersWithStats = allCareers.map(career => ({
+            ...career,
+            salaryFormatted: career.salary ? formatSalary(career.salary) : null,
+            applicationsCount: applicationsMap.get(career.id) || 0
+        }));
+
+        return NextResponse.json({
+            success: true,
+            careers: careersWithStats,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
+                hasPrevPage: page > 1
+            },
+            filters: {
+                search: search || null,
+                companyId: companyId || null,
+                minSalary: minSalary || null,
+                maxSalary: maxSalary || null,
+                minTierScore: minTierScore || null,
+                position: position || null
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching careers:", error);
+        return NextResponse.json({ 
+            success: false,
+            error: "Failed to fetch careers",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+// Helper function to format salary
+function formatSalary(salary: number): string {
+    if (salary >= 10000000) {
+        return `₹${(salary / 10000000).toFixed(1)}Cr`;
+    }
+    if (salary >= 100000) {
+        return `₹${(salary / 100000).toFixed(1)}L`;
+    }
+    return `₹${salary.toLocaleString()}`;
+}
+
+
+
+
+================================================================================
+
+FILE: user\careers\applications\route.ts
+
+================================================================================
+// app/api/user/careers/applications/route.ts
+import { db } from "@/db";
+import { careerApplications, careers, companies } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        const applications = await db.select({
+            id: careerApplications.id,
+            careerId: careers.id,
+            careerName: careers.name,
+            position: careers.position,
+            salary: careers.salary,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl,
+            appliedAt: careerApplications.id
+        }).from(careerApplications)
+            .innerJoin(careers, eq(careerApplications.careerId, careers.id))
+            .innerJoin(companies, eq(careers.companyId, companies.id))
+            .where(eq(careerApplications.userId, user.id))
+            .orderBy(careerApplications.id);
+
+        return NextResponse.json({ applications });
+
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\careers\apply\route.ts
+
+================================================================================
+// app/api/user/careers/apply/route.ts
+import { db } from "@/db";
+import { careers, careerApplications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { careerId } = body;
+
+        if (!careerId) {
+            return NextResponse.json({ error: "Career ID is required" }, { status: 400 });
+        }
+
+        const careerIdNum = parseInt(careerId);
+        if (isNaN(careerIdNum)) {
+            return NextResponse.json({ error: "Invalid career ID" }, { status: 400 });
+        }
+
+        // Check if career exists
+        const career = await db.select({
+            id: careers.id,
+            name: careers.name,
+            position: careers.position,
+            salary: careers.salary,
+            tierScore: careers.tierScore,
+            content: careers.content,
+            companyId: careers.companyId
+        }).from(careers)
+            .where(eq(careers.id, careerIdNum))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career position not found" }, { status: 404 });
+        }
+
+        // Check if already applied
+        const existingApplication = await db.select()
+            .from(careerApplications)
+            .where(and(
+                eq(careerApplications.userId, user.id),
+                eq(careerApplications.careerId, careerIdNum)
+            ))
+            .then(res => res[0]);
+
+        if (existingApplication) {
+            return NextResponse.json({ 
+                error: "Already applied for this position",
+                applicationId: existingApplication.id
+            }, { status: 409 });
+        }
+
+        // Create application
+        const [application] = await db.insert(careerApplications).values({
+            userId: user.id,
+            careerId: careerIdNum
+        }).returning();
+
+        // Format salary
+        const formatSalary = (salary: number | null) => {
+            if (salary === null) return null;
+            if (salary >= 10000000) return `₹${(salary / 10000000).toFixed(1)}Cr`;
+            if (salary >= 100000) return `₹${(salary / 100000).toFixed(1)}L`;
+            return `₹${salary.toLocaleString()}`;
+        };
+
+        // Get total applications count for this career
+        const totalApplications = await db.select()
+            .from(careerApplications)
+            .where(eq(careerApplications.careerId, careerIdNum))
+            .then(res => res.length);
+
+        return NextResponse.json({
+            success: true,
+            message: "Successfully applied for position",
+            data: {
+                applicationId: application.id,
+                careerId: careerIdNum,
+                careerName: career.name,
+                careerPosition: career.position,
+                careerSalary: formatSalary(career.salary),
+                careerTierScore: career.tierScore,
+                appliedAt: new Date().toISOString()
+            },
+            stats: {
+                totalApplications: totalApplications
+            }
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Error applying for career:", error);
+        return NextResponse.json({ 
+            error: "Failed to apply for position",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\careers\[id]\apply\route.ts
+
+================================================================================
+// app/api/user/careers/[id]/apply/route.ts
+import { db } from "@/db";
+import { careers, careerApplications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+// GET - Check if user has applied
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        if (isNaN(careerId)) {
+            return NextResponse.json({ error: "Invalid career ID" }, { status: 400 });
+        }
+
+        const application = await db.select({
+            id: careerApplications.id,
+            careerId: careerApplications.careerId,
+            appliedAt: careerApplications.id
+        }).from(careerApplications)
+            .where(and(
+                eq(careerApplications.userId, user.id),
+                eq(careerApplications.careerId, careerId)
+            ))
+            .then(res => res[0]);
+
+        return NextResponse.json({
+            hasApplied: !!application,
+            application: application || null
+        });
+
+    } catch (error) {
+        console.error("Error checking application:", error);
+        return NextResponse.json({ error: "Failed to check application status" }, { status: 500 });
+    }
+}
+
+// POST - Apply for career
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const careerId = parseInt(id);
+
+        if (isNaN(careerId)) {
+            return NextResponse.json({ error: "Invalid career ID" }, { status: 400 });
+        }
+
+        // Check if career exists
+        const career = await db.select()
+            .from(careers)
+            .where(eq(careers.id, careerId))
+            .then(res => res[0]);
+
+        if (!career) {
+            return NextResponse.json({ error: "Career not found" }, { status: 404 });
+        }
+
+        // Check if already applied
+        const existingApplication = await db.select()
+            .from(careerApplications)
+            .where(and(
+                eq(careerApplications.userId, user.id),
+                eq(careerApplications.careerId, careerId)
+            ))
+            .then(res => res[0]);
+
+        if (existingApplication) {
+            return NextResponse.json({ error: "Already applied for this position" }, { status: 409 });
+        }
+
+        // Apply for career
+        const [application] = await db.insert(careerApplications).values({
+            userId: user.id,
+            careerId: careerId
+        }).returning();
+
+        return NextResponse.json({
+            message: "Applied successfully",
+            application
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Error applying for career:", error);
+        return NextResponse.json({ 
+            error: "Failed to apply",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\dashboard\route.ts
+
+================================================================================
+// app/api/user/dashboard/route.ts
+import { db } from "@/db";
+import { 
+    projects, 
+    internshipApplications, 
+    careerApplications, 
+    users,
+    internships,
+    careers,
+    companies
+} from "@/db/schema";
+import { eq, desc, and, isNotNull } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        // Get user profile data
+        const userProfile = await db.select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            phoneNo: users.phoneNo,
+            description: users.description,
+            profileImgUrl: users.profileImgUrl,
+            verified: users.verified,
+            createdAt: users.createdAt,
+            roleType: users.roleType
+        }).from(users)
+            .where(eq(users.id, user.id))
+            .then(res => res[0]);
+
+        if (!userProfile) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Get counts
+        const projectsCount = await db.select({ id: projects.id })
+            .from(projects)
+            .where(eq(projects.userId, user.id))
+            .then(res => res.length);
+
+        const internshipApplicationsCount = await db.select({ id: internshipApplications.id })
+            .from(internshipApplications)
+            .where(eq(internshipApplications.userId, user.id))
+            .then(res => res.length);
+
+        const careerApplicationsCount = await db.select({ id: careerApplications.id })
+            .from(careerApplications)
+            .where(eq(careerApplications.userId, user.id))
+            .then(res => res.length);
+
+        // Get recent projects
+        const recentProjects = await db.select({
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            createdAt: projects.createdAt,
+            isPublic: projects.isPublic,
+            githubId: projects.githubId,
+            posts: projects.posts
+        }).from(projects)
+            .where(eq(projects.userId, user.id))
+            .orderBy(desc(projects.createdAt))
+            .limit(5);
+
+        // Format projects with posts count
+        const formattedProjects = recentProjects.map(project => ({
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            createdAt: project.createdAt,
+            isPublic: project.isPublic,
+            githubId: project.githubId,
+            postsCount: project.posts ? (Array.isArray(project.posts) ? project.posts.length : 0) : 0
+        }));
+
+        // Get recent internship applications
+        const recentInternshipApps = await db.select({
+            id: internshipApplications.id,
+            internshipId: internships.id,
+            internshipTitle: internships.title,
+            internshipDuration: internships.duration,
+            internshipIsLive: internships.isLive,
+            companyId: companies.id,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl,
+            certificateUnlocked: internshipApplications.certificateUnlocked,
+            lastApplyDate: internships.lastApplyDate
+        }).from(internshipApplications)
+            .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(eq(internshipApplications.userId, user.id))
+            .orderBy(desc(internshipApplications.id))
+            .limit(5);
+
+        // Get recent career applications
+        const recentCareerApps = await db.select({
+            id: careerApplications.id,
+            careerId: careers.id,
+            careerName: careers.name,
+            careerPosition: careers.position,
+            careerSalary: careers.salary,
+            careerTierScore: careers.tierScore,
+            companyId: companies.id,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl
+        }).from(careerApplications)
+            .innerJoin(careers, eq(careerApplications.careerId, careers.id))
+            .innerJoin(companies, eq(careers.companyId, companies.id))
+            .where(eq(careerApplications.userId, user.id))
+            .orderBy(desc(careerApplications.id))
+            .limit(5);
+
+        // Get upcoming deadlines (internships with deadlines in future)
+        const now = new Date();
+        const upcomingDeadlinesList = await db.select({
+            id: internships.id,
+            title: internships.title,
+            companyName: companies.name,
+            lastApplyDate: internships.lastApplyDate,
+            duration: internships.duration
+        }).from(internshipApplications)
+            .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(and(
+                eq(internshipApplications.userId, user.id),
+                isNotNull(internships.lastApplyDate)
+            ))
+            .limit(5);
+
+        // Filter upcoming deadlines (only future dates)
+        const upcomingDeadlines = upcomingDeadlinesList.filter(deadline => 
+            deadline.lastApplyDate && new Date(deadline.lastApplyDate) > now
+        );
+
+        // Get certificates earned
+        const certificates = await db.select({
+            id: internshipApplications.id,
+            internshipTitle: internships.title,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl
+        }).from(internshipApplications)
+            .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(and(
+                eq(internshipApplications.userId, user.id),
+                eq(internshipApplications.certificateUnlocked, true)
+            ))
+            .limit(5);
+
+        // Build activity timeline
+        const activities: any[] = [];
+
+        // Add project activities
+        recentProjects.forEach(project => {
+            if (project.createdAt) {
+                activities.push({
+                    type: "project",
+                    id: project.id,
+                    title: `Created project: ${project.name}`,
+                    description: project.description?.substring(0, 100) || "No description",
+                    date: project.createdAt,
+                    icon: "FolderGit2",
+                    color: "blue"
+                });
+            }
+        });
+
+        // Add internship application activities
+        recentInternshipApps.forEach(app => {
+            activities.push({
+                type: "internship_application",
+                id: app.id,
+                title: `Applied for: ${app.internshipTitle}`,
+                description: `at ${app.companyName}`,
+                date: new Date().toISOString(), // Use application created date if available
+                icon: "Briefcase",
+                color: "green"
+            });
+        });
+
+        // Add career application activities
+        recentCareerApps.forEach(app => {
+            activities.push({
+                type: "career_application",
+                id: app.id,
+                title: `Applied for: ${app.careerName}`,
+                description: `${app.careerPosition || "Position"} at ${app.companyName}`,
+                date: new Date().toISOString(),
+                icon: "Briefcase",
+                color: "purple"
+            });
+        });
+
+        // Sort activities by date (newest first)
+        activities.sort((a, b) => {
+            const dateA = a.date ? new Date(a.date).getTime() : 0;
+            const dateB = b.date ? new Date(b.date).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        // Calculate stats
+        const certificateCount = certificates.length;
+        const applicationSuccessRate = internshipApplicationsCount > 0 
+            ? (certificateCount / internshipApplicationsCount) * 100 
+            : 0;
+
+        // Get unique skills from applications
+        const allSkills = [
+            ...recentInternshipApps.map(app => app.internshipTitle).filter(Boolean),
+            ...recentCareerApps.map(app => app.careerName).filter(Boolean)
+        ];
+        const uniqueSkills = [...new Set(allSkills)];
+
+        // Format salary for display
+        const formatSalary = (salary: number | null) => {
+            if (!salary) return null;
+            if (salary >= 10000000) return `₹${(salary / 10000000).toFixed(1)}Cr`;
+            if (salary >= 100000) return `₹${(salary / 100000).toFixed(1)}L`;
+            return `₹${salary.toLocaleString()}`;
+        };
+
+        // Format career apps with salary
+        const formattedCareerApps = recentCareerApps.map(app => ({
+            ...app,
+            careerSalaryFormatted: formatSalary(app.careerSalary)
+        }));
+
+        return NextResponse.json({
+            success: true,
+            user: {
+                id: userProfile.id,
+                name: userProfile.name,
+                email: userProfile.email,
+                phoneNo: userProfile.phoneNo,
+                description: userProfile.description,
+                profileImgUrl: userProfile.profileImgUrl,
+                verified: userProfile.verified,
+                memberSince: userProfile.createdAt,
+                roleType: userProfile.roleType
+            },
+            stats: {
+                totalProjects: projectsCount,
+                totalInternshipApplications: internshipApplicationsCount,
+                totalCareerApplications: careerApplicationsCount,
+                totalApplications: internshipApplicationsCount + careerApplicationsCount,
+                totalCertificates: certificateCount,
+                applicationSuccessRate: Math.round(applicationSuccessRate),
+                activeApplications: recentInternshipApps.filter(app => app.internshipIsLive).length + recentCareerApps.length
+            },
+            recentProjects: formattedProjects,
+            recentInternshipApplications: recentInternshipApps,
+            recentCareerApplications: formattedCareerApps,
+            upcomingDeadlines: upcomingDeadlines,
+            certificates: certificates,
+            recentActivities: activities.slice(0, 10),
+            recommendations: {
+                suggestedSkills: uniqueSkills.slice(0, 5),
+                suggestedProjects: projectsCount === 0 ? [
+                    "Build a portfolio website",
+                    "Create a GitHub repository",
+                    "Contribute to open source"
+                ] : [],
+                nextSteps: [
+                    ...(internshipApplicationsCount === 0 ? ["Apply for your first internship"] : []),
+                    ...(projectsCount === 0 ? ["Create your first project"] : []),
+                    ...(certificateCount === 0 && internshipApplicationsCount > 0 ? ["Complete an internship to earn a certificate"] : [])
+                ]
+            }
+        });
+
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        return NextResponse.json({ 
+            success: false,
+            error: "Failed to fetch dashboard",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\internships\route.ts
+
+================================================================================
+// app/api/user/internships/route.ts
+import { db } from "@/db";
+import { internships, companies } from "@/db/schema";
+import { eq, desc, like, gte, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const page = parseInt(searchParams.get("page") || "1");
+        const limit = parseInt(searchParams.get("limit") || "10");
+        const search = searchParams.get("search");
+        const companyId = searchParams.get("companyId");
+        const minDuration = searchParams.get("minDuration");
+        const isLive = searchParams.get("isLive");
+        const offset = (page - 1) * limit;
+
+        // Build where conditions
+        const conditions = [eq(internships.isLive, true)];
+
+        if (search) {
+            conditions.push(like(internships.title, `%${search}%`));
+        }
+
+        if (companyId) {
+            conditions.push(eq(internships.companyId, parseInt(companyId)));
+        }
+
+        if (minDuration) {
+            conditions.push(gte(internships.duration, parseInt(minDuration)));
+        }
+
+        if (isLive === "true") {
+            conditions.push(eq(internships.isLive, true));
+        }
+
+        // Get total count
+        const totalResult = await db.select({
+            id: internships.id
+        }).from(internships)
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(and(...conditions));
+
+        const total = totalResult.length;
+
+        // Get paginated results
+        const allInternships = await db.select({
+            id: internships.id,
+            title: internships.title,
+            content: internships.content,
+            duration: internships.duration,
+            lastApplyDate: internships.lastApplyDate,
+            isLive: internships.isLive,
+            active: internships.active,
+            createdAt: internships.createdAt,
+            companyId: companies.id,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl,
+            companyCategory: companies.category
+        }).from(internships)
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(and(...conditions))
+            .orderBy(desc(internships.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        return NextResponse.json({
+            internships: allInternships,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching internships:", error);
+        return NextResponse.json({ error: "Failed to fetch internships" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\internships\applications\route.ts
+
+================================================================================
+// app/api/user/internships/applications/route.ts
+import { db } from "@/db";
+import { internshipApplications, internships, companies } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        const applications = await db.select({
+            id: internshipApplications.id,
+            internshipId: internships.id,
+            internshipTitle: internships.title,
+            companyName: companies.name,
+            companyLogo: companies.logoUrl,
+            appliedAt: internshipApplications.id,
+            certificateUnlocked: internshipApplications.certificateUnlocked,
+            internshipActive: internships.active,
+            lastApplyDate: internships.lastApplyDate
+        }).from(internshipApplications)
+            .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
+            .innerJoin(companies, eq(internships.companyId, companies.id))
+            .where(eq(internshipApplications.userId, user.id))
+            .orderBy(internshipApplications.id);
+
+        return NextResponse.json({ applications });
+
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\internships\apply\route.ts
+
+================================================================================
+// app/api/user/internships/apply/route.ts
+import { db } from "@/db";
+import { internships, internshipApplications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { internshipId } = body;
+
+        if (!internshipId) {
+            return NextResponse.json({ error: "Internship ID is required" }, { status: 400 });
+        }
+
+        const internshipIdNum = parseInt(internshipId);
+        if (isNaN(internshipIdNum)) {
+            return NextResponse.json({ error: "Invalid internship ID" }, { status: 400 });
+        }
+
+        // Check if internship exists and is active
+        const internship = await db.select({
+            id: internships.id,
+            active: internships.active,
+            isLive: internships.isLive,
+            title: internships.title,
+            lastApplyDate: internships.lastApplyDate
+        }).from(internships)
+            .where(eq(internships.id, internshipIdNum))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check if internship is accepting applications
+        if (!internship.active || !internship.isLive) {
+            return NextResponse.json({ error: "This internship is not accepting applications" }, { status: 400 });
+        }
+
+        // Check if last apply date has passed
+        if (internship.lastApplyDate && new Date(internship.lastApplyDate) < new Date()) {
+            return NextResponse.json({ error: "Application deadline has passed" }, { status: 400 });
+        }
+
+        // Check if already applied
+        const existingApplication = await db.select()
+            .from(internshipApplications)
+            .where(and(
+                eq(internshipApplications.userId, user.id),
+                eq(internshipApplications.internshipId, internshipIdNum)
+            ))
+            .then(res => res[0]);
+
+        if (existingApplication) {
+            return NextResponse.json({ 
+                error: "Already applied for this internship",
+                applicationId: existingApplication.id
+            }, { status: 409 });
+        }
+
+        // Apply for internship
+        const [application] = await db.insert(internshipApplications).values({
+            userId: user.id,
+            internshipId: internshipIdNum,
+            certificateUnlocked: false
+        }).returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Successfully applied for internship",
+            application: {
+                id: application.id,
+                internshipId: application.internshipId,
+                internshipTitle: internship.title,
+                certificateUnlocked: false,
+                appliedAt: new Date().toISOString()
+            }
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Error applying for internship:", error);
+        return NextResponse.json({ 
+            error: "Failed to apply for internship",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\internships\[id]\apply\route.ts
+
+================================================================================
+// app/api/user/internships/[id]/apply/route.ts
+import { db } from "@/db";
+import { internships, internshipApplications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        if (isNaN(internshipId)) {
+            return NextResponse.json({ error: "Invalid internship ID" }, { status: 400 });
+        }
+
+        const application = await db.select({
+            id: internshipApplications.id,
+            internshipId: internshipApplications.internshipId,
+            certificateUnlocked: internshipApplications.certificateUnlocked,
+        }).from(internshipApplications)
+            .where(and(
+                eq(internshipApplications.userId, user.id),
+                eq(internshipApplications.internshipId, internshipId)
+            ))
+            .then(res => res[0]);
+
+        return NextResponse.json({
+            hasApplied: !!application,
+            application: application || null
+        });
+
+    } catch (error) {
+        console.error("Error checking application:", error);
+        return NextResponse.json({ error: "Failed to check application status" }, { status: 500 });
+    }
+}
+
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const internshipId = parseInt(id);
+
+        // Validate internship ID
+        if (isNaN(internshipId)) {
+            return NextResponse.json({ error: "Invalid internship ID" }, { status: 400 });
+        }
+
+        // Check if internship exists and is active
+        const internship = await db.select({
+            id: internships.id,
+            active: internships.active,
+            isLive: internships.isLive,
+            title: internships.title,
+            lastApplyDate: internships.lastApplyDate
+        }).from(internships)
+            .where(eq(internships.id, internshipId))
+            .then(res => res[0]);
+
+        if (!internship) {
+            return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+        }
+
+        // Check if internship is accepting applications
+        if (!internship.active) {
+            return NextResponse.json({ error: "This internship is no longer active" }, { status: 400 });
+        }
+
+        if (!internship.isLive) {
+            return NextResponse.json({ error: "This internship is not currently accepting applications" }, { status: 400 });
+        }
+
+        // Check if last apply date has passed
+        if (internship.lastApplyDate && new Date(internship.lastApplyDate) < new Date()) {
+            return NextResponse.json({ error: "Application deadline has passed" }, { status: 400 });
+        }
+
+        // Check if already applied
+        const existingApplication = await db.select()
+            .from(internshipApplications)
+            .where(and(
+                eq(internshipApplications.userId, user.id),
+                eq(internshipApplications.internshipId, internshipId)
+            ))
+            .then(res => res[0]);
+
+        if (existingApplication) {
+            return NextResponse.json({ 
+                error: "Already applied for this internship",
+                applicationId: existingApplication.id
+            }, { status: 409 });
+        }
+
+        // Apply for internship
+        const [application] = await db.insert(internshipApplications).values({
+            userId: user.id,
+            internshipId: internshipId,
+            certificateUnlocked: false
+        }).returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Successfully applied for internship",
+            application: {
+                id: application.id,
+                internshipId: application.internshipId,
+                internshipTitle: internship.title,
+                certificateUnlocked: application.certificateUnlocked
+            }
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Error applying for internship:", error);
+        return NextResponse.json({ 
+            error: "Failed to apply for internship",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\profile\route.ts
+
+================================================================================
+// app/api/user/profile/route.ts
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
+// GET - Fetch user profile
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        const userProfile = await db.select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            roleType: users.roleType,
+            phoneNo: users.phoneNo,
+            description: users.description,
+            profileImgUrl: users.profileImgUrl,
+            verified: users.verified,
+            createdAt: users.createdAt,
+            authBy: users.authBy
+        }).from(users)
+            .where(eq(users.id, user.id))
+            .then(res => res[0]);
+
+        if (!userProfile) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ 
+            success: true,
+            user: userProfile 
+        });
+
+    } catch (error) {
+        console.error("Error fetching profile:", error);
+        return NextResponse.json({ 
+            error: "Failed to fetch profile" 
+        }, { status: 500 });
+    }
+}
+
+// PUT - Update user profile
+export async function PUT(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { name, phoneNo, description, profileImgUrl } = body;
+
+        // Build update data (only include fields that are provided)
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (phoneNo !== undefined) updateData.phoneNo = phoneNo;
+        if (description !== undefined) updateData.description = description;
+        if (profileImgUrl !== undefined) updateData.profileImgUrl = profileImgUrl;
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ 
+                error: "No fields to update" 
+            }, { status: 400 });
+        }
+
+        const updatedUser = await db.update(users)
+            .set(updateData)
+            .where(eq(users.id, user.id))
+            .returning();
+
+        if (!updatedUser || updatedUser.length === 0) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: "Profile updated successfully",
+            user: {
+                id: updatedUser[0].id,
+                name: updatedUser[0].name,
+                email: updatedUser[0].email,
+                phoneNo: updatedUser[0].phoneNo,
+                description: updatedUser[0].description,
+                profileImgUrl: updatedUser[0].profileImgUrl,
+                roleType: updatedUser[0].roleType,
+                verified: updatedUser[0].verified
+            }
+        });
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        return NextResponse.json({ 
+            error: "Failed to update profile" 
+        }, { status: 500 });
+    }
+}
+
+// PATCH - Partial update (same as PUT but more RESTful)
+export async function PATCH(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { name, phoneNo, description, profileImgUrl } = body;
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (phoneNo !== undefined) updateData.phoneNo = phoneNo;
+        if (description !== undefined) updateData.description = description;
+        if (profileImgUrl !== undefined) updateData.profileImgUrl = profileImgUrl;
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ 
+                error: "No fields to update" 
+            }, { status: 400 });
+        }
+
+        const updatedUser = await db.update(users)
+            .set(updateData)
+            .where(eq(users.id, user.id))
+            .returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Profile updated successfully",
+            user: updatedUser[0]
+        });
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        return NextResponse.json({ 
+            error: "Failed to update profile" 
+        }, { status: 500 });
+    }
+}
+
+// DELETE - Delete user account
+export async function DELETE(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { password, confirmDelete } = body;
+
+        // Require confirmation
+        if (!confirmDelete) {
+            return NextResponse.json({ 
+                error: "Please confirm account deletion" 
+            }, { status: 400 });
+        }
+
+        // Get user to verify password
+        const existingUser = await db.select({
+            id: users.id,
+            password: users.password,
+            email: users.email
+        }).from(users)
+            .where(eq(users.id, user.id))
+            .then(res => res[0]);
+
+        if (!existingUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Verify password if user has password set
+        if (existingUser.password) {
+            if (!password) {
+                return NextResponse.json({ 
+                    error: "Password is required to delete account" 
+                }, { status: 400 });
+            }
+
+            const isValidPassword = await bcrypt.compare(password, existingUser.password);
+            if (!isValidPassword) {
+                return NextResponse.json({ 
+                    error: "Invalid password" 
+                }, { status: 401 });
+            }
+        }
+
+        // Delete user (cascade will handle related records if set up)
+        await db.delete(users).where(eq(users.id, user.id));
+
+        // Clear the cookie
+        const response = NextResponse.json({
+            success: true,
+            message: "Account deleted successfully"
+        });
+        response.cookies.delete("token");
+
+        return response;
+
+    } catch (error) {
+        console.error("Error deleting account:", error);
+        return NextResponse.json({ 
+            error: "Failed to delete account" 
+        }, { status: 500 });
+    }
+}
+
+// POST - Change password (additional endpoint)
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const body = await request.json();
+        const { currentPassword, newPassword, confirmNewPassword } = body;
+
+        // Validation
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            return NextResponse.json({ 
+                error: "All password fields are required" 
+            }, { status: 400 });
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return NextResponse.json({ 
+                error: "New passwords do not match" 
+            }, { status: 400 });
+        }
+
+        if (newPassword.length < 6) {
+            return NextResponse.json({ 
+                error: "Password must be at least 6 characters" 
+            }, { status: 400 });
+        }
+
+        // Get user with password
+        const existingUser = await db.select({
+            id: users.id,
+            password: users.password,
+            email: users.email
+        }).from(users)
+            .where(eq(users.id, user.id))
+            .then(res => res[0]);
+
+        if (!existingUser) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Verify current password
+        if (existingUser.password) {
+            const isValidPassword = await bcrypt.compare(currentPassword, existingUser.password);
+            if (!isValidPassword) {
+                return NextResponse.json({ 
+                    error: "Current password is incorrect" 
+                }, { status: 401 });
+            }
+        } else {
+            // User signed up with OAuth, can't change password
+            return NextResponse.json({ 
+                error: "This account uses OAuth. Password cannot be changed." 
+            }, { status: 400 });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        await db.update(users)
+            .set({ password: hashedPassword })
+            .where(eq(users.id, user.id));
+
+        return NextResponse.json({
+            success: true,
+            message: "Password changed successfully"
+        });
+
+    } catch (error) {
+        console.error("Error changing password:", error);
+        return NextResponse.json({ 
+            error: "Failed to change password" 
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\profile\image\route.ts
+
+================================================================================
+// app/api/user/profile/image/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+    
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Upload to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: `user_profiles/${user.id}`,
+          transformation: [{ width: 500, height: 500, crop: "fill" }],
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
+    });
+
+    return NextResponse.json({
+      success: true,
+      imageUrl: (result as any).secure_url,
+    });
+
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return NextResponse.json({ 
+      error: "Failed to upload image" 
+    }, { status: 500 });
+  }
+}
+
+
+
+
+================================================================================
+
+FILE: user\profile\[id]\route.ts
+
+================================================================================
+// app/api/user/profile/[id]/route.ts
+import { db } from "@/db";
+import { users, projects, roles, companies, internshipApplications, careerApplications } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        const userId = parseInt(id);
+
+        if (isNaN(userId)) {
+            return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+        }
+
+        // Check if requesting user is authenticated (optional)
+        const token = request.cookies.get("token")?.value;
+        let currentUserId: number | null = null;
+        
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+                currentUserId = decoded.id;
+            } catch (error) {
+                // Invalid token, proceed as unauthenticated
+            }
+        }
+
+        // Get user profile (public info)
+        const user = await db.select({
+            id: users.id,
+            name: users.name,
+            description: users.description,
+            profileImgUrl: users.profileImgUrl,
+            createdAt: users.createdAt,
+            roleType: users.roleType
+        }).from(users)
+            .where(eq(users.id, userId))
+            .then(res => res[0]);
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Get user's public projects
+        const userProjects = await db.select({
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            createdAt: projects.createdAt,
+            isPublic: projects.isPublic,
+            githubId: projects.githubId,
+            posts: projects.posts
+        }).from(projects)
+            .where(eq(projects.userId, userId))
+            .orderBy(projects.createdAt)
+            .limit(10);
+
+        // Filter projects based on visibility
+        const visibleProjects = userProjects.filter(project => 
+            project.isPublic || currentUserId === userId
+        );
+
+        // Get user's company roles
+        const userRoles = await db.select({
+            companyId: companies.id,
+            companyName: companies.name,
+            role: roles.role,
+            companyLogo: companies.logoUrl,
+            companyVerified: companies.verified
+        }).from(roles)
+            .innerJoin(companies, eq(roles.companyId, companies.id))
+            .where(eq(roles.userId, userId));
+
+        // Get stats (only for the user themselves)
+        let stats = null;
+        if (currentUserId === userId) {
+            const internshipAppsCount = await db.select()
+                .from(internshipApplications)
+                .where(eq(internshipApplications.userId, userId))
+                .then(res => res.length);
+
+            const careerAppsCount = await db.select()
+                .from(careerApplications)
+                .where(eq(careerApplications.userId, userId))
+                .then(res => res.length);
+
+            stats = {
+                totalProjects: userProjects.length,
+                totalInternshipApplications: internshipAppsCount,
+                totalCareerApplications: careerAppsCount,
+                totalApplications: internshipAppsCount + careerAppsCount
+            };
+        }
+
+        return NextResponse.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                description: user.description,
+                profileImgUrl: user.profileImgUrl,
+                createdAt: user.createdAt,
+                roleType: user.roleType
+            },
+            projects: visibleProjects,
+            companies: userRoles,
+            projectsCount: visibleProjects.length,
+            companiesCount: userRoles.length,
+            ...(stats && { stats })
+        });
+
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return NextResponse.json({ 
+            error: "Failed to fetch user",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\route.ts
+
+================================================================================
+// app/api/user/projects/route.ts
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        // Get user's projects
+        const userProjects = await db.select()
+            .from(projects)
+            .where(eq(projects.userId, user.id))
+            .orderBy(desc(projects.createdAt));
+
+        return NextResponse.json({ 
+            projects: userProjects,
+            total: userProjects.length
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\create\route.ts
+
+================================================================================
+// app/api/user/projects/create/route.ts
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: NextRequest) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+
+        const body = await request.json();
+        const { name, description, isPublic, githubId, posts } = body;
+
+        // Validation
+        if (!name) {
+            return NextResponse.json({ error: "Project name is required" }, { status: 400 });
+        }
+
+        // Create project
+        const [newProject] = await db.insert(projects).values({
+            name,
+            userId: user.id,
+            description: description || null,
+            isPublic: isPublic !== undefined ? isPublic : true,
+            githubId: githubId || null,
+            posts: posts || null
+        }).returning();
+
+        return NextResponse.json({
+            message: "Project created successfully",
+            project: newProject
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\github\[githubId]\route.ts
+
+================================================================================
+// app/api/user/projects/github/[githubId]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ githubId: string }> }
+) {
+    try {
+        // Await params - Next.js 15+ requirement
+        const { githubId } = await params;
+        
+        if (!githubId) {
+            return NextResponse.json({ error: "GitHub repository ID is required" }, { status: 400 });
+        }
+
+        // Fetch from GitHub API
+        const response = await fetch(`https://api.github.com/repos/${githubId}`, {
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                ...(process.env.GITHUB_TOKEN && {
+                    'Authorization': `token ${process.env.GITHUB_TOKEN}`
+                })
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                return NextResponse.json({ error: "GitHub repository not found" }, { status: 404 });
+            }
+            return NextResponse.json({ error: "Failed to fetch from GitHub API" }, { status: response.status });
+        }
+
+        const repoData = await response.json();
+
+        // Return relevant info
+        return NextResponse.json({
+            name: repoData.name,
+            fullName: repoData.full_name,
+            description: repoData.description,
+            stars: repoData.stargazers_count,
+            forks: repoData.forks_count,
+            language: repoData.language,
+            url: repoData.html_url,
+            createdAt: repoData.created_at,
+            updatedAt: repoData.updated_at,
+            owner: {
+                login: repoData.owner.login,
+                avatarUrl: repoData.owner.avatar_url,
+                url: repoData.owner.html_url
+            },
+            topics: repoData.topics || [],
+            license: repoData.license?.name || null,
+            defaultBranch: repoData.default_branch
+        });
+
+    } catch (error) {
+        console.error("Error fetching GitHub repo:", error);
+        return NextResponse.json({ 
+            error: "Failed to fetch GitHub repository",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\public\route.ts
+
+================================================================================
+// app/api/user/projects/public/route.ts
+import { db } from "@/db";
+import { projects, users } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+    try {
+        const searchParams = request.nextUrl.searchParams;
+        const page = parseInt(searchParams.get("page") || "1");
+        const limit = parseInt(searchParams.get("limit") || "10");
+        const offset = (page - 1) * limit;
+
+        // Get all public projects with user details
+        const publicProjects = await db.select({
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            createdAt: projects.createdAt,
+            isPublic: projects.isPublic,
+            githubId: projects.githubId,
+            posts: projects.posts,
+            userId: users.id,
+            userName: users.name,
+            userEmail: users.email,
+            userProfileImg: users.profileImgUrl
+        }).from(projects)
+            .innerJoin(users, eq(projects.userId, users.id))
+            .where(eq(projects.isPublic, true))
+            .orderBy(desc(projects.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        const total = await db.select()
+            .from(projects)
+            .where(eq(projects.isPublic, true));
+
+        return NextResponse.json({
+            projects: publicProjects,
+            pagination: {
+                page,
+                limit,
+                total: total.length,
+                totalPages: Math.ceil(total.length / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch public projects" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\search\route.ts
+
+================================================================================
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { and, eq, like } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+
+// app/api/user/projects/search/route.ts
+export async function GET(request: NextRequest) {
+    const searchParams = request.nextUrl.searchParams;
+    const query = searchParams.get("q");
+    
+    if (!query) {
+        return NextResponse.json({ error: "Search query required" }, { status: 400 });
+    }
+
+    const results = await db.select()
+        .from(projects)
+        .where(and(
+            eq(projects.isPublic, true),
+            like(projects.name, `%${query}%`)
+        ))
+        .limit(20);
+
+    return NextResponse.json({ projects: results });
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\[id]\route.ts
+
+================================================================================
+// app/api/user/projects/[id]/route.ts
+import { db } from "@/db";
+import { projects, users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        const project = await db.select({
+            id: projects.id,
+            name: projects.name,
+            description: projects.description,
+            createdAt: projects.createdAt,
+            isPublic: projects.isPublic,
+            githubId: projects.githubId,
+            posts: projects.posts,
+            userId: users.id,
+            userName: users.name,
+            userProfileImg: users.profileImgUrl
+        }).from(projects)
+            .innerJoin(users, eq(projects.userId, users.id))
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!project) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        // Check access
+        let isOwner = false;
+        let currentUser = null;
+        
+        if (token) {
+            try {
+                currentUser = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+                isOwner = currentUser.id === project.userId;
+            } catch (error) {
+                // Invalid token
+            }
+        }
+
+        if (!project.isPublic && !isOwner) {
+            return NextResponse.json({ 
+                error: "This project is private. You don't have access to view it." 
+            }, { status: 403 });
+        }
+
+        return NextResponse.json({ 
+            project: {
+                ...project,
+                isOwner
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching project:", error);
+        return NextResponse.json({ 
+            error: "Failed to fetch project",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+export async function PUT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        const existingProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!existingProject) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        if (existingProject.userId !== user.id) {
+            return NextResponse.json({ error: "You don't have permission to update this project" }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { name, description, isPublic, githubId, posts } = body;
+
+        const updatedProject = await db.update(projects)
+            .set({
+                name: name !== undefined ? name : existingProject.name,
+                description: description !== undefined ? description : existingProject.description,
+                isPublic: isPublic !== undefined ? isPublic : existingProject.isPublic,
+                githubId: githubId !== undefined ? githubId : existingProject.githubId,
+                posts: posts !== undefined ? posts : existingProject.posts
+            })
+            .where(eq(projects.id, projectId))
+            .returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Project updated successfully",
+            project: updatedProject[0]
+        });
+
+    } catch (error) {
+        console.error("Error updating project:", error);
+        return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
+    }
+}
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        const existingProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!existingProject) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        if (existingProject.userId !== user.id) {
+            return NextResponse.json({ error: "You don't have permission to delete this project" }, { status: 403 });
+        }
+
+        await db.delete(projects).where(eq(projects.id, projectId));
+
+        return NextResponse.json({
+            success: true,
+            message: "Project deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Error deleting project:", error);
+        return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\[id]\add-post\route.ts
+
+================================================================================
+// app/api/user/projects/[id]/add-post/route.ts
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+// GET - Fetch all posts of a project
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        const project = await db.select({
+            id: projects.id,
+            name: projects.name,
+            posts: projects.posts,
+            userId: projects.userId,
+            isPublic: projects.isPublic
+        }).from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!project) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        // Check permissions
+        let hasAccess = project.isPublic;
+        
+        if (token) {
+            try {
+                const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+                hasAccess = hasAccess || (user.id === project.userId);
+            } catch (error) {
+                // Invalid token, proceed with public access only
+            }
+        }
+
+        if (!hasAccess) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        return NextResponse.json({
+            projectId: project.id,
+            projectName: project.name,
+            posts: project.posts || [],
+            totalPosts: project.posts?.length || 0
+        });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
+    }
+}
+
+// POST - Add a new post
+export async function POST(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        // Check if project exists and user owns it
+        const existingProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!existingProject) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        if (existingProject.userId !== user.id) {
+            return NextResponse.json({ error: "You don't have permission to add posts to this project" }, { status: 403 });
+        }
+
+        const { url, title, description } = await request.json();
+        
+        if (!url) {
+            return NextResponse.json({ error: "URL is required" }, { status: 400 });
+        }
+
+        // Add new post to existing posts array
+        const currentPosts = existingProject.posts || [];
+        const newPost = { 
+            url,
+            title: title || null,
+            description: description || null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        const updatedPosts = [...currentPosts, newPost];
+
+        const updatedProject = await db.update(projects)
+            .set({ posts: updatedPosts })
+            .where(eq(projects.id, projectId))
+            .returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Post added successfully",
+            post: newPost,
+            totalPosts: updatedPosts.length,
+            posts: updatedProject[0].posts
+        }, { status: 201 });
+
+    } catch (error) {
+        console.error("Error adding post:", error);
+        return NextResponse.json({ 
+            error: "Failed to add post",
+            details: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
+    }
+}
+
+// DELETE - Remove a post
+export async function DELETE(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+
+        const searchParams = request.nextUrl.searchParams;
+        const postIndex = parseInt(searchParams.get("index") || "-1");
+
+        if (postIndex === -1 || isNaN(postIndex)) {
+            return NextResponse.json({ error: "Post index is required" }, { status: 400 });
+        }
+
+        // Check if project exists and user owns it
+        const existingProject = await db.select()
+            .from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!existingProject) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        if (existingProject.userId !== user.id) {
+            return NextResponse.json({ error: "You don't have permission to delete posts from this project" }, { status: 403 });
+        }
+
+        const currentPosts = existingProject.posts || [];
+        
+        if (postIndex >= currentPosts.length) {
+            return NextResponse.json({ error: "Post not found" }, { status: 404 });
+        }
+
+        // Remove post at index
+        const updatedPosts = currentPosts.filter((_, index) => index !== postIndex);
+
+        const updatedProject = await db.update(projects)
+            .set({ posts: updatedPosts })
+            .where(eq(projects.id, projectId))
+            .returning();
+
+        return NextResponse.json({
+            success: true,
+            message: "Post deleted successfully",
+            totalPosts: updatedPosts.length,
+            posts: updatedProject[0].posts
+        });
+
+    } catch (error) {
+        console.error("Error deleting post:", error);
+        return NextResponse.json({ error: "Failed to delete post" }, { status: 500 });
+    }
+}
+
+
+
+
+================================================================================
+
+FILE: user\projects\[id]\stats\route.ts
+
+================================================================================
+// app/api/user/projects/[id]/stats/route.ts
+import { db } from "@/db";
+import { projects } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const token = request.cookies.get("token")?.value;
+        
+        // Await params - Next.js 15+ requirement
+        const { id } = await params;
+        const projectId = parseInt(id);
+
+        if (isNaN(projectId)) {
+            return NextResponse.json({ error: "Invalid project ID" }, { status: 400 });
+        }
+        
+        // Get project
+        const project = await db.select({
+            id: projects.id,
+            name: projects.name,
+            createdAt: projects.createdAt,
+            isPublic: projects.isPublic,
+            githubId: projects.githubId,
+            posts: projects.posts,
+            userId: projects.userId
+        }).from(projects)
+            .where(eq(projects.id, projectId))
+            .then(res => res[0]);
+
+        if (!project) {
+            return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        }
+
+        // Check access (only owner or public project)
+        let isOwner = false;
+        
+        if (token) {
+            try {
+                const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+                isOwner = user.id === project.userId;
+            } catch (error) {
+                // Invalid token
+            }
+        }
+
+        if (!project.isPublic && !isOwner) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        // Calculate stats
+        const stats = {
+            id: project.id,
+            name: project.name,
+            createdAt: project.createdAt,
+            isPublic: project.isPublic,
+            hasGithub: !!project.githubId,
+            postsCount: project.posts?.length || 0,
+            githubUrl: project.githubId ? `https://github.com/${project.githubId}` : null
+        };
+
+        return NextResponse.json({ stats });
+
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to fetch project stats" }, { status: 500 });
+    }
+}
+

@@ -1,4 +1,4 @@
-// app/dashboard/internships/page.tsx
+// app/dashboard/internships/page.tsx - Fixed version
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -46,48 +46,43 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 
+// Updated interface matching API response
 interface Internship {
   id: number;
   title: string;
-  company: string;
-  companyLogo: string;
-  location: string;
-  type: string;
+  description: string;
   duration: string;
-  stipend: string;
-  deadline: string;
-  posted: string;
-  applicants: number;
-  status: 'active' | 'closing';
-  skills?: string[]; // Made optional with fallback
-  description?: string;
-  requirements?: string[];
-  perks?: string[];
-  isApplied?: boolean;
-  isSaved?: boolean;
+  lastApplyDate: string | null;
+  isLive: boolean;
+  active: boolean;
+  createdAt: string;
+  autoCancel: boolean;
+  company: {
+    id: number;
+    name: string;
+    logo: string | null;
+    category: string | null;
+    verified: boolean;
+  };
+  applicationStatus: {
+    hasApplied: boolean;
+    applicationId: number | null;
+    certificateUnlocked: boolean;
+  };
 }
-
-// Default fallback values
-const defaultInternship: Partial<Internship> = {
-  skills: [],
-  requirements: [],
-  perks: [],
-  description: 'No description available',
-  type: 'Internship',
-  duration: 'Not specified',
-  stipend: 'Unpaid',
-  status: 'active',
-};
 
 export default function InternshipsPage() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [selectedCompany, setSelectedCompany] = useState('all');
+  const [selectedDuration, setSelectedDuration] = useState('all');
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
   const [applying, setApplying] = useState(false);
   const [saving, setSaving] = useState<number | null>(null);
+
+  // Get unique companies for filter
+  const uniqueCompanies = [...new Set(internships.map(i => i.company.name))];
 
   // Fetch internships from API
   useEffect(() => {
@@ -102,24 +97,18 @@ export default function InternshipsPage() {
         }
         
         const data = await response.json();
+        console.log('API Response:', data); // Debug log
         
-        // Ensure each internship has required fields with fallbacks
-        const internshipsWithDefaults = (data.internships || []).map((internship: Internship) => ({
-          ...defaultInternship,
-          ...internship,
-          skills: internship.skills || [],
-          requirements: internship.requirements || [],
-          perks: internship.perks || [],
-          description: internship.description || 'No description available',
-        }));
-        
-        setInternships(internshipsWithDefaults);
+        if (data.success && data.internships) {
+          setInternships(data.internships);
+        } else {
+          setInternships([]);
+        }
       } catch (error) {
         console.error('Error fetching internships:', error);
         toast.error('Failed to load internships', {
           description: 'Please try again later.',
         });
-        // Set empty array on error
         setInternships([]);
       } finally {
         setLoading(false);
@@ -147,10 +136,21 @@ export default function InternshipsPage() {
         credentials: 'include',
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setInternships(prev =>
           prev.map(i =>
-            i.id === internshipId ? { ...i, isApplied: true } : i
+            i.id === internshipId 
+              ? { 
+                  ...i, 
+                  applicationStatus: { 
+                    ...i.applicationStatus, 
+                    hasApplied: true,
+                    applicationId: data.application?.id || null
+                  } 
+                } 
+              : i
           )
         );
         
@@ -162,8 +162,7 @@ export default function InternshipsPage() {
         
         setSelectedInternship(null);
       } else {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to apply');
+        throw new Error(data.message || 'Failed to apply');
       }
     } catch (error: any) {
       toast.error('Application Failed', {
@@ -176,63 +175,42 @@ export default function InternshipsPage() {
     }
   };
 
-  // Save internship
+  // Save internship (mock for now - implement API later)
   const handleSave = async (internshipId: number) => {
     setSaving(internshipId);
     
-    const internship = internships.find(i => i.id === internshipId);
-    const isCurrentlySaved = internship?.isSaved;
+    toast.info('Save Feature', {
+      description: 'This feature will be implemented soon!',
+      duration: 2000,
+    });
     
-    try {
-      const response = await fetch('/api/user/internships/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ internshipId }),
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        setInternships(prev =>
-          prev.map(i =>
-            i.id === internshipId ? { ...i, isSaved: !i.isSaved } : i
-          )
-        );
-        
-        toast.success(isCurrentlySaved ? 'Removed from saved' : 'Saved!', {
-          description: isCurrentlySaved 
-            ? 'Internship removed from your saved list.' 
-            : 'Internship saved to your profile.',
-          duration: 2000,
-        });
-      }
-    } catch (error) {
-      toast.error('Error', {
-        description: 'Failed to save internship. Please try again.',
-      });
-    } finally {
-      setSaving(null);
-    }
+    setSaving(null);
   };
 
   const filteredInternships = internships.filter((internship) => {
     const matchesSearch = internship.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      internship.company?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === 'all' || internship.type === selectedType;
-    const matchesLocation = selectedLocation === 'all' || internship.location?.includes(selectedLocation);
-    return matchesSearch && matchesType && matchesLocation;
+      internship.company.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCompany = selectedCompany === 'all' || internship.company.name === selectedCompany;
+    const matchesDuration = selectedDuration === 'all' || 
+      (selectedDuration === 'lessThan3' && parseInt(internship.duration) < 3) ||
+      (selectedDuration === '3to6' && parseInt(internship.duration) >= 3 && parseInt(internship.duration) <= 6) ||
+      (selectedDuration === 'moreThan6' && parseInt(internship.duration) > 6);
+    
+    return matchesSearch && matchesCompany && matchesDuration;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'closing':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
+  const formatDate = (date: string | null) => {
+    if (!date) return 'Not specified';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getDurationNumber = (duration: string) => {
+    const match = duration.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
   };
 
   // Loading skeleton
@@ -305,12 +283,12 @@ export default function InternshipsPage() {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="rounded-lg bg-green-100 p-2">
-              <Users className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-600" />
             </div>
             <div>
               <p className="text-xs text-gray-500">Your Applications</p>
               <p className="text-xl font-bold">
-                {internships.filter(i => i.isApplied).length}
+                {internships.filter(i => i.applicationStatus.hasApplied).length}
               </p>
             </div>
           </CardContent>
@@ -322,9 +300,7 @@ export default function InternshipsPage() {
             </div>
             <div>
               <p className="text-xs text-gray-500">Saved Jobs</p>
-              <p className="text-xl font-bold">
-                {internships.filter(i => i.isSaved).length}
-              </p>
+              <p className="text-xl font-bold">0</p>
             </div>
           </CardContent>
         </Card>
@@ -353,28 +329,29 @@ export default function InternshipsPage() {
               className="pl-9"
             />
           </div>
-          <div className="flex gap-2">
-            <Select value={selectedType} onValueChange={setSelectedType}>
+          <div className="flex gap-2 flex-wrap">
+            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Job Type" />
+                <SelectValue placeholder="Company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Full-time">Full-time</SelectItem>
-                <SelectItem value="Part-time">Part-time</SelectItem>
-                <SelectItem value="Internship">Internship</SelectItem>
+                <SelectItem value="all">All Companies</SelectItem>
+                {uniqueCompanies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <Select value={selectedDuration} onValueChange={setSelectedDuration}>
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Location" />
+                <SelectValue placeholder="Duration" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="Jaipur">Jaipur</SelectItem>
-                <SelectItem value="Bangalore">Bangalore</SelectItem>
-                <SelectItem value="Mumbai">Mumbai</SelectItem>
-                <SelectItem value="Remote">Remote</SelectItem>
+                <SelectItem value="all">All Durations</SelectItem>
+                <SelectItem value="lessThan3">Less than 3 months</SelectItem>
+                <SelectItem value="3to6">3-6 months</SelectItem>
+                <SelectItem value="moreThan6">More than 6 months</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -403,12 +380,12 @@ export default function InternshipsPage() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-12 w-12">
                         <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                          {internship.companyLogo || internship.company?.charAt(0) || 'C'}
+                          {internship.company.name?.charAt(0) || 'C'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <CardTitle className="text-lg line-clamp-1">{internship.title || 'Untitled'}</CardTitle>
-                        <CardDescription className="text-sm">{internship.company || 'Unknown Company'}</CardDescription>
+                        <CardTitle className="text-lg line-clamp-1">{internship.title}</CardTitle>
+                        <CardDescription className="text-sm">{internship.company.name}</CardDescription>
                       </div>
                     </div>
                     <div className="flex gap-1">
@@ -422,14 +399,11 @@ export default function InternshipsPage() {
                         {saving === internship.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Bookmark className={`h-4 w-4 ${internship.isSaved ? 'fill-indigo-600 text-indigo-600' : ''}`} />
+                          <Bookmark className="h-4 w-4" />
                         )}
                       </Button>
-                      <Badge className={getStatusColor(internship.status || 'active')}>
-                        <span className="flex items-center gap-1 text-xs">
-                          {internship.status === 'active' ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                          {internship.status === 'active' ? 'Active' : 'Closing Soon'}
-                        </span>
+                      <Badge className={internship.isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                        {internship.isLive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
                   </div>
@@ -438,55 +412,34 @@ export default function InternshipsPage() {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="flex items-center gap-1 text-gray-600">
                       <MapPin className="h-3 w-3" />
-                      <span className="text-xs">{internship.location || 'Location not specified'}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <Briefcase className="h-3 w-3" />
-                      <span className="text-xs">{internship.type || 'Internship'}</span>
+                      <span className="text-xs">{internship.company.category || 'Remote'}</span>
                     </div>
                     <div className="flex items-center gap-1 text-gray-600">
                       <Clock className="h-3 w-3" />
-                      <span className="text-xs">{internship.duration || 'Not specified'}</span>
+                      <span className="text-xs">{internship.duration}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-green-600 font-medium">
-                      <DollarSign className="h-3 w-3" />
-                      <span className="text-xs">{internship.stipend || 'Unpaid'}</span>
+                    <div className="flex items-center gap-1 text-gray-600">
+                      <Building className="h-3 w-3" />
+                      <span className="text-xs">
+                        {internship.company.verified ? 'Verified' : 'Unverified'}
+                      </span>
                     </div>
                   </div>
                   
-                  {/* Fixed: Safe check for skills array */}
-                  <div className="flex flex-wrap gap-1 pt-1">
-                    {internship.skills && internship.skills.length > 0 ? (
-                      <>
-                        {internship.skills.slice(0, 3).map((skill) => (
-                          <Badge key={skill} variant="secondary" className="text-[10px]">
-                            {skill}
-                          </Badge>
-                        ))}
-                        {internship.skills.length > 3 && (
-                          <Badge variant="secondary" className="text-[10px]">
-                            +{internship.skills.length - 3}
-                          </Badge>
-                        )}
-                      </>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px]">
-                        No skills listed
-                      </Badge>
-                    )}
-                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {internship.description}
+                  </p>
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
                     <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span>{internship.applicants || 0} applicants</span>
+                      <Calendar className="h-3 w-3" />
+                      <span>Posted: {formatDate(internship.createdAt)}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>Deadline: {internship.deadline ? new Date(internship.deadline).toLocaleDateString() : 'Not specified'}</span>
+                      <AlertCircle className="h-3 w-3" />
+                      <span>Deadline: {formatDate(internship.lastApplyDate)}</span>
                     </div>
                   </div>
-                  <Progress value={Math.min((internship.applicants || 0) / 100 * 100, 100)} className="h-1" />
                 </CardContent>
                 <CardFooter className="pt-3 flex gap-2">
                   <Button 
@@ -500,10 +453,10 @@ export default function InternshipsPage() {
                   <Button 
                     className="flex-1 gap-2 text-sm"
                     onClick={() => handleApply(internship.id)}
-                    disabled={internship.isApplied || applying}
-                    variant={internship.isApplied ? "outline" : "default"}
+                    disabled={internship.applicationStatus.hasApplied || applying}
+                    variant={internship.applicationStatus.hasApplied ? "outline" : "default"}
                   >
-                    {internship.isApplied ? (
+                    {internship.applicationStatus.hasApplied ? (
                       <>
                         <CheckCircle className="h-3 w-3" />
                         Applied
@@ -528,19 +481,21 @@ export default function InternshipsPage() {
                 <div className="flex items-start gap-4">
                   <Avatar className="h-14 w-14">
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-lg">
-                      {selectedInternship.companyLogo || selectedInternship.company?.charAt(0) || 'C'}
+                      {selectedInternship.company.name?.charAt(0) || 'C'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <DialogTitle className="text-2xl">{selectedInternship.title || 'Untitled'}</DialogTitle>
+                    <DialogTitle className="text-2xl">{selectedInternship.title}</DialogTitle>
                     <DialogDescription className="text-base">
-                      {selectedInternship.company || 'Unknown Company'}
+                      {selectedInternship.company.name}
                     </DialogDescription>
                     <div className="flex gap-2 mt-2">
-                      <Badge className={getStatusColor(selectedInternship.status || 'active')}>
-                        {selectedInternship.status === 'active' ? 'Active' : 'Closing Soon'}
+                      <Badge className={selectedInternship.isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                        {selectedInternship.isLive ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Badge variant="outline">{selectedInternship.type || 'Internship'}</Badge>
+                      <Badge variant="outline">
+                        {selectedInternship.company.verified ? 'Verified Company' : 'Company'}
+                      </Badge>
                     </div>
                   </div>
                   <Button
@@ -552,7 +507,7 @@ export default function InternshipsPage() {
                     {saving === selectedInternship.id ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      <Bookmark className={`h-5 w-5 ${selectedInternship.isSaved ? 'fill-indigo-600 text-indigo-600' : ''}`} />
+                      <Bookmark className="h-5 w-5" />
                     )}
                   </Button>
                 </div>
@@ -561,83 +516,58 @@ export default function InternshipsPage() {
               <Tabs defaultValue="details" className="space-y-4">
                 <TabsList className="w-full">
                   <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-                  <TabsTrigger value="requirements" className="flex-1">Requirements</TabsTrigger>
-                  <TabsTrigger value="perks" className="flex-1">Perks</TabsTrigger>
+                  <TabsTrigger value="description" className="flex-1">Description</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="space-y-4">
                   <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                     <div>
+                      <p className="text-xs text-gray-500">Company</p>
+                      <p className="font-medium text-sm">{selectedInternship.company.name}</p>
+                    </div>
+                    <div>
                       <p className="text-xs text-gray-500">Location</p>
-                      <p className="font-medium text-sm">{selectedInternship.location || 'Not specified'}</p>
+                      <p className="font-medium text-sm">{selectedInternship.company.category || 'Remote'}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Duration</p>
-                      <p className="font-medium text-sm">{selectedInternship.duration || 'Not specified'}</p>
+                      <p className="font-medium text-sm">{selectedInternship.duration}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Stipend</p>
-                      <p className="font-medium text-sm text-green-600">{selectedInternship.stipend || 'Unpaid'}</p>
+                      <p className="text-xs text-gray-500">Posted Date</p>
+                      <p className="font-medium text-sm">{formatDate(selectedInternship.createdAt)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Posted</p>
-                      <p className="font-medium text-sm">{selectedInternship.posted ? new Date(selectedInternship.posted).toLocaleDateString() : 'Not specified'}</p>
+                      <p className="text-xs text-gray-500">Last Apply Date</p>
+                      <p className="font-medium text-sm">{formatDate(selectedInternship.lastApplyDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Auto Cancel</p>
+                      <p className="font-medium text-sm">{selectedInternship.autoCancel ? 'Yes' : 'No'}</p>
                     </div>
                   </div>
                   
-                  <div>
-                    <h4 className="font-semibold mb-2">Description</h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                      {selectedInternship.description || 'No description available'}
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-2">Required Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedInternship.skills && selectedInternship.skills.length > 0 ? (
-                        selectedInternship.skills.map((skill) => (
-                          <Badge key={skill} variant="secondary">
-                            {skill}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-500">No specific skills required</span>
+                  {selectedInternship.applicationStatus.hasApplied && (
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="font-medium text-green-700">You have applied for this internship</span>
+                      </div>
+                      {selectedInternship.applicationStatus.certificateUnlocked && (
+                        <p className="text-sm text-green-600 mt-2">
+                          Certificate has been unlocked for this internship!
+                        </p>
                       )}
                     </div>
-                  </div>
+                  )}
                 </TabsContent>
 
-                <TabsContent value="requirements">
+                <TabsContent value="description">
                   <Card>
-                    <CardContent className="p-4 space-y-3">
-                      {selectedInternship.requirements && selectedInternship.requirements.length > 0 ? (
-                        selectedInternship.requirements.map((req, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{req}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-gray-500">No specific requirements listed</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="perks">
-                  <Card>
-                    <CardContent className="p-4 space-y-3">
-                      {selectedInternship.perks && selectedInternship.perks.length > 0 ? (
-                        selectedInternship.perks.map((perk, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <Building className="h-4 w-4 text-indigo-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm">{perk}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-gray-500">No perks mentioned</p>
-                      )}
+                    <CardContent className="p-4">
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {selectedInternship.description}
+                      </p>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -651,9 +581,9 @@ export default function InternshipsPage() {
                 </Button>
                 <Button
                   onClick={() => handleApply(selectedInternship.id)}
-                  disabled={selectedInternship.isApplied || applying}
+                  disabled={selectedInternship.applicationStatus.hasApplied || applying}
                 >
-                  {selectedInternship.isApplied ? (
+                  {selectedInternship.applicationStatus.hasApplied ? (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Already Applied

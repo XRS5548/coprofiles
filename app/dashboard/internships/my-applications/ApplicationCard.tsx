@@ -16,10 +16,32 @@ interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, index, onViewDetails }: ApplicationCardProps) {
-  const appliedDate = new Date(application.appliedAt).toLocaleDateString();
+  // Use appliedDate instead of appliedAt
+  const appliedDate = application.appliedDate 
+    ? new Date(application.appliedDate).toLocaleDateString() 
+    : 'Date not available';
+    
   const lastApplyDate = application.lastApplyDate 
     ? new Date(application.lastApplyDate).toLocaleDateString() 
     : null;
+
+  // Get status badge color and text
+  const getStatusBadge = () => {
+    switch (application.status) {
+      case 'pending':
+        return { color: 'bg-yellow-100 text-yellow-700', text: 'Pending Review' };
+      case 'accepted':
+        return { color: 'bg-green-100 text-green-700', text: 'Accepted' };
+      case 'rejected':
+        return { color: 'bg-red-100 text-red-700', text: 'Rejected' };
+      case 'completed':
+        return { color: 'bg-blue-100 text-blue-700', text: 'Completed' };
+      default:
+        return { color: 'bg-gray-100 text-gray-700', text: 'Unknown' };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
 
   return (
     <motion.div
@@ -37,7 +59,7 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
                   <AvatarImage src={application.companyLogo} alt={application.companyName} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-lg">
-                    {application.companyName.charAt(0)}
+                    {application.companyName?.charAt(0) || 'C'}
                   </AvatarFallback>
                 )}
               </Avatar>
@@ -54,16 +76,16 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
                     <Calendar className="h-3 w-3" />
                     Applied: {appliedDate}
                   </span>
+                  {application.rollNo && (
+                    <span className="flex items-center gap-1">
+                      Roll No: {application.rollNo}
+                    </span>
+                  )}
                   {application.certificateUnlocked && (
                     <span className="flex items-center gap-1 text-green-600">
                       <Award className="h-3 w-3" />
                       Certificate Ready
-                    </span>
-                  )}
-                  {!application.internshipActive && (
-                    <Badge variant="secondary" className="text-xs">
-                      Closed
-                    </Badge>
+                  </span>
                   )}
                   {lastApplyDate && (
                     <span className="flex items-center gap-1 text-orange-600">
@@ -77,9 +99,14 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
 
             {/* Status Badge */}
             <div className="flex flex-col items-end gap-2">
-              <Badge className={application.internshipActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}>
-                {application.internshipActive ? 'Active' : 'Closed'}
+              <Badge className={statusBadge.color}>
+                {statusBadge.text}
               </Badge>
+              {application.examDate && (
+                <Badge variant="outline" className="text-xs">
+                  Exam: {new Date(application.examDate).toLocaleDateString()}
+                </Badge>
+              )}
             </div>
           </div>
 

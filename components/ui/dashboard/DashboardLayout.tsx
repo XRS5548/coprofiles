@@ -24,6 +24,7 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
+  Award,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -68,22 +69,27 @@ const navItems: NavItem[] = [
     name: 'Internships', 
     href: '/dashboard/internships', 
     icon: GraduationCap, 
-    badge: 3 
+     
   },
   { 
     name: 'My Applications', 
     href: '/dashboard/internships/my-applications', 
     icon: FileText, 
-    badge: 4
+    
   },
   { 
     name: 'My Jobs History',
     href: '/dashboard/my-jobs-history', 
     icon: Clock, 
-    badge: 5
+    
   },
-  { name: 'Careers', href: '/dashboard/careers', icon: Briefcase, badge: 2 },
+  { name: 'Careers', href: '/dashboard/careers', icon: Briefcase},
   { name: 'Projects', href: '/dashboard/projects', icon: FolderOpen },
+  { 
+    name: 'Certificates', 
+    href: '/dashboard/certificates', 
+    icon: Award,
+  },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 

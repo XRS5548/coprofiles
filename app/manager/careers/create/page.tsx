@@ -1,34 +1,43 @@
 // app/manager/careers/create/page.tsx
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { 
-  ArrowLeft, Save, Building2, DollarSign, 
-  Star, AlertCircle, Briefcase, TrendingUp
-} from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { ArrowLeft, Save, Loader2, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Company {
   id: number;
   name: string;
-  role: string;
+  logoUrl: string | null;
+  category: string | null;
 }
 
 export default function CreateCareerPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    position: "",
-    companyId: "",
-    content: "",
-    salary: "",
-    tierScore: "",
-    tierListId: ""
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Form fields
+  const [name, setName] = useState('');
+  const [position, setPosition] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [salary, setSalary] = useState('');
+  const [tierScore, setTierScore] = useState('');
+  const [content, setContent] = useState('');
 
   useEffect(() => {
     fetchCompanies();
@@ -36,249 +45,212 @@ export default function CreateCareerPage() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch("/api/manager/companies", {
-        credentials: "include",
+      const response = await fetch('/api/manager/companies', {
+        credentials: 'include',
       });
       const data = await response.json();
-      if (response.ok) {
-        setCompanies(data.companies || []);
-        if (data.companies?.length === 1) {
-          setFormData(prev => ({ ...prev, companyId: data.companies[0].id.toString() }));
-        }
-      }
+      setCompanies(data.companies || []);
     } catch (error) {
-      console.error("Error fetching companies:", error);
+      console.error('Error fetching companies:', error);
+      toast.error('Failed to load companies');
+    } finally {
+      setLoadingCompanies(false);
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = "Job title is required";
-    if (!formData.companyId) newErrors.companyId = "Please select a company";
-    if (formData.salary && (parseInt(formData.salary) < 0)) {
-      newErrors.salary = "Salary must be a positive number";
+  const handleSubmit = async () => {
+    // Validation
+    if (!name.trim()) {
+      toast.error('Job title is required');
+      return;
     }
-    if (formData.tierScore && (parseInt(formData.tierScore) < 0 || parseInt(formData.tierScore) > 100)) {
-      newErrors.tierScore = "Tier score must be between 0 and 100";
+    
+    if (!companyId) {
+      toast.error('Please select a company');
+      return;
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const response = await fetch("/api/manager/careers/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      const response = await fetch('/api/manager/careers/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          position: formData.position || null,
-          companyId: parseInt(formData.companyId),
-          content: formData.content || null,
-          salary: formData.salary ? parseInt(formData.salary) : null,
-          tierScore: formData.tierScore ? parseInt(formData.tierScore) : null,
-          tierListId: formData.tierListId ? parseInt(formData.tierListId) : null,
+          name: name.trim(),
+          position: position.trim() || null,
+          companyId: parseInt(companyId),
+          salary: salary ? parseInt(salary) : null,
+          tierScore: tierScore ? parseInt(tierScore) : null,
+          content: content.trim() || null,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();
-      if (response.ok) {
-        router.push("/manager/careers");
-      } else {
-        setErrors({ submit: data.error || "Failed to create career" });
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create job');
       }
+
+      toast.success('Job posted successfully!');
+      router.push('/manager/careers');
     } catch (error) {
-      setErrors({ submit: "Something went wrong" });
+      console.error('Error creating career:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create job');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gray-900/50 border-b border-gray-800">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/manager/careers"
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                Create Career Opening
-              </h1>
-              <p className="text-gray-400 mt-1">Post a new job position</p>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={() => router.back()} className="-ml-2">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
       </div>
 
-      <div className="container mx-auto px-6 py-8 max-w-3xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Error Message */}
-          {errors.submit && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-400" />
-              <p className="text-red-400 text-sm">{errors.submit}</p>
-            </div>
-          )}
+      {/* Form Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">Post New Job</CardTitle>
+          <p className="text-sm text-gray-500 mt-1">Fill in the details to create a new job posting</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Job Title */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Job Title *</Label>
+            <Input
+              id="name"
+              placeholder="e.g., Senior Software Engineer"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <p className="text-xs text-gray-500">Enter the full job title as it will appear to candidates</p>
+          </div>
+
+          {/* Position / Job Type */}
+          <div className="space-y-2">
+            <Label htmlFor="position">Position / Job Type</Label>
+            <Input
+              id="position"
+              placeholder="e.g., Full-time, Remote, Hybrid, On-site"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+            />
+            <p className="text-xs text-gray-500">Specify work type, location, or employment type</p>
+          </div>
 
           {/* Company Selection */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Company <span className="text-red-400">*</span>
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="company">Company *</Label>
+            <Select value={companyId} onValueChange={setCompanyId}>
+              <SelectTrigger className={!companyId && !loadingCompanies ? 'border-red-500' : ''}>
+                <SelectValue placeholder={loadingCompanies ? "Loading companies..." : "Select a company"} />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingCompanies ? (
+                  <SelectItem value="loading" disabled>Loading...</SelectItem>
+                ) : (
+                  companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        {company.name}
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500">Select the company offering this position</p>
+          </div>
+
+          {/* Salary */}
+          <div className="space-y-2">
+            <Label htmlFor="salary">Salary (per year)</Label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <select
-                value={formData.companyId}
-                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white appearance-none"
-              >
-                <option value="">Select a company</option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+              <Input
+                id="salary"
+                type="number"
+                placeholder="e.g., 1200000"
+                className="pl-8"
+                value={salary}
+                onChange={(e) => setSalary(e.target.value)}
+              />
             </div>
-            {errors.companyId && (
-              <p className="text-red-400 text-sm mt-1">{errors.companyId}</p>
-            )}
+            <p className="text-xs text-gray-500">Enter amount in rupees (e.g., 1200000 for ₹12 LPA). Leave empty if not disclosed</p>
           </div>
 
-          {/* Job Details */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Job Details</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Job Title <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., Senior Software Engineer"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Position / Specialization
-                </label>
-                <input
-                  type="text"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="e.g., Backend Developer, Frontend Lead"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Job Description
-                </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={6}
-                  placeholder="Describe the role, responsibilities, requirements, benefits..."
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white resize-y"
-                />
-              </div>
-            </div>
+          {/* Tier Score */}
+          <div className="space-y-2">
+            <Label htmlFor="tierScore">Tier Score</Label>
+            <Input
+              id="tierScore"
+              type="number"
+              placeholder="e.g., 1, 2, 3"
+              min="1"
+              max="5"
+              value={tierScore}
+              onChange={(e) => setTierScore(e.target.value)}
+            />
+            <p className="text-xs text-gray-500">
+              Company tier rating (1=Highest tier, 2=Medium tier, 3=Basic tier). Used for ranking jobs
+            </p>
           </div>
 
-          {/* Compensation & Scoring */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Compensation & Scoring</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Annual Salary (₹)
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="number"
-                    value={formData.salary}
-                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                    placeholder="e.g., 1500000"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Enter amount in INR</p>
-                {errors.salary && (
-                  <p className="text-red-400 text-sm mt-1">{errors.salary}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tier Score (0-100)
-                </label>
-                <div className="relative">
-                  <Star className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="number"
-                    value={formData.tierScore}
-                    onChange={(e) => setFormData({ ...formData, tierScore: e.target.value })}
-                    placeholder="e.g., 85"
-                    min="0"
-                    max="100"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-green-500 text-white"
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Higher score = Better ranking</p>
-                {errors.tierScore && (
-                  <p className="text-red-400 text-sm mt-1">{errors.tierScore}</p>
-                )}
-              </div>
-            </div>
+          {/* Job Description */}
+          <div className="space-y-2">
+            <Label htmlFor="content">Job Description</Label>
+            <Textarea
+              id="content"
+              placeholder="Describe the job responsibilities, requirements, qualifications, benefits, and other important details..."
+              rows={12}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500">
+              Provide a detailed description of the role, including:
+              • Key responsibilities
+              • Required skills and experience
+              • Qualifications
+              • Benefits and perks
+              • Application process
+            </p>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Submit Button */}
-          <div className="flex gap-4">
-            <Link
-              href="/manager/careers"
-              className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-green-500 hover:bg-green-600 rounded-lg transition disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              {loading ? "Creating..." : "Create Career"}
-            </button>
-          </div>
-        </form>
+      {/* Form Actions */}
+      <div className="flex justify-end gap-4">
+        <Button 
+          variant="outline" 
+          onClick={() => router.back()}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={loading}
+          className="min-w-[120px]"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Post Job
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

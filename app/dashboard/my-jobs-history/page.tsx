@@ -1,4 +1,4 @@
-// app/dashboard/my-jobs-history/page.tsx
+// app/dashboard/my-jobs-history/page.tsx - Updated with new fields
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,6 +17,7 @@ export default function MyJobsHistoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
   const [sortBy, setSortBy] = useState('newest');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Fetch applications from API
   useEffect(() => {
@@ -33,10 +34,17 @@ export default function MyJobsHistoryPage() {
         const data = await response.json();
         const apiApplications: JobApplication[] = data.applications || [];
         
-        // Fix the appliedAt timestamp (convert from seconds to milliseconds if needed)
+        // Fix the appliedAt timestamp and ensure all fields are present
         const fixedApplications = apiApplications.map(app => ({
           ...app,
-          appliedAt: app.appliedAt < 10000000000 ? app.appliedAt * 1000 : app.appliedAt
+          status: app.status || 'pending',
+          officeId: app.officeId || null,
+          appliedAt: app.appliedAt < 10000000000 ? app.appliedAt * 1000 : app.appliedAt,
+          interviewDate: app.interviewDate ? (app.interviewDate < 10000000000 ? app.interviewDate * 1000 : app.interviewDate) : null,
+          joiningDate: app.joiningDate ? (app.joiningDate < 10000000000 ? app.joiningDate * 1000 : app.joiningDate) : null,
+          feedback: app.feedback || null,
+          offerLetterUrl: app.offerLetterUrl || null,
+          salaryOffered: app.salaryOffered || null,
         }));
         
         setApplications(fixedApplications);
@@ -67,6 +75,13 @@ export default function MyJobsHistoryPage() {
     thisMonth: applications.filter(app => getMonthYear(app.appliedAt) === currentMonthYear).length,
     lastMonth: applications.filter(app => getMonthYear(app.appliedAt) === lastMonthYear).length,
     companies: new Set(applications.map(app => app.companyName)).size,
+    pending: applications.filter(app => app.status === 'pending').length,
+    reviewing: applications.filter(app => app.status === 'reviewing').length,
+    shortlisted: applications.filter(app => app.status === 'shortlisted').length,
+    interview: applications.filter(app => app.status === 'interview').length,
+    accepted: applications.filter(app => app.status === 'accepted').length,
+    rejected: applications.filter(app => app.status === 'rejected').length,
+    hired: applications.filter(app => app.status === 'hired').length,
   };
 
   // Filter and sort applications
@@ -76,7 +91,10 @@ export default function MyJobsHistoryPage() {
         app.careerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (app.position && app.position.toLowerCase().includes(searchTerm.toLowerCase()));
-      return matchesSearch;
+      
+      const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       if (sortBy === 'newest') {
@@ -87,6 +105,8 @@ export default function MyJobsHistoryPage() {
         return a.companyName.localeCompare(b.companyName);
       } else if (sortBy === 'position') {
         return (a.position || '').localeCompare(b.position || '');
+      } else if (sortBy === 'status') {
+        return a.status.localeCompare(b.status);
       }
       return 0;
     });
@@ -164,11 +184,13 @@ export default function MyJobsHistoryPage() {
         onSearchChange={setSearchTerm}
         sortBy={sortBy}
         onSortChange={setSortBy}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
       />
 
       {/* Applications List */}
       {filteredApplications.length === 0 ? (
-        <EmptyJobsState searchTerm={searchTerm} />
+        <EmptyJobsState searchTerm={searchTerm} statusFilter={statusFilter} />
       ) : (
         <div className="space-y-4">
           {filteredApplications.map((application, index) => (
@@ -190,6 +212,7 @@ export default function MyJobsHistoryPage() {
         open={!!selectedApplication}
         onOpenChange={(open) => !open && setSelectedApplication(null)}
         formatSalary={formatSalary}
+        formatDate={formatDate}
       />
     </div>
   );

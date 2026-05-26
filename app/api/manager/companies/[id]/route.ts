@@ -140,46 +140,73 @@ export async function PUT(
     }
 }
 
-// DELETE - Delete company
+
+
 export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
-    try {
-        const token = request.cookies.get("token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+  try {
+    const resolvedParams = await Promise.resolve(params);
+    const companyId = parseInt(resolvedParams.id);
+    
+    console.log("DELETE request for company ID:", companyId);
 
-        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
-        const { id } = await params;
-        const companyId = parseInt(id);
-
-        if (user.roleType !== "manager") {
-            return NextResponse.json({ error: "Only managers can delete companies" }, { status: 403 });
-        }
-
-        // Check permission (only founder/CEO with full access can delete)
-        const userRole = await db.select().from(roles)
-            .where(and(
-                eq(roles.userId, user.id),
-                eq(roles.companyId, companyId)
-            ))
-            .then(res => res[0]);
-
-        if (!userRole || userRole.permission !== "f") {
-            return NextResponse.json({ error: "You don't have permission to delete this company" }, { status: 403 });
-        }
-
-        // Delete company (cascade will handle related records)
-        await db.delete(companies).where(eq(companies.id, companyId));
-
-        return NextResponse.json({
-            message: "Company deleted successfully"
-        });
-
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json({ error: "Failed to delete company" }, { status: 500 });
+    if (isNaN(companyId)) {
+      console.log("Invalid company ID");
+      return NextResponse.json({ error: "Invalid company ID" }, { status: 400 });
     }
+
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      console.log("No token found");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
+      console.log("Decoded user:", decoded);
+    } catch (err) {
+      console.log("Token verification failed:", err);
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Check if user is founder
+    const userRole = await db
+      .select()
+      .from(roles)
+      .where(
+        and(
+          eq(roles.userId, decoded.id),
+          eq(roles.companyId, companyId),
+          eq(roles.role, 'Founder')
+        )
+      );
+    
+    console.log("User role found:", userRole);
+
+    if (!userRole || userRole.length === 0) {
+      return NextResponse.json({ error: "Only Founder can delete company" }, { status: 403 });
+    }
+
+    // First delete roles for this company
+    await db.delete(roles).where(eq(roles.companyId, companyId));
+    console.log("Roles deleted");
+
+    // Then delete company
+    await db.delete(companies).where(eq(companies.id, companyId));
+    console.log("Company deleted");
+
+    return NextResponse.json({
+      success: true,
+      message: "Company deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error in DELETE:", error);
+    return NextResponse.json({ 
+      error: "Failed to delete company", 
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
+  }
 }

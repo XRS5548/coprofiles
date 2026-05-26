@@ -1,40 +1,75 @@
-// components/dashboard/internships/EmptyApplications.tsx
+// app/dashboard/internships/my-applications/EmptyApplications.tsx
 'use client';
 
-import { FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { ClipboardList, Award, Clock, CheckCircle, Briefcase, FileText } from 'lucide-react';
 
 interface EmptyApplicationsProps {
-  type?: 'all' | 'certificate';
+  type: 'all' | 'pending' | 'accepted' | 'rejected' | 'completed' | 'certificate' | 'active';
 }
 
-export function EmptyApplications({ type = 'all' }: EmptyApplicationsProps) {
-  const messages = {
-    all: {
-      title: "No applications found",
-      description: "You haven't applied for any internships yet",
-      buttonText: "Browse Internships",
-      buttonLink: "/dashboard/internships"
-    },
-    certificate: {
-      title: "No certificates available",
-      description: "Complete internships to unlock your certificates",
-      buttonText: "View Applications",
-      buttonLink: "/dashboard/internships/my-applications"
+export function EmptyApplications({ type }: EmptyApplicationsProps) {
+  const getContent = () => {
+    switch (type) {
+      case 'all':
+        return {
+          icon: ClipboardList,
+          title: 'No Applications Found',
+          description: "You haven't applied for any internships yet. Start exploring and apply to kickstart your career!",
+        };
+      case 'pending':
+        return {
+          icon: Clock,
+          title: 'No Pending Applications',
+          description: "You don't have any pending applications. All your applications have been reviewed or you haven't applied yet.",
+        };
+      case 'accepted':
+        return {
+          icon: CheckCircle,
+          title: 'No Accepted Applications',
+          description: "You haven't received any acceptances yet. Keep applying and stay positive!",
+        };
+      case 'rejected':
+        return {
+          icon: FileText,
+          title: 'No Rejected Applications',
+          description: "Good news! None of your applications have been rejected so far.",
+        };
+      case 'completed':
+        return {
+          icon: Award,
+          title: 'No Completed Internships',
+          description: "You haven't completed any internships yet. Start your journey today!",
+        };
+      case 'certificate':
+        return {
+          icon: Award,
+          title: 'No Certificates Available',
+          description: "Complete internships to unlock and download your certificates.",
+        };
+      case 'active':
+        return {
+          icon: Briefcase,
+          title: 'No Active Internships',
+          description: "You don't have any active internships right now. Apply to get started!",
+        };
+      default:
+        return {
+          icon: ClipboardList,
+          title: 'No Applications Found',
+          description: "You haven't applied for any internships yet.",
+        };
     }
   };
 
-  const message = messages[type];
+  const { icon: Icon, title, description } = getContent();
 
   return (
-    <Card className="p-12 text-center">
-      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-gray-600">{message.title}</h3>
-      <p className="text-gray-400 mt-1">{message.description}</p>
-      <Button className="mt-4" onClick={() => window.location.href = message.buttonLink}>
-        {message.buttonText}
-      </Button>
-    </Card>
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="rounded-full bg-gray-100 p-4 mb-4">
+        <Icon className="h-8 w-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-500 max-w-md">{description}</p>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 // app/api/user/internships/applications/route.ts
 import { db } from "@/db";
 import { internshipApplications, internships, companies } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; email: string; roleType: string };
 
         const applications = await db.select({
             id: internshipApplications.id,
@@ -20,19 +20,50 @@ export async function GET(request: NextRequest) {
             internshipTitle: internships.title,
             companyName: companies.name,
             companyLogo: companies.logoUrl,
-            appliedAt: internshipApplications.id,
+            status: internshipApplications.status,
+            rollNo: internshipApplications.rollNo,
+            examDate: internshipApplications.examDate,
             certificateUnlocked: internshipApplications.certificateUnlocked,
             internshipActive: internships.active,
-            lastApplyDate: internships.lastApplyDate
-        }).from(internshipApplications)
-            .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
-            .innerJoin(companies, eq(internships.companyId, companies.id))
-            .where(eq(internshipApplications.userId, user.id))
-            .orderBy(internshipApplications.id);
+            internshipIsLive: internships.isLive,
+            lastApplyDate: internships.lastApplyDate,
+            duration: internships.duration,
+            content: internships.content,
+        })
+        .from(internshipApplications)
+        .innerJoin(internships, eq(internshipApplications.internshipId, internships.id))
+        .innerJoin(companies, eq(internships.companyId, companies.id))
+        .where(eq(internshipApplications.userId, decoded.id))
+        .orderBy(desc(internshipApplications.id));
 
-        return NextResponse.json({ applications });
+        // Transform the response
+        const transformedApplications = applications.map(app => ({
+            id: app.id,
+            internshipId: app.internshipId,
+            internshipTitle: app.internshipTitle,
+            companyName: app.companyName,
+            companyLogo: app.companyLogo,
+            status: app.status,
+            rollNo: app.rollNo,
+            examDate: app.examDate,
+            certificateUnlocked: app.certificateUnlocked,
+            internshipActive: app.internshipActive && app.internshipIsLive,
+            lastApplyDate: app.lastApplyDate,
+            duration: app.duration,
+            description: app.content,
+        }));
+
+        return NextResponse.json({ 
+            success: true, 
+            applications: transformedApplications,
+            count: transformedApplications.length 
+        });
 
     } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 });
+        console.error('Error fetching applications:', error);
+        return NextResponse.json({ 
+            error: "Failed to fetch applications",
+            message: error instanceof Error ? error.message : "Unknown error"
+        }, { status: 500 });
     }
 }

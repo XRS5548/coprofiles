@@ -1,281 +1,448 @@
-// app/manager/internships/create/page.tsx
-"use client";
+// app/manager/internships/create/page.tsx - Without react-hook-form
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { 
-  ArrowLeft, Save, Calendar, Clock, 
-  AlertCircle, CheckCircle, Building2
-} from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  ArrowLeft,
+  Save,
+  Eye,
+  Building2,
+  Loader2,
+  Calendar,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Company {
   id: number;
   name: string;
-  role: string;
+  logoUrl: string | null;
+  category: string | null;
 }
 
 export default function CreateInternshipPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [formData, setFormData] = useState({
-    title: "",
-    companyId: "",
-    content: "",
-    duration: "",
-    lastApplyDate: "",
-    isLive: false,
-    autoCancel: false,
-  });
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  
+  // Form state
+  const [title, setTitle] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [content, setContent] = useState('');
+  const [duration, setDuration] = useState(12);
+  const [lastApplyDate, setLastApplyDate] = useState('');
+  const [active, setActive] = useState(true);
+  const [isLive, setIsLive] = useState(false);
+  const [autoCancel, setAutoCancel] = useState(false);
+  
+  // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Fetch companies
   useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch('/api/manager/companies', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCompanies(data.companies || []);
+        }
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        toast.error('Failed to load companies');
+      } finally {
+        setLoadingCompanies(false);
+      }
+    };
     fetchCompanies();
   }, []);
 
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch("/api/manager/companies", {
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setCompanies(data.companies || []);
-        if (data.companies?.length === 1) {
-          setFormData(prev => ({ ...prev, companyId: data.companies[0].id.toString() }));
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching companies:", error);
-    }
-  };
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.title.trim()) newErrors.title = "Title is required";
-    if (!formData.companyId) newErrors.companyId = "Please select a company";
-    if (formData.duration && (parseInt(formData.duration) < 1 || parseInt(formData.duration) > 52)) {
-      newErrors.duration = "Duration must be between 1 and 52 weeks";
+    
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (title.length < 5) {
+      newErrors.title = 'Title must be at least 5 characters';
     }
+    
+    if (!companyId) {
+      newErrors.companyId = 'Please select a company';
+    }
+    
+    if (!content.trim()) {
+      newErrors.content = 'Description is required';
+    } else if (content.length < 50) {
+      newErrors.content = 'Description must be at least 50 characters';
+    }
+    
+    if (!duration) {
+      newErrors.duration = 'Duration is required';
+    } else if (duration < 1) {
+      newErrors.duration = 'Duration must be at least 1 week';
+    } else if (duration > 52) {
+      newErrors.duration = 'Duration cannot exceed 52 weeks';
+    }
+    
+    if (!lastApplyDate) {
+      newErrors.lastApplyDate = 'Last apply date is required';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
+  const onSubmit = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors before submitting');
+      return;
+    }
+    
     setLoading(true);
     try {
-      const response = await fetch("/api/manager/internships/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      const response = await fetch('/api/manager/internships', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          ...formData,
-          companyId: parseInt(formData.companyId),
-          duration: formData.duration ? parseInt(formData.duration) : null,
+          title,
+          companyId: parseInt(companyId),
+          content,
+          duration,
+          lastApplyDate,
+          active,
+          isLive,
+          autoCancel,
         }),
+        credentials: 'include',
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        router.push("/manager/internships");
-      } else {
-        setErrors({ submit: data.error || "Failed to create internship" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to create internship');
       }
+
+      toast.success('Internship created successfully!');
+      router.push('/manager/internships');
     } catch (error) {
-      setErrors({ submit: "Something went wrong" });
+      console.error('Error creating internship:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create internship');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black">
-      {/* Header */}
-      <div className="bg-gray-900/50 border-b border-gray-800">
-        <div className="container mx-auto px-6 py-6">
+  if (previewMode) {
+    const selectedCompany = companies.find(c => c.id === parseInt(companyId));
+    
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <Link
-              href="/manager/internships"
-              className="p-2 hover:bg-gray-800 rounded-lg transition"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Create Internship
-              </h1>
-              <p className="text-gray-400 mt-1">Post a new internship position</p>
-            </div>
+            <Button variant="ghost" onClick={() => setPreviewMode(false)}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Edit
+            </Button>
+            <h1 className="text-2xl font-bold">Preview Internship</h1>
           </div>
+          <Button onClick={onSubmit} disabled={loading}>
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            Publish Internship
+          </Button>
         </div>
+
+        {/* Preview Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle className="text-2xl">{title || 'Untitled Internship'}</CardTitle>
+                <CardDescription className="mt-1">
+                  {selectedCompany?.name || 'Select Company'}
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                {isLive && (
+                  <Badge className="bg-green-100 text-green-700">Live</Badge>
+                )}
+                {active && !isLive && (
+                  <Badge className="bg-yellow-100 text-yellow-700">Active</Badge>
+                )}
+                {!active && (
+                  <Badge variant="secondary">Inactive</Badge>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> Duration
+                </p>
+                <p className="font-medium">{duration} weeks</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> Last Apply Date
+                </p>
+                <p className="font-medium">
+                  {lastApplyDate ? new Date(lastApplyDate).toLocaleDateString() : 'Not set'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Auto Cancel</p>
+                <p className="font-medium">{autoCancel ? 'Enabled' : 'Disabled'}</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">Description</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{content || 'No description provided'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <Button variant="ghost" onClick={() => router.back()} className="mb-2 -ml-2">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <h1 className="text-2xl font-bold">Create New Internship</h1>
+        <p className="text-gray-500 mt-1">Post a new internship opportunity</p>
       </div>
 
-      <div className="container mx-auto px-6 py-8 max-w-3xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Company Selection */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Company <span className="text-red-400">*</span>
-            </label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <select
-                value={formData.companyId}
-                onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white appearance-none"
-              >
-                <option value="">Select a company</option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {errors.companyId && (
-              <p className="text-red-400 text-sm mt-1">{errors.companyId}</p>
-            )}
-          </div>
+      <Tabs defaultValue="basic" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
 
-          {/* Basic Info */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Internship Title <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        {/* Basic Info Tab */}
+        <TabsContent value="basic" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+              <CardDescription>Enter the fundamental details of the internship</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Title */}
+              <div className="space-y-2">
+                <Label htmlFor="title">Internship Title *</Label>
+                <Input
+                  id="title"
                   placeholder="e.g., Frontend Developer Intern"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className={errors.title ? 'border-red-500' : ''}
                 />
                 {errors.title && (
-                  <p className="text-red-400 text-sm mt-1">{errors.title}</p>
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.title}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500">A clear and descriptive title for the internship</p>
+              </div>
+
+              {/* Company */}
+              <div className="space-y-2">
+                <Label htmlFor="company">Company *</Label>
+                <Select value={companyId} onValueChange={setCompanyId}>
+                  <SelectTrigger className={errors.companyId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select a company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loadingCompanies ? (
+                      <SelectItem value="loading" disabled>Loading...</SelectItem>
+                    ) : (
+                      companies.map((company) => (
+                        <SelectItem key={company.id} value={company.id.toString()}>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4" />
+                            {company.name}
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {errors.companyId && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.companyId}
+                  </p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Description / Content
-                </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={6}
-                  placeholder="Describe the internship, requirements, responsibilities, benefits..."
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white resize-y"
+              {/* Duration */}
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration (weeks) *</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  placeholder="e.g., 12"
+                  value={duration}
+                  onChange={(e) => setDuration(parseInt(e.target.value))}
+                  className={errors.duration ? 'border-red-500' : ''}
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Duration & Dates */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Duration & Dates</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Duration (weeks)
-                </label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    placeholder="12"
-                    min="1"
-                    max="52"
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                  />
-                </div>
                 {errors.duration && (
-                  <p className="text-red-400 text-sm mt-1">{errors.duration}</p>
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.duration}
+                  </p>
                 )}
+                <p className="text-sm text-gray-500">How many weeks will the internship last?</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Last Apply Date
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="date"
-                    value={formData.lastApplyDate}
-                    onChange={(e) => setFormData({ ...formData, lastApplyDate: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                  />
+              {/* Last Apply Date */}
+              <div className="space-y-2">
+                <Label htmlFor="lastApplyDate">Last Apply Date *</Label>
+                <Input
+                  id="lastApplyDate"
+                  type="date"
+                  value={lastApplyDate}
+                  onChange={(e) => setLastApplyDate(e.target.value)}
+                  className={errors.lastApplyDate ? 'border-red-500' : ''}
+                />
+                {errors.lastApplyDate && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.lastApplyDate}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500">The last date for students to apply</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Details Tab */}
+        <TabsContent value="details" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Internship Details</CardTitle>
+              <CardDescription>Describe the internship in detail</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="content">Description *</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Describe the internship responsibilities, requirements, and benefits..."
+                  className="min-h-[200px]"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+                {errors.content && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.content}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500">
+                  Include details about daily tasks, required skills, learning opportunities, and any perks
+                </p>
+                <p className="text-sm text-gray-400">
+                  {content.length}/50 characters minimum
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Internship Settings</CardTitle>
+              <CardDescription>Configure how the internship appears</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Active Status */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Active Status</Label>
+                  <p className="text-sm text-gray-500">Make this internship visible to students</p>
                 </div>
+                <Switch
+                  checked={active}
+                  onCheckedChange={setActive}
+                />
               </div>
-            </div>
-          </div>
 
-          {/* Settings */}
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold mb-4">Settings</h2>
-            
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isLive}
-                  onChange={(e) => setFormData({ ...formData, isLive: e.target.checked })}
-                  className="w-4 h-4 accent-blue-500"
+              {/* Live Status */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Live Status</Label>
+                  <p className="text-sm text-gray-500">Mark as live to feature prominently</p>
+                </div>
+                <Switch
+                  checked={isLive}
+                  onCheckedChange={setIsLive}
                 />
-                <span className="text-gray-300">Publish immediately (make it live)</span>
-              </label>
+              </div>
 
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.autoCancel}
-                  onChange={(e) => setFormData({ ...formData, autoCancel: e.target.checked })}
-                  className="w-4 h-4 accent-blue-500"
+              {/* Auto Cancel */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Auto Cancel</Label>
+                  <p className="text-sm text-gray-500">Automatically cancel after deadline</p>
+                </div>
+                <Switch
+                  checked={autoCancel}
+                  onCheckedChange={setAutoCancel}
                 />
-                <span className="text-gray-300">Auto-cancel after deadline</span>
-              </label>
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-          {/* Submit Button */}
-          {errors.submit && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-400" />
-              <p className="text-red-400 text-sm">{errors.submit}</p>
-            </div>
-          )}
-
-          <div className="flex gap-4">
-            <Link
-              href="/manager/internships"
-              className="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 rounded-lg transition disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              {loading ? "Creating..." : "Create Internship"}
-            </button>
-          </div>
-        </form>
+      {/* Submit Buttons */}
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={() => router.back()}>
+          Cancel
+        </Button>
+        <Button type="button" variant="outline" onClick={() => setPreviewMode(true)}>
+          <Eye className="h-4 w-4 mr-2" />
+          Preview
+        </Button>
+        <Button type="button" onClick={onSubmit} disabled={loading}>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+          Create Internship
+        </Button>
       </div>
     </div>
   );

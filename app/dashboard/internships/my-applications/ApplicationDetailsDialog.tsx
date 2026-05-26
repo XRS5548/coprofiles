@@ -19,8 +19,8 @@ interface ApplicationDetailsDialogProps {
 export function ApplicationDetailsDialog({ application, open, onOpenChange }: ApplicationDetailsDialogProps) {
   if (!application) return null;
 
-  const appliedDate = new Date(application.appliedAt).toLocaleDateString();
-  const appliedTime = new Date(application.appliedAt).toLocaleTimeString();
+  const appliedDate = new Date(application.appliedDate).toLocaleDateString();
+  const appliedTime = new Date(application.appliedDate).toLocaleTimeString();
   const lastApplyDate = application.lastApplyDate 
     ? new Date(application.lastApplyDate).toLocaleDateString() 
     : null;

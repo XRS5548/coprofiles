@@ -9,7 +9,7 @@ import { ApplicationStats } from './ApplicationStats';
 import { ApplicationCard } from './ApplicationCard'; 
 import { ApplicationDetailsDialog } from './ApplicationDetailsDialog'; 
 import { EmptyApplications } from './EmptyApplications'; 
-import type { ApiApplication, Application } from '@/types/internship';
+import type { Application, ApplicationStatus } from '@/types/internship';
 
 export default function MyApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -29,12 +29,26 @@ export default function MyApplicationsPage() {
         }
         
         const data = await response.json();
-        const apiApplications: ApiApplication[] = data.applications || [];
+        console.log('API Response:', data);
+        
+        const apiApplications = data.applications || [];
         
         // Transform API data to frontend format
-        const transformedApplications: Application[] = apiApplications.map((app) => ({
-          ...app,
-          appliedDate: new Date(app.appliedAt).toISOString(),
+        const transformedApplications: Application[] = apiApplications.map((app: any) => ({
+          id: app.id,
+          internshipId: app.internshipId,
+          internshipTitle: app.internshipTitle,
+          companyName: app.companyName,
+          companyLogo: app.companyLogo,
+          status: app.status || 'pending',
+          rollNo: app.rollNo,
+          examDate: app.examDate,
+          certificateUnlocked: app.certificateUnlocked || false,
+          internshipActive: app.internshipActive || false,
+          lastApplyDate: app.lastApplyDate,
+          duration: app.duration,
+          description: app.description,
+          appliedDate: app.appliedAt || new Date().toISOString(),
         }));
         
         setApplications(transformedApplications);
@@ -51,11 +65,15 @@ export default function MyApplicationsPage() {
     fetchApplications();
   }, []);
 
-  // Calculate stats
+  // Calculate stats based on new fields
   const stats = {
     total: applications.length,
     certificateAvailable: applications.filter((a) => a.certificateUnlocked).length,
     activeInternships: applications.filter((a) => a.internshipActive).length,
+    pending: applications.filter((a) => a.status === 'pending').length,
+    accepted: applications.filter((a) => a.status === 'accepted').length,
+    rejected: applications.filter((a) => a.status === 'rejected').length,
+    completed: applications.filter((a) => a.status === 'completed').length,
   };
 
   // Loading skeleton
@@ -68,7 +86,7 @@ export default function MyApplicationsPage() {
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
@@ -99,12 +117,18 @@ export default function MyApplicationsPage() {
         total={stats.total}
         certificateAvailable={stats.certificateAvailable}
         activeInternships={stats.activeInternships}
+        pending={stats.pending}
+        accepted={stats.accepted}
+        completed={stats.completed}
       />
 
       {/* Applications Tabs */}
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
+          <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
+          <TabsTrigger value="accepted">Accepted ({stats.accepted})</TabsTrigger>
+          <TabsTrigger value="completed">Completed ({stats.completed})</TabsTrigger>
           <TabsTrigger value="certificates">Certificates ({stats.certificateAvailable})</TabsTrigger>
           <TabsTrigger value="active">Active ({stats.activeInternships})</TabsTrigger>
         </TabsList>
@@ -125,9 +149,63 @@ export default function MyApplicationsPage() {
           )}
         </TabsContent>
 
+        {/* Pending Applications Tab */}
+        <TabsContent value="pending" className="space-y-4">
+          {stats.pending === 0 ? (
+            <EmptyApplications type="pending" />
+          ) : (
+            applications
+              .filter(a => a.status === 'pending')
+              .map((application, index) => (
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                  index={index}
+                  onViewDetails={setSelectedApplication}
+                />
+              ))
+          )}
+        </TabsContent>
+
+        {/* Accepted Applications Tab */}
+        <TabsContent value="accepted" className="space-y-4">
+          {stats.accepted === 0 ? (
+            <EmptyApplications type="accepted" />
+          ) : (
+            applications
+              .filter(a => a.status === 'accepted')
+              .map((application, index) => (
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                  index={index}
+                  onViewDetails={setSelectedApplication}
+                />
+              ))
+          )}
+        </TabsContent>
+
+        {/* Completed Applications Tab */}
+        <TabsContent value="completed" className="space-y-4">
+          {stats.completed === 0 ? (
+            <EmptyApplications type="completed" />
+          ) : (
+            applications
+              .filter(a => a.status === 'completed')
+              .map((application, index) => (
+                <ApplicationCard
+                  key={application.id}
+                  application={application}
+                  index={index}
+                  onViewDetails={setSelectedApplication}
+                />
+              ))
+          )}
+        </TabsContent>
+
         {/* Certificates Tab */}
         <TabsContent value="certificates" className="space-y-4">
-          {applications.filter(a => a.certificateUnlocked).length === 0 ? (
+          {stats.certificateAvailable === 0 ? (
             <EmptyApplications type="certificate" />
           ) : (
             applications
@@ -145,8 +223,8 @@ export default function MyApplicationsPage() {
 
         {/* Active Internships Tab */}
         <TabsContent value="active" className="space-y-4">
-          {applications.filter(a => a.internshipActive).length === 0 ? (
-            <EmptyApplications type="all" />
+          {stats.activeInternships === 0 ? (
+            <EmptyApplications type="active" />
           ) : (
             applications
               .filter(a => a.internshipActive)

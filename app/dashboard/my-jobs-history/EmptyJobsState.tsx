@@ -1,29 +1,39 @@
 // components/dashboard/jobs/EmptyJobsState.tsx
 'use client';
 
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 interface EmptyJobsStateProps {
-  searchTerm?: string;
+  searchTerm: string;
+  statusFilter: string;
 }
 
-export function EmptyJobsState({ searchTerm = '' }: EmptyJobsStateProps) {
-  const isSearchEmpty = searchTerm === '';
+export function EmptyJobsState({ searchTerm, statusFilter }: EmptyJobsStateProps) {
+  const hasFilters = searchTerm !== '' || statusFilter !== 'all';
   
   return (
-    <Card className="p-12 text-center">
-      <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-gray-600">No applications found</h3>
-      <p className="text-gray-400 mt-1">
-        {!isSearchEmpty ? 'Try adjusting your search' : "You haven't applied for any jobs yet"}
+    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+      <div className="rounded-full bg-gray-100 p-4 mb-4">
+        <Briefcase className="h-8 w-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        {hasFilters ? 'No matching applications found' : 'No applications yet'}
+      </h3>
+      <p className="text-sm text-gray-500 max-w-md">
+        {hasFilters 
+          ? 'Try adjusting your search or filter criteria to find what you\'re looking for.'
+          : 'You haven\'t applied for any jobs yet. Start exploring career opportunities!'}
       </p>
-      {isSearchEmpty && (
-        <Button className="mt-4" onClick={() => window.location.href = '/dashboard/careers'}>
-          Browse Jobs
+      {hasFilters && (
+        <Button 
+          variant="outline" 
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Clear Filters
         </Button>
       )}
-    </Card>
+    </div>
   );
 }

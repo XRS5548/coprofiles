@@ -1,14 +1,69 @@
 // app/manager/internships/page.tsx
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { 
-  Briefcase, Plus, Eye, Edit, Trash2, Search, 
-  Filter, Calendar, Users, CheckCircle, XCircle,
-  ChevronLeft, ChevronRight, AlertCircle
-} from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Eye,
+  Users,
+  Calendar,
+  Clock,
+  Building2,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Filter,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  TrendingUp,
+  MoreVertical,
+  Briefcase,
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 interface Internship {
   id: number;
@@ -17,303 +72,488 @@ interface Internship {
   isLive: boolean;
   lastApplyDate: string;
   duration: number;
+  autoCancel: boolean;
   createdAt: string;
   companyId: number;
   companyName: string;
   applicationsCount: number;
 }
 
+interface PaginationData {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export default function ManagerInternshipsPage() {
   const router = useRouter();
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    live: 0,
+    totalApplications: 0,
+  });
 
-  const itemsPerPage = 10;
+  const limit = 10;
 
   useEffect(() => {
     fetchInternships();
-  }, [currentPage, filterStatus]);
+  }, [currentPage, statusFilter]);
 
   const fetchInternships = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/manager/internships?page=${currentPage}&limit=${itemsPerPage}&status=${filterStatus}`, {
-        credentials: "include",
-      });
+      const response = await fetch(
+        `/api/manager/internships?page=${currentPage}&limit=${limit}&status=${statusFilter}&search=${searchTerm}`,
+        {
+          credentials: 'include',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch internships');
+      }
+
       const data = await response.json();
-      if (response.ok) {
-        setInternships(data.internships || []);
-        setTotalPages(Math.ceil((data.total || data.internships?.length) / itemsPerPage));
+      setInternships(data.internships);
+      setPagination(data.pagination);
+      
+      // Calculate stats
+      if (data.internships) {
+        const total = data.pagination.total;
+        const active = data.internships.filter((i: Internship) => i.active).length;
+        const live = data.internships.filter((i: Internship) => i.isLive).length;
+        const totalApplications = data.internships.reduce((sum: number, i: Internship) => sum + i.applicationsCount, 0);
+        
+        setStats({ total, active, live, totalApplications });
       }
     } catch (error) {
-      console.error("Error fetching internships:", error);
+      console.error('Error fetching internships:', error);
+      toast.error('Failed to load internships');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchInternships();
+  };
+
   const handleDelete = async () => {
     if (!selectedInternship) return;
     
+    setDeleting(true);
     try {
       const response = await fetch(`/api/manager/internships/${selectedInternship.id}`, {
-        method: "DELETE",
-        credentials: "include",
+        method: 'DELETE',
+        credentials: 'include',
       });
-      
-      if (response.ok) {
-        setShowDeleteModal(false);
-        fetchInternships();
+
+      if (!response.ok) {
+        throw new Error('Failed to delete internship');
       }
+
+      toast.success('Internship deleted successfully');
+      setDeleteDialogOpen(false);
+      fetchInternships();
     } catch (error) {
-      console.error("Error deleting internship:", error);
+      console.error('Error deleting internship:', error);
+      toast.error('Failed to delete internship');
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const toggleStatus = async (id: number, currentLive: boolean) => {
+  const toggleStatus = async (internship: Internship) => {
     try {
-      const response = await fetch(`/api/manager/internships/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ isLive: !currentLive }),
+      const response = await fetch(`/api/manager/internships/${internship.id}/toggle-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          active: !internship.active,
+          isLive: !internship.isLive,
+        }),
+        credentials: 'include',
       });
-      
-      if (response.ok) {
-        fetchInternships();
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
       }
+
+      toast.success(`Internship ${!internship.active ? 'activated' : 'deactivated'} successfully`);
+      fetchInternships();
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error('Error updating status:', error);
+      toast.error('Failed to update internship status');
     }
   };
 
-  const filteredInternships = internships.filter(internship => 
-    internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    internship.companyName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getStatusBadge = (internship: Internship) => {
+    if (!internship.active) {
+      return <Badge variant="secondary" className="bg-gray-100 text-gray-700">Inactive</Badge>;
+    }
+    if (internship.isLive) {
+      return <Badge className="bg-green-100 text-green-700">Live</Badge>;
+    }
+    return <Badge variant="outline" className="bg-yellow-100 text-yellow-700">Draft</Badge>;
+  };
+
+  const statsCards = [
+    {
+      title: 'Total Internships',
+      value: stats.total,
+      icon: BriefcaseIcon,
+      color: 'bg-blue-100 text-blue-600',
+    },
+    {
+      title: 'Active Internships',
+      value: stats.active,
+      icon: CheckCircle,
+      color: 'bg-green-100 text-green-600',
+    },
+    {
+      title: 'Live Internships',
+      value: stats.live,
+      icon: TrendingUp,
+      color: 'bg-purple-100 text-purple-600',
+    },
+    {
+      title: 'Total Applications',
+      value: stats.totalApplications,
+      icon: Users,
+      color: 'bg-orange-100 text-orange-600',
+    },
+  ];
+
+  if (loading && internships.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-96 rounded-lg" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gray-900/50 border-b border-gray-800">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Internship Management
-              </h1>
-              <p className="text-gray-400 mt-1">Manage your company internships</p>
-            </div>
-            <Link
-              href="/manager/internships/create"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition"
-            >
-              <Plus className="w-4 h-4" />
-              Create Internship
-            </Link>
-          </div>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">All Internships</h1>
+          <p className="text-gray-500 mt-1">
+            Manage and monitor all your internship programs
+          </p>
         </div>
+        <Button onClick={() => router.push('/manager/internships/create')} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Internship
+        </Button>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
-        {/* Filters */}
-        <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Search internships..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-                />
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statsCards.map((stat, index) => (
+          <Card key={index}>
+            <CardContent className="p-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500">{stat.title}</p>
+                <p className="text-2xl font-bold mt-1">{stat.value}</p>
               </div>
-            </div>
-            
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white"
-            >
-              <option value="all">All Status</option>
-              <option value="live">Live</option>
-              <option value="draft">Draft</option>
-              <option value="closed">Closed</option>
-            </select>
+              <div className={`rounded-lg p-2 ${stat.color}`}>
+                <stat.icon className="h-4 w-4" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <Card className="p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by title or company..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="live">Live</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleSearch}>
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
           </div>
         </div>
+      </Card>
 
-        {/* Internships Table */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        ) : filteredInternships.length === 0 ? (
-          <div className="text-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
-            <Briefcase className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold mb-1">No internships found</h3>
-            <p className="text-gray-400 mb-4">Create your first internship to get started</p>
-            <Link
-              href="/manager/internships/create"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg transition"
-            >
-              <Plus className="w-4 h-4" />
-              Create Internship
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800/50 border-b border-gray-700">
-                  <tr>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Title</th>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Company</th>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Status</th>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Applications</th>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Deadline</th>
-                    <th className="text-left px-6 py-3 text-sm font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredInternships.map((internship) => (
-                    <tr key={internship.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition">
-                      <td className="px-6 py-4">
+      {/* Internships Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Applications</TableHead>
+                  <TableHead>Last Apply Date</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {internships.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-12">
+                      <BriefcaseIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No internships found</p>
+                      <Button 
+                        variant="link" 
+                        onClick={() => router.push('/manager/internships/create')}
+                        className="mt-2"
+                      >
+                        Create your first internship
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  internships.map((internship) => (
+                    <TableRow key={internship.id}>
+                      <TableCell className="font-medium">#{internship.id}</TableCell>
+                      <TableCell>
                         <div>
                           <p className="font-medium">{internship.title}</p>
-                          <p className="text-sm text-gray-400">{internship.duration} weeks</p>
+                          <p className="text-xs text-gray-500">
+                            Auto-cancel: {internship.autoCancel ? 'Yes' : 'No'}
+                          </p>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-300">{internship.companyName}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {internship.isLive ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                            <CheckCircle className="w-3 h-3" /> Live
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full text-xs">
-                            <XCircle className="w-3 h-3" /> Draft
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => router.push(`/manager/internships/${internship.id}/applications`)}
-                          className="flex items-center gap-1 text-blue-400 hover:text-blue-300"
-                        >
-                          <Users className="w-4 h-4" />
-                          {internship.applicationsCount}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-sm text-gray-400">
-                          <Calendar className="w-4 h-4" />
-                          {internship.lastApplyDate ? new Date(internship.lastApplyDate).toLocaleDateString() : "No deadline"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => toggleStatus(internship.id, internship.isLive)}
-                            className={`p-1.5 rounded-lg transition ${
-                              internship.isLive 
-                                ? "bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400"
-                                : "bg-green-500/20 hover:bg-green-500/30 text-green-400"
-                            }`}
-                            title={internship.isLive ? "Take Down" : "Publish"}
-                          >
-                            {internship.isLive ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
-                          </button>
-                          <Link
-                            href={`/manager/internships/${internship.id}/edit`}
-                            className="p-1.5 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition"
-                          >
-                            <Edit className="w-4 h-4 text-blue-400" />
-                          </Link>
-                          <button
-                            onClick={() => {
-                              setSelectedInternship(internship);
-                              setShowDeleteModal(true);
-                            }}
-                            className="p-1.5 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </button>
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                          <span>{internship.companyName}</span>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800">
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 bg-gray-800 rounded-lg disabled:opacity-50 hover:bg-gray-700 transition"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <span className="text-sm text-gray-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 bg-gray-800 rounded-lg disabled:opacity-50 hover:bg-gray-700 transition"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            )}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(internship)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-gray-400" />
+                          <span>{internship.duration} weeks</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-3 w-3 text-gray-400" />
+                          <span className="font-medium">{internship.applicationsCount}</span>
+                          {internship.applicationsCount > 0 && (
+                            <Progress 
+                              value={Math.min((internship.applicationsCount / 100) * 100, 100)} 
+                              className="h-1 w-12" 
+                            />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 text-gray-400" />
+                          <span className="text-sm">{formatDate(internship.lastApplyDate)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{formatDate(internship.createdAt)}</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => router.push(`/manager/internships/${internship.id}`)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/manager/internships/${internship.id}/edit`)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/manager/internships/${internship.id}/applications`)}>
+                              <Users className="mr-2 h-4 w-4" />
+                              View Applications ({internship.applicationsCount})
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => toggleStatus(internship)}>
+                              {internship.active ? (
+                                <>
+                                  <XCircle className="mr-2 h-4 w-4" />
+                                  Deactivate
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  Activate
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedInternship(internship);
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedInternship && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="w-6 h-6 text-red-400" />
-              <h2 className="text-xl font-semibold">Delete Internship</h2>
+      {/* Pagination */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Showing {((pagination.page - 1) * limit) + 1} to {Math.min(pagination.page * limit, pagination.total)} of {pagination.total} internships
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(pagination.page - 1)}
+              disabled={!pagination.hasPrevPage}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <div className="flex gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.page <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.page >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = pagination.page - 2 + i;
+                }
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pagination.page === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="w-10"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
             </div>
-            <p className="text-gray-300 mb-2">
-              Are you sure you want to delete <span className="font-semibold">"{selectedInternship.title}"</span>?
-            </p>
-            <p className="text-sm text-red-400 mb-6">
-              This action cannot be undone. All applications will also be deleted.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition"
-              >
-                Delete
-              </button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(pagination.page + 1)}
+              disabled={!pagination.hasNextPage}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Internship</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{selectedInternship?.title}"? This action cannot be undone.
+              All applications for this internship will also be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+// Icon component for Briefcase (to avoid naming conflict)
+function BriefcaseIcon(props: any) {
+  return <Briefcase {...props} />;
 }

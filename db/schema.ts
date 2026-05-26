@@ -309,45 +309,44 @@ export const internships =
     }
   );
 
+export const applicationStatusEnum = pgEnum(
+  "application_status",
+  [
+    "pending",    // Application submitted, under review
+    "accepted",   // Application accepted
+    "rejected",   // Application rejected
+    "completed",  // Internship completed
+  ]
+);
+
 // ================= INTERNSHIP APPLICATIONS =================
 
 export const internshipApplications =
   pgTable(
     "internship_applications",
     {
-      id: serial(
-        "id"
-      ).primaryKey(),
+      id: serial("id").primaryKey(),
 
-      userId:
-        integer(
-          "user_id"
-        )
-          .references(
-            () =>
-              users.id
-          )
-          .notNull(),
+      userId: integer("user_id")
+        .references(() => users.id)
+        .notNull(),
 
-      internshipId:
-        integer(
-          "internship_id"
-        )
-          .references(
-            () =>
-              internships.id
-          )
-          .notNull(),
+      internshipId: integer("internship_id")
+        .references(() => internships.id)
+        .notNull(),
 
-      certificateUnlocked:
-        boolean(
-          "certificate_unlocked"
-        ).default(
-          false
-        ),
+      certificateUnlocked: boolean("certificate_unlocked").default(false),
+
+      status: applicationStatusEnum("status").default("pending").notNull(),
+      
+      rollNo: varchar("roll_no", { length: 50 }),
+      
+      examDate: timestamp("exam_date"),
+
+      // New field for certificate payment
+      certificatePaid: boolean("certificate_paid").default(false),
     }
   );
-
 // ================= CAREERS =================
 
 export const careers =
@@ -407,6 +406,20 @@ export const careers =
         ),
     }
   );
+// ================= ENUMS (Add this with other enums) =================
+
+export const careerApplicationStatusEnum = pgEnum(
+  "career_application_status",
+  [
+    "pending",    // Application submitted, under review
+    "reviewing",  // Application is being reviewed
+    "shortlisted", // Candidate shortlisted for interview
+    "interview",  // Interview scheduled
+    "accepted",   // Job offer accepted
+    "rejected",   // Application rejected
+    "hired",      // Candidate hired
+  ]
+);
 
 // ================= CAREER APPLICATIONS =================
 
@@ -414,32 +427,40 @@ export const careerApplications =
   pgTable(
     "career_applications",
     {
-      id: serial(
-        "id"
-      ).primaryKey(),
+      id: serial("id").primaryKey(),
 
-      careerId:
-        integer(
-          "career_id"
-        )
-          .references(
-            () =>
-              careers.id
-          )
-          .notNull(),
+      careerId: integer("career_id")
+        .references(() => careers.id)
+        .notNull(),
 
-      userId:
-        integer(
-          "user_id"
-        )
-          .references(
-            () =>
-              users.id
-          )
-          .notNull(),
+      userId: integer("user_id")
+        .references(() => users.id)
+        .notNull(),
+
+      // New fields
+      status: careerApplicationStatusEnum("status")
+        .default("pending")
+        .notNull(),
+      
+      officeId: varchar("office_id", { length: 100 }), // Office/Department ID
+      
+      appliedDate: timestamp("applied_date").defaultNow(),
+      
+      resumeUrl: text("resume_url"), // URL to stored resume
+      
+      coverLetter: text("cover_letter"), // Cover letter text
+      
+      interviewDate: timestamp("interview_date"), // Scheduled interview date
+      
+      feedback: text("feedback"), // Feedback from employer
+      
+      offerLetterUrl: text("offer_letter_url"), // URL to offer letter
+      
+      joiningDate: timestamp("joining_date"), // Expected joining date
+      
+      salaryOffered: integer("salary_offered"), // Offered salary
     }
   );
-
 // ================= PROJECTS =================
 
 export const projects =
@@ -505,3 +526,55 @@ export const projects =
         >(),
     }
   );
+
+
+
+  // ================= ENUMS =================
+
+export const certificateStatusEnum = pgEnum(
+  "certificate_status",
+  [
+    "active",        // Certificate is active and valid
+    "under_review",  // Certificate is under review  
+    "bounced",       // Certificate was rejected/bounced
+  ]
+);
+
+// ================= CERTIFICATES =================
+
+export const certificates = pgTable(
+  "certificates",
+  {
+    id: serial("id").primaryKey(),
+
+    internshipApplicationId: integer("internship_application_id")
+      .references(() => internshipApplications.id)
+      .notNull()
+      .unique(),
+
+    pdfUrl: text("pdf_url").notNull(),
+
+    certificateNumber: varchar("certificate_number", { length: 100 })
+      .notNull()
+      .unique(), // Example: CERT-2024-001234
+
+    userName: varchar("user_name", { length: 255 }).notNull(),
+    
+    internshipTitle: varchar("internship_title", { length: 255 }).notNull(),
+    
+    companyName: varchar("company_name", { length: 255 }).notNull(),
+
+    issueDate: timestamp("issue_date").defaultNow().notNull(),
+
+    status: certificateStatusEnum("status").default("active").notNull(),
+
+    // Unique verification code - like SQR452545
+    verificationCode: varchar("verification_code", { length: 50 })
+      .notNull()
+      .unique(),
+
+    createdAt: timestamp("created_at").defaultNow(),
+
+    updatedAt: timestamp("updated_at").defaultNow(),
+  }
+);

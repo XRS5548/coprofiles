@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         response.cookies.set("token", token, {
             httpOnly: true,
             sameSite: "strict",
-            maxAge: 604800, // 7 days in seconds
+           
         });
         return response;
     }

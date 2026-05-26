@@ -1,0 +1,1 @@
+ALTER TABLE "internship_applications" ADD COLUMN "certificate_paid" boolean DEFAULT false;

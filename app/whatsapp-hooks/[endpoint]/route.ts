@@ -2,13 +2,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
+
 import {
   whatsappAccounts,
   whatsappWebhookLogs,
-  whatsappMessages
+  whatsappMessages,
+  whatsappConversations
 } from "@/db/schema";
 
-import { eq } from "drizzle-orm";
+import {
+  eq,
+  and
+} from "drizzle-orm";
 
 const VERIFY_TOKEN =
 process.env.WHATSAPP_VERIFY_TOKEN!;
@@ -17,8 +22,7 @@ process.env.WHATSAPP_VERIFY_TOKEN!;
 
 /*
 =========================
-GET
-Meta Verification
+VERIFY WEBHOOK
 =========================
 */
 
@@ -27,8 +31,7 @@ req:NextRequest,
 {
 params
 }:{
-params:
-Promise<{
+params:Promise<{
 endpoint:string
 }>
 }
@@ -36,34 +39,26 @@ endpoint:string
 
 try{
 
-const{
-endpoint
-}
+const {endpoint}
 =
 await params;
 
 
 const mode=
-req.nextUrl
-.searchParams
-.get(
+req.nextUrl.searchParams.get(
 "hub.mode"
 );
 
-
 const token=
-req.nextUrl
-.searchParams
-.get(
+req.nextUrl.searchParams.get(
 "hub.verify_token"
 );
 
 const challenge=
-req.nextUrl
-.searchParams
-.get(
+req.nextUrl.searchParams.get(
 "hub.challenge"
 );
+
 
 
 const account=
@@ -74,19 +69,19 @@ whatsappAccounts
 )
 .where(
 eq(
-whatsappAccounts
-.webhookEndpoint,
+whatsappAccounts.webhookEndpoint,
 endpoint
 )
 )
 .limit(1);
 
 
+
 if(
 !account.length
 ){
 
-return new NextResponse(
+return new Response(
 "Webhook not found",
 {
 status:404
@@ -96,20 +91,32 @@ status:404
 }
 
 
+
 if(
 mode==="subscribe"
 &&
 token===VERIFY_TOKEN
 ){
 
-return new NextResponse(
-challenge
+console.log(
+"Webhook verified"
+);
+
+return new Response(
+challenge || "",
+{
+status:200,
+headers:{
+"Content-Type":
+"text/plain"
+}
+}
 );
 
 }
 
 
-return new NextResponse(
+return new Response(
 "Verification failed",
 {
 status:403
@@ -117,14 +124,15 @@ status:403
 );
 
 }
-catch(error){
+catch(err){
 
 console.log(
-error
+"GET webhook error:",
+err
 );
 
-return new NextResponse(
-"Error",
+return new Response(
+"Server Error",
 {
 status:500
 }
@@ -136,11 +144,9 @@ status:500
 
 
 
-
 /*
 =========================
-POST
-Receive Messages
+RECEIVE MESSAGES
 =========================
 */
 
@@ -149,8 +155,7 @@ req:NextRequest,
 {
 params
 }:{
-params:
-Promise<{
+params:Promise<{
 endpoint:string
 }>
 }
@@ -158,15 +163,25 @@ endpoint:string
 
 try{
 
-const{
-endpoint
-}
+const {endpoint}
 =
 await params;
 
 
 const body=
 await req.json();
+
+
+
+console.log(
+"WEBHOOK RECEIVED:",
+JSON.stringify(
+body,
+null,
+2
+)
+);
+
 
 
 const account=
@@ -177,12 +192,12 @@ whatsappAccounts
 )
 .where(
 eq(
-whatsappAccounts
-.webhookEndpoint,
+whatsappAccounts.webhookEndpoint,
 endpoint
 )
 )
 .limit(1);
+
 
 
 if(
@@ -192,7 +207,7 @@ if(
 return NextResponse.json(
 {
 error:
-"Webhook not found"
+"Webhook account not found"
 },
 {
 status:404
@@ -200,6 +215,7 @@ status:404
 );
 
 }
+
 
 
 const whatsappAccount=
@@ -216,7 +232,9 @@ whatsappAccountId:
 whatsappAccount.id,
 
 webhookEvent:
-"message",
+body?.entry?.[0]
+?.changes?.[0]
+?.field || "unknown",
 
 requestBody:
 JSON.stringify(
@@ -230,20 +248,142 @@ processed:true
 
 
 const value=
-body
-?.entry?.[0]
+body?.entry?.[0]
 ?.changes?.[0]
 ?.value;
 
 
+
+/*
+=====================
+STATUS UPDATE
+=====================
+*/
+
+
+const status=
+value?.statuses?.[0];
+
+
+if(status){
+
+console.log(
+"STATUS UPDATE",
+status
+);
+
+
+await db
+.update(
+whatsappMessages
+)
+.set({
+
+status:
+status.status === "read"
+?"read"
+:status.status === "delivered"
+?"delivered"
+:"sent"
+
+})
+.where(
+eq(
+whatsappMessages
+.waMessageId,
+status.id
+)
+);
+
+
+return NextResponse.json({
+success:true
+});
+
+}
+
+
+
+/*
+=====================
+NEW MESSAGE
+=====================
+*/
+
+
 const message=
-value
-?.messages?.[0];
+value?.messages?.[0];
+
+if(!message){
+
+return NextResponse.json({
+success:true
+});
+
+}
+
+
+console.log(
+"NEW MESSAGE:",
+message
+);
+
+
+
+const allowedTypes=[
+
+"text",
+"image",
+"video",
+"audio",
+"document",
+"location",
+"contact",
+"interactive",
+"template",
+"sticker",
+"reaction"
+
+];
+
+
+const messageType=
+allowedTypes.includes(
+message.type
+)
+?
+message.type
+:
+"text";
+
+
+
+let textBody="";
 
 
 if(
-message
+message.type==="text"
 ){
+
+textBody=
+message.text?.body || "";
+
+}
+
+
+if(
+message.type==="button"
+){
+
+textBody=
+message.button?.text || "";
+
+}
+
+
+
+try{
+
 
 await db
 .insert(
@@ -255,7 +395,8 @@ whatsappAccountId:
 whatsappAccount.id,
 
 messageId:
-message.id,
+message.id ||
+`msg_${Date.now()}`,
 
 waMessageId:
 message.id,
@@ -267,7 +408,7 @@ toNumber:
 whatsappAccount.phoneNumber,
 
 messageType:
-message.type,
+messageType as any,
 
 direction:
 "incoming",
@@ -276,19 +417,128 @@ status:
 "delivered",
 
 textBody:
-message?.text?.body ||
-
-"",
-
+textBody,
 
 metadata:{
 
 timestamp:
-message.timestamp
+message.timestamp,
+
+profileName:
+value?.contacts?.[0]
+?.profile?.name
+
+},
+
+createdAt:
+new Date()
+
+})
+.returning();
+
+
+
+console.log(
+"Message saved"
+);
+
+
+
+const existing=
+await db
+.select()
+.from(
+whatsappConversations
+)
+.where(
+and(
+eq(
+whatsappConversations
+.whatsappAccountId,
+whatsappAccount.id
+),
+
+eq(
+whatsappConversations
+.customerNumber,
+message.from
+)
+)
+)
+.limit(1);
+
+
+
+if(
+existing.length
+){
+
+await db
+.update(
+whatsappConversations
+)
+.set({
+
+lastMessageAt:
+new Date(),
+
+lastMessagePreview:
+textBody,
+
+totalMessages:
+(existing[0]
+.totalMessages ||0)+1,
+
+updatedAt:
+new Date()
+
+})
+.where(
+eq(
+whatsappConversations.id,
+existing[0].id
+)
+);
+
+}
+else{
+
+await db
+.insert(
+whatsappConversations
+)
+.values({
+
+whatsappAccountId:
+whatsappAccount.id,
+
+customerNumber:
+message.from,
+
+customerName:
+value?.contacts?.[0]
+?.profile?.name,
+
+totalMessages:1,
+
+lastMessagePreview:
+textBody,
+
+lastMessageAt:
+new Date()
+
+});
 
 }
 
-});
+
+}
+catch(dbErr){
+
+console.log(
+"DB INSERT ERROR:",
+dbErr
+);
 
 }
 
@@ -303,14 +553,16 @@ success:true
 catch(error){
 
 console.log(
-"webhook error",
+"POST WEBHOOK ERROR:",
 error
 );
 
 return NextResponse.json(
 {
 error:
-"Webhook failed"
+error instanceof Error
+?error.message
+:"Webhook failed"
 },
 {
 status:500

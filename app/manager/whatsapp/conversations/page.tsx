@@ -1,4 +1,4 @@
-// app/manager/whatsapp/conversations/page.tsx
+// app/manager/whatsapp/conversations/page.tsx - Fixed with proper theme support
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -27,43 +26,31 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   MessageCircle,
   Send,
   Search,
   Filter,
   MoreVertical,
   Phone,
-  Mail,
   Calendar,
   Clock,
   CheckCircle,
   CheckCheck,
-  Eye,
-  EyeOff,
   Loader2,
-  ArrowLeft,
   RefreshCw,
-  Download,
   Image,
   File,
   Video,
   Music,
   MapPin,
   User,
-  Building2,
-  Plus,
   XCircle,
   Edit,
+  Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface Conversation {
   id: number;
@@ -105,13 +92,6 @@ interface Message {
   mediaId: string | null;
   mediaMimeType: string | null;
   caption: string | null;
-  interactiveData: any | null;
-  templateData: any | null;
-  locationData: any | null;
-  contactData: any | null;
-  metadata: any | null;
-  repliedTo: number | null;
-  replyToMessageId: string | null;
   createdAt: string;
   deliveredAt: string | null;
   readAt: string | null;
@@ -139,8 +119,8 @@ export default function WhatsAppConversationsPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchAccounts();
@@ -155,7 +135,6 @@ export default function WhatsAppConversationsPage() {
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages();
-      // Mark as read
       markConversationAsRead();
     }
   }, [selectedConversation]);
@@ -163,6 +142,19 @@ export default function WhatsAppConversationsPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (selectedConversation) {
+        fetchMessages();
+      }
+      if (selectedAccount) {
+        fetchConversations();
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [selectedConversation, selectedAccount]);
 
   const fetchAccounts = async () => {
     try {
@@ -193,11 +185,10 @@ export default function WhatsAppConversationsPage() {
       });
       const data = await response.json();
       if (data.success) {
-        setConversations(data.conversations);
+        setConversations(data.conversations || []);
       }
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      toast.error('Failed to load conversations');
     }
   };
 
@@ -211,11 +202,10 @@ export default function WhatsAppConversationsPage() {
       });
       const data = await response.json();
       if (data.success) {
-        setMessages(data.messages);
+        setMessages(data.messages || []);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      toast.error('Failed to load messages');
     } finally {
       setMessagesLoading(false);
     }
@@ -234,7 +224,6 @@ export default function WhatsAppConversationsPage() {
         credentials: 'include',
       });
       
-      // Update local state
       setConversations(prev => prev.map(c => 
         c.id === selectedConversation.id 
           ? { ...c, unreadCount: 0 }
@@ -265,8 +254,8 @@ export default function WhatsAppConversationsPage() {
       const data = await response.json();
       if (data.success) {
         setNewMessage('');
-        fetchMessages();
-        fetchConversations();
+        await fetchMessages();
+        await fetchConversations();
         toast.success('Message sent');
       } else {
         throw new Error(data.error || 'Failed to send message');
@@ -279,8 +268,20 @@ export default function WhatsAppConversationsPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchConversations();
+    if (selectedConversation) {
+      await fetchMessages();
+    }
+    setRefreshing(false);
+    toast.success('Refreshed');
+  };
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const formatTime = (dateString: string) => {
@@ -301,13 +302,13 @@ export default function WhatsAppConversationsPage() {
   const getMessageStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <CheckCircle className="h-3 w-3 text-gray-400" />;
+        return <CheckCircle className="h-3 w-3 text-gray-400 dark:text-gray-500" />;
       case 'delivered':
-        return <CheckCheck className="h-3 w-3 text-gray-500" />;
+        return <CheckCheck className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
       case 'read':
-        return <CheckCheck className="h-3 w-3 text-blue-500" />;
+        return <CheckCheck className="h-3 w-3 text-blue-500 dark:text-blue-400" />;
       default:
-        return <Clock className="h-3 w-3 text-gray-400" />;
+        return <Clock className="h-3 w-3 text-gray-400 dark:text-gray-500" />;
     }
   };
 
@@ -339,7 +340,7 @@ export default function WhatsAppConversationsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -347,9 +348,9 @@ export default function WhatsAppConversationsPage() {
   if (accounts.length === 0) {
     return (
       <div className="text-center py-12">
-        <MessageCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-600">No WhatsApp Accounts</h2>
-        <p className="text-gray-500 mt-2">Connect a WhatsApp account to start messaging</p>
+        <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-foreground">No WhatsApp Accounts</h2>
+        <p className="text-muted-foreground mt-2">Connect a WhatsApp account to start messaging</p>
         <Button onClick={() => router.push('/manager/whatsapp/accounts')} className="mt-4">
           Connect Account
         </Button>
@@ -362,8 +363,8 @@ export default function WhatsAppConversationsPage() {
       {/* Header */}
       <div className="flex justify-between items-center flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold">WhatsApp Conversations</h1>
-          <p className="text-gray-500 mt-1">Manage all your customer conversations</p>
+          <h1 className="text-2xl font-bold text-foreground">WhatsApp Conversations</h1>
+          <p className="text-muted-foreground mt-1">Manage all your customer conversations</p>
         </div>
         <div className="flex gap-2">
           <Select
@@ -388,8 +389,8 @@ export default function WhatsAppConversationsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={fetchConversations}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
             Refresh
           </Button>
         </div>
@@ -398,11 +399,11 @@ export default function WhatsAppConversationsPage() {
       {/* Main Content */}
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Conversations List */}
-        <Card className="w-96 flex flex-col flex-shrink-0">
+        <Card className="w-96 flex flex-col flex-shrink-0 border-border">
           <CardHeader className="pb-3">
             <div className="space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search conversations..."
                   value={searchTerm}
@@ -429,34 +430,37 @@ export default function WhatsAppConversationsPage() {
             <div className="space-y-1">
               {filteredConversations.length === 0 ? (
                 <div className="text-center py-12">
-                  <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No conversations found</p>
+                  <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No conversations found</p>
                 </div>
               ) : (
                 filteredConversations.map((conv) => (
                   <div
                     key={conv.id}
-                    className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedConversation?.id === conv.id ? 'bg-gray-100' : ''
-                    }`}
+                    className={cn(
+                      "p-3 cursor-pointer transition-colors",
+                      selectedConversation?.id === conv.id 
+                        ? "bg-muted" 
+                        : "hover:bg-muted/50"
+                    )}
                     onClick={() => setSelectedConversation(conv)}
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-green-100 text-green-600">
+                        <AvatarFallback className="bg-primary/10 text-primary">
                           {conv.customerName?.charAt(0) || conv.customerNumber.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-medium truncate">
+                          <p className="font-medium text-foreground truncate">
                             {conv.customerName || conv.customerNumber}
                           </p>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {formatTime(conv.lastMessageAt)}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="text-sm text-muted-foreground truncate">
                           {conv.lastMessagePreview || 'No messages'}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
@@ -465,11 +469,6 @@ export default function WhatsAppConversationsPage() {
                               {conv.unreadCount} new
                             </Badge>
                           )}
-                          {conv.tags?.slice(0, 2).map((tag, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
                         </div>
                       </div>
                     </div>
@@ -481,23 +480,23 @@ export default function WhatsAppConversationsPage() {
         </Card>
 
         {/* Chat Area */}
-        <Card className="flex-1 flex flex-col overflow-hidden">
+        <Card className="flex-1 flex flex-col overflow-hidden border-border">
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <CardHeader className="pb-3 border-b flex-shrink-0">
+              <CardHeader className="pb-3 border-b flex-shrink-0 border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-green-100 text-green-600">
+                      <AvatarFallback className="bg-primary/10 text-primary">
                         {selectedConversation.customerName?.charAt(0) || selectedConversation.customerNumber.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold">
+                      <h3 className="font-semibold text-foreground">
                         {selectedConversation.customerName || selectedConversation.customerNumber}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {selectedConversation.customerNumber}
                       </p>
                     </div>
@@ -509,29 +508,33 @@ export default function WhatsAppConversationsPage() {
               </CardHeader>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
                 {messagesLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-12">
-                    <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No messages yet</p>
-                    <p className="text-sm text-gray-400">Send a message to start the conversation</p>
+                    <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No messages yet</p>
+                    <p className="text-sm text-muted-foreground">Send a message to start the conversation</p>
                   </div>
                 ) : (
                   messages.map((msg) => (
                     <div
                       key={msg.id}
-                      className={`flex ${msg.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
+                      className={cn(
+                        "flex",
+                        msg.direction === 'outgoing' ? "justify-end" : "justify-start"
+                      )}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
+                        className={cn(
+                          "max-w-[70%] rounded-lg p-3",
                           msg.direction === 'outgoing'
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground"
+                        )}
                       >
                         {msg.messageType !== 'text' && (
                           <div className="flex items-center gap-2 mb-1">
@@ -539,7 +542,9 @@ export default function WhatsAppConversationsPage() {
                             <span className="text-xs opacity-75 capitalize">{msg.messageType}</span>
                           </div>
                         )}
-                        <p className="text-sm break-words">{msg.textBody || msg.caption || 'Media message'}</p>
+                        <p className="text-sm break-words whitespace-pre-wrap">
+                          {msg.textBody || msg.caption || 'Media message'}
+                        </p>
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-xs opacity-75">
                             {formatTime(msg.createdAt)}
@@ -554,24 +559,14 @@ export default function WhatsAppConversationsPage() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t flex-shrink-0">
-                {replyTo && (
-                  <div className="mb-2 p-2 bg-gray-100 rounded-lg flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500">Replying to:</p>
-                      <p className="text-sm truncate">{replyTo.textBody?.substring(0, 50)}</p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setReplyTo(null)}>
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+              <div className="p-4 border-t flex-shrink-0 border-border bg-background">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                    className="flex-1"
                   />
                   <Button onClick={handleSendMessage} disabled={sendingMessage || !newMessage.trim()}>
                     {sendingMessage ? (
@@ -586,9 +581,9 @@ export default function WhatsAppConversationsPage() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <MessageCircle className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-600">Select a conversation</h3>
-                <p className="text-gray-400 mt-1">Choose a conversation to start messaging</p>
+                <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground">Select a conversation</h3>
+                <p className="text-muted-foreground mt-1">Choose a conversation to start messaging</p>
               </div>
             </div>
           )}
@@ -596,10 +591,10 @@ export default function WhatsAppConversationsPage() {
 
         {/* Customer Details Sidebar */}
         {showDetails && selectedConversation && (
-          <Card className="w-80 flex-shrink-0 overflow-y-auto">
+          <Card className="w-80 flex-shrink-0 overflow-y-auto border-border">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle>Customer Details</CardTitle>
+                <CardTitle className="text-foreground">Customer Details</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)}>
                   <XCircle className="h-4 w-4" />
                 </Button>
@@ -608,39 +603,47 @@ export default function WhatsAppConversationsPage() {
             <CardContent className="space-y-4">
               <div className="text-center">
                 <Avatar className="h-20 w-20 mx-auto">
-                  <AvatarFallback className="bg-green-100 text-green-600 text-2xl">
+                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">
                     {selectedConversation.customerName?.charAt(0) || selectedConversation.customerNumber.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <h3 className="font-semibold mt-2">{selectedConversation.customerName || 'Unknown'}</h3>
-                <p className="text-sm text-gray-500">{selectedConversation.customerNumber}</p>
+                <h3 className="font-semibold text-foreground mt-2">
+                  {selectedConversation.customerName || 'Unknown'}
+                </h3>
+                <p className="text-sm text-muted-foreground">{selectedConversation.customerNumber}</p>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  <span>{selectedConversation.customerNumber}</span>
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">{selectedConversation.customerNumber}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span>First contact: {format(new Date(selectedConversation.createdAt), 'MMM d, yyyy')}</span>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">
+                    First contact: {format(new Date(selectedConversation.createdAt), 'MMM d, yyyy')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <span>Last active: {formatTime(selectedConversation.lastMessageAt)}</span>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">
+                    Last active: {formatTime(selectedConversation.lastMessageAt)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <MessageCircle className="h-4 w-4 text-gray-400" />
-                  <span>Total messages: {selectedConversation.totalMessages}</span>
+                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">
+                    Total messages: {selectedConversation.totalMessages}
+                  </span>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               <div>
-                <h4 className="text-sm font-semibold mb-2">Tags</h4>
+                <h4 className="text-sm font-semibold text-foreground mb-2">Tags</h4>
                 <div className="flex flex-wrap gap-2">
                   {selectedConversation.tags?.map((tag, i) => (
                     <Badge key={i} variant="secondary">
@@ -655,8 +658,8 @@ export default function WhatsAppConversationsPage() {
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold mb-2">Notes</h4>
-                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+                <h4 className="text-sm font-semibold text-foreground mb-2">Notes</h4>
+                <p className="text-sm text-muted-foreground bg-muted p-2 rounded-lg">
                   {selectedConversation.metadata?.notes || 'No notes added yet'}
                 </p>
                 <Button variant="outline" size="sm" className="w-full mt-2">

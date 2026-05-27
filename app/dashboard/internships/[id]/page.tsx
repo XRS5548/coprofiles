@@ -1,4 +1,5 @@
-// app/dashboard/internships/my-applications/[id]/page.tsx - Fixed version
+// app/dashboard/internships/my-applications/[id]/page.tsx - Fixed Version
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,6 +28,7 @@ import {
   Calendar as CalendarIcon,
   CreditCard,
   Lock,
+  FileCheck,
 } from 'lucide-react';
 
 declare global {
@@ -48,7 +50,6 @@ interface ApplicationDetails {
   certificatePaid: boolean;
   internshipActive: boolean;
   appliedAt?: Date | string | null;
-  // Direct fields from API (not nested)
   internshipTitle?: string;
   companyName?: string;
   companyLogo?: string | null;
@@ -59,7 +60,6 @@ interface ApplicationDetails {
   autoCancel?: boolean;
   companyVerified?: boolean;
   companyDescription?: string | null;
-  // Nested internship object (alternative structure)
   internship?: {
     id: number;
     title: string;
@@ -87,11 +87,9 @@ export default function ApplicationDetailsPage() {
   const router = useRouter();
   const [application, setApplication] = useState<ApplicationDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
-    // Load Razorpay script
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -125,15 +123,11 @@ export default function ApplicationDetailsPage() {
 
         console.log('Application data received:', data);
         
-        // Handle both nested and flat structure
         let appData = data.application;
         
-        // If the API returns nested structure, use it
         if (appData && !appData.internshipTitle && appData.internship) {
-          // Already has nested structure, use as is
           setApplication(appData);
         } else if (appData) {
-          // Transform flat structure to expected format
           setApplication({
             id: appData.id,
             internshipId: appData.internshipId,
@@ -176,7 +170,6 @@ export default function ApplicationDetailsPage() {
     }
   }, [params.id, router]);
 
-  // Helper to safely get internship title
   const getInternshipTitle = () => {
     if (!application) return '';
     if (application.internship?.title) return application.internship.title;
@@ -184,7 +177,6 @@ export default function ApplicationDetailsPage() {
     return 'Internship';
   };
 
-  // Helper to safely get company name
   const getCompanyName = () => {
     if (!application) return '';
     if (application.internship?.company) return application.internship.company;
@@ -192,7 +184,6 @@ export default function ApplicationDetailsPage() {
     return 'Company';
   };
 
-  // Helper to safely get location
   const getLocation = () => {
     if (!application) return 'Remote';
     if (application.internship?.location) return application.internship.location;
@@ -200,7 +191,6 @@ export default function ApplicationDetailsPage() {
     return 'Remote';
   };
 
-  // Helper to safely get duration
   const getDuration = () => {
     if (!application) return 'Not specified';
     if (application.internship?.duration) return application.internship.duration;
@@ -208,7 +198,6 @@ export default function ApplicationDetailsPage() {
     return 'Not specified';
   };
 
-  // Helper to safely get description
   const getDescription = () => {
     if (!application) return 'No description provided';
     if (application.internship?.description) return application.internship.description;
@@ -216,7 +205,6 @@ export default function ApplicationDetailsPage() {
     return 'No description provided';
   };
 
-  // Helper to safely get last apply date
   const getLastApplyDate = () => {
     if (!application) return null;
     if (application.internship?.lastApplyDate) return application.internship.lastApplyDate;
@@ -224,7 +212,6 @@ export default function ApplicationDetailsPage() {
     return null;
   };
 
-  // Helper to safely get auto cancel
   const getAutoCancel = () => {
     if (!application) return false;
     if (application.internship?.autoCancel !== undefined) return application.internship.autoCancel;
@@ -243,7 +230,6 @@ export default function ApplicationDetailsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId: application.id,
-          amount: 100,
         }),
         credentials: 'include',
       });
@@ -277,11 +263,10 @@ export default function ApplicationDetailsPage() {
           const verifyData = await verifyResponse.json();
 
           if (verifyResponse.ok) {
-            toast.success('Payment successful! Certificate unlocked!');
+            toast.success('Payment successful! Certificate will be available soon!');
             setApplication({
               ...application,
               certificatePaid: true,
-              certificateUnlocked: true,
             });
           } else {
             throw new Error(verifyData.message || 'Payment verification failed');
@@ -306,54 +291,14 @@ export default function ApplicationDetailsPage() {
     }
   };
 
-  const handleDownloadCertificate = async () => {
-    if (!application?.certificateUnlocked) {
-      toast.error('Certificate not available', {
-        description: 'Please complete the internship and pay for the certificate to unlock.',
-      });
-      return;
-    }
-
-    setDownloadingCertificate(true);
-    try {
-      const response = await fetch(`/api/user/internships/${application.internshipId}/certificate`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to download certificate');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `certificate-${application.id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success('Certificate downloaded successfully');
-    } catch (error) {
-      console.error('Error downloading certificate:', error);
-      toast.error('Failed to download certificate', {
-        description: error instanceof Error ? error.message : 'Please try again later.',
-      });
-    } finally {
-      setDownloadingCertificate(false);
-    }
-  };
-
   const getStatusBadge = () => {
     if (!application) return null;
     
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: Clock, label: 'Pending Review' },
-      accepted: { color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle2, label: 'Accepted' },
-      rejected: { color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle, label: 'Rejected' },
-      completed: { color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Award, label: 'Completed' },
+      pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-400 dark:border-yellow-800', icon: Clock, label: 'Pending Review' },
+      accepted: { color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800', icon: CheckCircle2, label: 'Accepted' },
+      rejected: { color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800', icon: XCircle, label: 'Rejected' },
+      completed: { color: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800', icon: Award, label: 'Completed' },
     };
     
     const config = statusConfig[application.status];
@@ -392,7 +337,7 @@ export default function ApplicationDetailsPage() {
       case 'completed':
         return {
           title: 'Internship Completed ✅',
-          message: 'You have successfully completed this internship. Your certificate is now available for download.',
+          message: 'You have successfully completed this internship. Your certificate will be available in the Certificates section once the company issues it.',
           icon: <Award className="h-5 w-5 text-blue-500" />
         };
       default:
@@ -436,16 +381,16 @@ export default function ApplicationDetailsPage() {
     return (
       <div className="space-y-6 max-w-4xl mx-auto">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-10 rounded-full dark:bg-gray-800" />
+          <Skeleton className="h-8 w-48 dark:bg-gray-800" />
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+            <Skeleton key={i} className="h-32 rounded-lg dark:bg-gray-800" />
           ))}
         </div>
-        <Skeleton className="h-64 rounded-lg" />
-        <Skeleton className="h-96 rounded-lg" />
+        <Skeleton className="h-64 rounded-lg dark:bg-gray-800" />
+        <Skeleton className="h-96 rounded-lg dark:bg-gray-800" />
       </div>
     );
   }
@@ -453,9 +398,9 @@ export default function ApplicationDetailsPage() {
   if (!application) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto text-center py-12">
-        <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-2xl font-semibold text-gray-600">Application Not Found</h2>
-        <p className="text-gray-500 mt-2">The application you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+        <AlertCircle className="h-16 w-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+        <h2 className="text-2xl font-semibold text-gray-600 dark:text-gray-400">Application Not Found</h2>
+        <p className="text-gray-500 dark:text-gray-500 mt-2">The application you&apos;re looking for doesn&apos;t exist or has been removed.</p>
         <Button onClick={() => router.push('/dashboard/internships/my-applications')} className="mt-4">
           Back to Applications
         </Button>
@@ -468,7 +413,7 @@ export default function ApplicationDetailsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Back Button */}
-      <Button variant="ghost" onClick={() => router.back()} className="gap-2">
+      <Button variant="ghost" onClick={() => router.back()} className="gap-2 dark:text-gray-300 dark:hover:bg-gray-800">
         <ArrowLeft className="h-4 w-4" />
         Back to Applications
       </Button>
@@ -476,76 +421,76 @@ export default function ApplicationDetailsPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-linear-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
             {getInternshipTitle()}
           </h1>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <div className="flex items-center gap-1">
-              <Building2 className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">{getCompanyName()}</span>
+              <Building2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-gray-600 dark:text-gray-400">{getCompanyName()}</span>
             </div>
             <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">{getLocation()}</span>
+              <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span className="text-gray-600 dark:text-gray-400">{getLocation()}</span>
             </div>
           </div>
         </div>
         {getStatusBadge()}
       </div>
 
-      <Separator />
+      <Separator className="dark:bg-gray-800" />
 
       {/* Application Info Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Applied Date</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Applied Date</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">{formatDate(application.appliedAt)}</span>
+              <Calendar className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="font-medium dark:text-gray-300">{formatDate(application.appliedAt)}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Duration</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Duration</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">{getDuration()}</span>
+              <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="font-medium dark:text-gray-300">{getDuration()}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Roll Number</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Roll Number</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Hash className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">{application.rollNo || 'Not provided'}</span>
+              <Hash className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <span className="font-medium dark:text-gray-300">{application.rollNo || 'Not provided'}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">Certificate Status</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Certificate Status</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Award className={`h-4 w-4 ${application.certificateUnlocked ? 'text-green-500' : 'text-gray-400'}`} />
-              <span className={`font-medium ${application.certificateUnlocked ? 'text-green-600' : 'text-gray-500'}`}>
+              <Award className={`h-4 w-4 ${application.certificateUnlocked ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'}`} />
+              <span className={`font-medium ${application.certificateUnlocked ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                 {application.certificateUnlocked ? 'Unlocked' : 'Locked'}
               </span>
             </div>
             {application.certificatePaid && (
-              <Badge variant="secondary" className="mt-2 text-xs">
+              <Badge variant="secondary" className="mt-2 text-xs dark:bg-gray-800 dark:text-gray-300">
                 <CreditCard className="h-3 w-3 mr-1" />
                 Payment Completed
               </Badge>
@@ -556,53 +501,53 @@ export default function ApplicationDetailsPage() {
 
       {/* Exam Date Card */}
       {application.examDate && (
-        <Card className="border-purple-200 bg-purple-50/30">
+        <Card className="border-purple-200 bg-purple-50/30 dark:border-purple-800 dark:bg-purple-950/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-purple-700 flex items-center gap-2">
+            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400 flex items-center gap-2">
               <CalendarIcon className="h-4 w-4" />
               Exam Date
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-purple-700">{formatExamDate(application.examDate)}</span>
+              <span className="font-medium text-purple-700 dark:text-purple-400">{formatExamDate(application.examDate)}</span>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Internship Description */}
-      <Card>
+      <Card className="dark:bg-gray-900">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 dark:text-gray-200">
             <FileText className="h-5 w-5" />
             Internship Description
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{getDescription()}</p>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{getDescription()}</p>
         </CardContent>
       </Card>
 
       {/* Application Status Details */}
-      <Card>
+      <Card className="dark:bg-gray-900">
         <CardHeader>
-          <CardTitle>Application Status</CardTitle>
-          <CardDescription>Track the progress of your application</CardDescription>
+          <CardTitle className="dark:text-gray-200">Application Status</CardTitle>
+          <CardDescription className="dark:text-gray-400">Track the progress of your application</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               <div className="mt-0.5">{statusInfo.icon}</div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-800">{statusInfo.title}</h3>
-                <p className="text-gray-600 text-sm mt-1">{statusInfo.message}</p>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200">{statusInfo.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{statusInfo.message}</p>
               </div>
             </div>
 
             {application.internshipActive && application.status === 'pending' && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="text-sm text-blue-700">
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-100 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-400">
                   <span className="font-semibold">Internship Status: </span>
                   This internship is currently active and accepting applications.
                 </p>
@@ -610,8 +555,8 @@ export default function ApplicationDetailsPage() {
             )}
 
             {getAutoCancel() && application.status === 'accepted' && (
-              <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                <p className="text-sm text-yellow-700">
+              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-100 dark:border-yellow-800">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">
                   <span className="font-semibold">Note: </span>
                   This internship has auto-cancel enabled. Make sure to complete it before the deadline.
                 </p>
@@ -619,8 +564,8 @@ export default function ApplicationDetailsPage() {
             )}
 
             {getLastApplyDate() && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-semibold">Last Application Date: </span>
                   {formatDate(getLastApplyDate())}
                 </p>
@@ -630,29 +575,29 @@ export default function ApplicationDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Certificate Section */}
+      {/* Certificate Section - Only for Payment (Not for Download) */}
       {application.status === 'completed' && (
-        <Card className="border-green-200 bg-green-50/30">
+        <Card className="border-green-200 bg-green-50/30 dark:border-green-800 dark:bg-green-950/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-700">
+            <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
               <Award className="h-5 w-5" />
               Internship Certificate
             </CardTitle>
-            <CardDescription>You have successfully completed this internship!</CardDescription>
+            <CardDescription className="dark:text-green-300/70">You have successfully completed this internship!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!application.certificatePaid && !application.certificateUnlocked && (
               <div className="space-y-3">
-                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <h4 className="font-semibold text-yellow-800 flex items-center gap-2">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-400 flex items-center gap-2">
                     <Lock className="h-4 w-4" />
                     Certificate Locked - Payment Required
                   </h4>
-                  <p className="text-sm text-yellow-700 mt-1">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400/80 mt-1">
                     Unlock your internship certificate for just ₹129. Get a verified certificate that you can share on LinkedIn and with employers.
                   </p>
                 </div>
-                <Button onClick={handlePayment} disabled={processingPayment} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
+                <Button onClick={handlePayment} disabled={processingPayment} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700">
                   {processingPayment ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -668,29 +613,36 @@ export default function ApplicationDetailsPage() {
               </div>
             )}
 
+            {application.certificatePaid && !application.certificateUnlocked && (
+              <div className="p-4 bg-blue-100 dark:bg-blue-950/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-400 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Payment Completed!
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-400/80 mt-1">
+                  Your payment has been successfully processed. The certificate will be available in the Certificates section once the company issues it.
+                </p>
+              </div>
+            )}
+
             {application.certificateUnlocked && (
-              <>
-                <div className="p-4 bg-green-100 rounded-lg border border-green-200">
-                  <h4 className="font-semibold text-green-800 flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Certificate Unlocked!
-                  </h4>
-                  <p className="text-sm text-green-700 mt-1">Your certificate is ready for download.</p>
-                </div>
-                <Button onClick={handleDownloadCertificate} disabled={downloadingCertificate} className="w-full gap-2 bg-green-600 hover:bg-green-700">
-                  {downloadingCertificate ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="h-4 w-4" />
-                      Download Certificate (PDF)
-                    </>
-                  )}
+              <div className="p-4 bg-green-100 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-800">
+                <h4 className="font-semibold text-green-800 dark:text-green-400 flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  Certificate Available!
+                </h4>
+                <p className="text-sm text-green-700 dark:text-green-400/80 mt-1">
+                  Your certificate has been issued and is now available for download.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-3 w-full gap-2 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950/30"
+                  onClick={() => router.push('/dashboard/certificates')}
+                >
+                  <Download className="h-4 w-4" />
+                  View in Certificates
                 </Button>
-              </>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -699,13 +651,13 @@ export default function ApplicationDetailsPage() {
       {/* Action Buttons */}
       <div className="flex gap-4 pt-4">
         {application.status === 'rejected' && (
-          <Button variant="outline" onClick={() => router.push('/dashboard/internships')}>
+          <Button variant="outline" onClick={() => router.push('/dashboard/internships')} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
             Browse More Internships
             <ExternalLink className="h-4 w-4 ml-2" />
           </Button>
         )}
         
-        <Button variant="outline" onClick={() => router.push('/dashboard/internships/my-applications')}>
+        <Button variant="outline" onClick={() => router.push('/dashboard/internships/my-applications')} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
           View All Applications
         </Button>
       </div>

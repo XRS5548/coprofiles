@@ -1,4 +1,5 @@
-// app/dashboard/certificates/page.tsx
+// app/dashboard/certificates/page.tsx - Complete with Dark/Light Theme
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -118,13 +119,13 @@ export default function CertificatesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle2 className="h-3 w-3 mr-1" /> Active</Badge>;
+        return <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-none"><CheckCircle2 className="h-3 w-3 mr-1" /> Active</Badge>;
       case 'under_review':
-        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" /> Under Review</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400 border-none"><Clock className="h-3 w-3 mr-1" /> Under Review</Badge>;
       case 'bounced':
-        return <Badge className="bg-red-100 text-red-800"><XCircle className="h-3 w-3 mr-1" /> Bounced</Badge>;
+        return <Badge className="bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400 border-none"><XCircle className="h-3 w-3 mr-1" /> Bounced</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge variant="outline" className="dark:border-gray-700 dark:text-gray-400">Unknown</Badge>;
     }
   };
 
@@ -147,12 +148,17 @@ export default function CertificatesPage() {
     return (
       <div className="space-y-6">
         <div>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
+          <Skeleton className="h-8 w-48 dark:bg-gray-800" />
+          <Skeleton className="h-4 w-64 mt-2 dark:bg-gray-800" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-lg dark:bg-gray-800" />
+          ))}
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-64 rounded-lg" />
+            <Skeleton key={i} className="h-64 rounded-lg dark:bg-gray-800" />
           ))}
         </div>
       </div>
@@ -163,48 +169,48 @@ export default function CertificatesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-linear-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
           My Certificates
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
           View and download all your internship certificates
         </p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-green-100 p-2">
-              <Award className="h-5 w-5 text-green-600" />
+            <div className="rounded-lg bg-green-100 dark:bg-green-950 p-2">
+              <Award className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Total Certificates</p>
-              <p className="text-2xl font-bold">{certificates.length}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Total Certificates</p>
+              <p className="text-2xl font-bold dark:text-gray-200">{certificates.length}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+            <div className="rounded-lg bg-blue-100 dark:bg-blue-950 p-2">
+              <CheckCircle2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Active Certificates</p>
-              <p className="text-2xl font-bold">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Active Certificates</p>
+              <p className="text-2xl font-bold dark:text-gray-200">
                 {certificates.filter(c => c.status === 'active').length}
               </p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-purple-100 p-2">
-              <Building2 className="h-5 w-5 text-purple-600" />
+            <div className="rounded-lg bg-purple-100 dark:bg-purple-950 p-2">
+              <Building2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Companies</p>
-              <p className="text-2xl font-bold">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Companies</p>
+              <p className="text-2xl font-bold dark:text-gray-200">
                 {new Set(certificates.map(c => c.companyName)).size}
               </p>
             </div>
@@ -213,44 +219,44 @@ export default function CertificatesPage() {
       </div>
 
       {/* Search */}
-      <Card className="p-4">
+      <Card className="p-4 dark:bg-gray-900">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <Input
             placeholder="Search by internship title, company, certificate number, or verification code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-9 dark:bg-gray-800 dark:border-gray-700"
           />
         </div>
       </Card>
 
       {/* Certificates Grid */}
       {filteredCertificates.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Award className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600">No Certificates Found</h3>
-          <p className="text-gray-400 mt-1">
+        <Card className="p-12 text-center dark:bg-gray-900">
+          <Award className="h-16 w-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400">No Certificates Found</h3>
+          <p className="text-gray-400 dark:text-gray-500 mt-1">
             {searchTerm ? 'Try adjusting your search' : 'Complete internships to earn certificates'}
           </p>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredCertificates.map((certificate) => (
-            <Card key={certificate.id} className="hover:shadow-lg transition-all">
+            <Card key={certificate.id} className="hover:shadow-lg transition-all dark:bg-gray-900">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 p-2">
+                    <div className="rounded-lg bg-linear-to-br from-indigo-500 to-purple-600 p-2">
                       <Award className="h-5 w-5 text-white" />
                     </div>
                     {getStatusBadge(certificate.status)}
                   </div>
                 </div>
-                <CardTitle className="text-lg mt-2 line-clamp-1">
+                <CardTitle className="text-lg mt-2 line-clamp-1 dark:text-gray-200">
                   {certificate.internshipTitle}
                 </CardTitle>
-                <CardDescription className="flex items-center gap-1">
+                <CardDescription className="flex items-center gap-1 dark:text-gray-400">
                   <Building2 className="h-3 w-3" />
                   {certificate.companyName}
                 </CardDescription>
@@ -258,16 +264,16 @@ export default function CertificatesPage() {
               <CardContent className="space-y-3">
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Certificate No:</span>
-                    <span className="font-mono text-xs">{certificate.certificateNumber}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Certificate No:</span>
+                    <span className="font-mono text-xs dark:text-gray-300">{certificate.certificateNumber}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Verification Code:</span>
-                    <span className="font-mono text-xs">{certificate.verificationCode}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Verification Code:</span>
+                    <span className="font-mono text-xs dark:text-gray-300">{certificate.verificationCode}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Issue Date:</span>
-                    <span className="text-sm">{formatDate(certificate.issueDate)}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Issue Date:</span>
+                    <span className="text-sm dark:text-gray-300">{formatDate(certificate.issueDate)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -275,7 +281,7 @@ export default function CertificatesPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   onClick={() => handleDownload(certificate)}
                 >
                   <Download className="h-3 w-3" />
@@ -284,7 +290,7 @@ export default function CertificatesPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                   onClick={() => {
                     setSelectedCertificate(certificate);
                     handleShare(certificate);
@@ -298,47 +304,47 @@ export default function CertificatesPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 gap-2"
+                      className="flex-1 gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     >
                       <Eye className="h-3 w-3" />
                       View
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-2xl dark:bg-gray-900">
                     <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <Award className="h-5 w-5 text-indigo-600" />
+                      <DialogTitle className="flex items-center gap-2 dark:text-gray-200">
+                        <Award className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                         Certificate Details
                       </DialogTitle>
-                      <DialogDescription>
+                      <DialogDescription className="dark:text-gray-400">
                         Internship completion certificate
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg text-center">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                      <div className="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 p-6 rounded-lg text-center">
+                        <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                           Certificate of Completion
                         </h3>
-                        <p className="text-gray-600">This certificate is proudly presented to</p>
-                        <p className="text-xl font-semibold text-indigo-600 my-2">
+                        <p className="text-gray-600 dark:text-gray-400">This certificate is proudly presented to</p>
+                        <p className="text-xl font-semibold text-indigo-600 dark:text-indigo-400 my-2">
                           {certificate.userName}
                         </p>
-                        <p className="text-gray-600">for successfully completing</p>
-                        <p className="text-lg font-semibold text-gray-800 my-2">
+                        <p className="text-gray-600 dark:text-gray-400">for successfully completing</p>
+                        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200 my-2">
                           {certificate.internshipTitle}
                         </p>
-                        <p className="text-gray-600">at</p>
-                        <p className="text-lg font-semibold text-gray-800">
+                        <p className="text-gray-600 dark:text-gray-400">at</p>
+                        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                           {certificate.companyName}
                         </p>
-                        <div className="mt-4 pt-4 border-t">
-                          <p className="text-sm text-gray-500">
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             Certificate Number: {certificate.certificateNumber}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             Issue Date: {formatDate(certificate.issueDate)}
                           </p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             Verification Code: {certificate.verificationCode}
                           </p>
                         </div>
@@ -353,7 +359,7 @@ export default function CertificatesPage() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="flex-1 gap-2"
+                          className="flex-1 gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                           onClick={() => {
                             const link = `${window.location.origin}/verify-certificate?code=${certificate.verificationCode}`;
                             navigator.clipboard.writeText(link);
@@ -375,16 +381,16 @@ export default function CertificatesPage() {
 
       {/* Share Dialog */}
       <Dialog open={!!verificationLink} onOpenChange={() => setVerificationLink('')}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-900">
           <DialogHeader>
-            <DialogTitle>Share Your Certificate</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-gray-200">Share Your Certificate</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
               Share this verification link on LinkedIn, resume, or portfolio
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm font-mono break-all">{verificationLink}</p>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-sm font-mono break-all dark:text-gray-300">{verificationLink}</p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -399,7 +405,7 @@ export default function CertificatesPage() {
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 onClick={() => window.open(verificationLink, '_blank')}
               >
                 <ExternalLink className="h-4 w-4" />

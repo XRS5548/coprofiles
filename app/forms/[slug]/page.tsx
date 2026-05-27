@@ -1,4 +1,4 @@
-// app/forms/[slug]/page.tsx - Complete Fixed Version
+// app/forms/[slug]/page.tsx - Updated with authentication handling
 
 'use client';
 
@@ -24,6 +24,7 @@ import {
     CheckCircle,
     AlertCircle,
     Upload,
+    LogIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -80,6 +81,8 @@ export default function PublicFormPage() {
     const [passkeyVerified, setPasskeyVerified] = useState(false);
     const [passkeyError, setPasskeyError] = useState('');
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -92,29 +95,36 @@ export default function PublicFormPage() {
     }, []);
 
     useEffect(() => {
+        checkAuthStatus();
         fetchForm();
     }, [slug]);
 
-    // Helper function to parse options (handles both string and array formats)
+    const checkAuthStatus = async () => {
+        try {
+            const response = await fetch('/api/user/profile', {
+                credentials: 'include',
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setIsLoggedIn(true);
+                setUser(data.profile);
+            }
+        } catch (error) {
+            setIsLoggedIn(false);
+        }
+    };
+
     const parseOptions = (options: any): any[] => {
         if (!options) return [];
-
-        // If options is already an array
-        if (Array.isArray(options)) {
-            return options;
-        }
-
-        // If options is a string, try to parse it as JSON
+        if (Array.isArray(options)) return options;
         if (typeof options === 'string') {
             try {
                 const parsed = JSON.parse(options);
                 return Array.isArray(parsed) ? parsed : [];
             } catch (e) {
-                // If not valid JSON, split by comma
                 return options.split(',').map(opt => opt.trim());
             }
         }
-
         return [];
     };
 
@@ -130,12 +140,11 @@ export default function PublicFormPage() {
                 const initialData: Record<string, any> = {};
                 (data.fields || []).forEach((field: FormField) => {
                     if (field.fieldType === 'checkbox') {
-                        // Check if it's a multiple checkbox field (has options array)
                         const options = parseOptions(field.options);
                         if (options.length > 0) {
-                            initialData[field.fieldName] = []; // Initialize as empty array for multiple checkboxes
+                            initialData[field.fieldName] = [];
                         } else {
-                            initialData[field.fieldName] = false; // Initialize as false for single checkbox
+                            initialData[field.fieldName] = false;
                         }
                     } else if (field.fieldType === 'radio' || field.fieldType === 'select') {
                         initialData[field.fieldName] = '';
@@ -183,16 +192,13 @@ export default function PublicFormPage() {
         if (!field.isRequired) return '';
 
         if (field.fieldType === 'checkbox') {
-            // Handle both single checkbox (boolean) and multiple checkboxes (array)
             const options = parseOptions(field.options);
             if (options.length > 0) {
-                // Multiple checkboxes - check if array has any items
                 const isChecked = Array.isArray(value) && value.length > 0;
                 if (!isChecked) {
                     return `${field.fieldLabel} is required (select at least one option)`;
                 }
             } else {
-                // Single checkbox
                 const isChecked = value === true || value === 'true' || value === 'on' || value === 1 || value === 'yes';
                 if (!isChecked) {
                     return `${field.fieldLabel} is required`;
@@ -231,8 +237,8 @@ export default function PublicFormPage() {
             description: form?.paymentDescription || 'Payment for form submission',
             order_id: orderData.orderId,
             prefill: {
-                name: formData.name || '',
-                email: formData.email || '',
+                name: formData.name || user?.name || '',
+                email: formData.email || user?.email || '',
                 contact: formData.phone || '',
             },
             theme: {
@@ -248,8 +254,8 @@ export default function PublicFormPage() {
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
                             formData,
-                            userEmail: formData.email,
-                            userName: formData.name,
+                            userEmail: formData.email || user?.email,
+                            userName: formData.name || user?.name,
                         }),
                     });
 
@@ -298,8 +304,9 @@ export default function PublicFormPage() {
                 body: JSON.stringify({
                     formData,
                     formId: form?.id,
-                    userEmail: formData.email,
-                    userName: formData.name,
+                    userEmail: formData.email || user?.email,
+                    userName: formData.name || user?.name,
+                    userId: user?.id,
                 }),
             });
 
@@ -404,39 +411,25 @@ export default function PublicFormPage() {
 
             case 'checkbox': {
                 const checkboxOptions = parseOptions(field.options);
-                // Handle single checkbox vs multiple checkboxes
                 if (checkboxOptions.length === 0) {
-                    // Single checkbox (boolean)
                     return (
                         <div className="flex items-start gap-3 rounded-md border p-3">
                             <input
                                 type="checkbox"
                                 id={field.fieldName}
                                 checked={value || false}
-                                onChange={(e) =>
-                                    handleFieldChange(
-                                        field.fieldName,
-                                        e.target.checked
-                                    )
-                                }
+                                onChange={(e) => handleFieldChange(field.fieldName, e.target.checked)}
                                 disabled={submitting || processingPayment}
                                 className="mt-1 h-4 w-4 shrink-0"
                             />
-                            <Label
-                                htmlFor={field.fieldName}
-                                className="text-sm font-normal leading-5 cursor-pointer"
-                            >
+                            <Label htmlFor={field.fieldName} className="text-sm font-normal leading-5 cursor-pointer">
                                 {field.fieldLabel}
-                                {field.isRequired && (
-                                    <span className="text-red-500 ml-1">*</span>
-                                )}
+                                {field.isRequired && <span className="text-red-500 ml-1">*</span>}
                             </Label>
                         </div>
                     );
                 } else {
-                    // Multiple checkboxes - store as array
                     const selectedValues = Array.isArray(value) ? value : (value ? [value] : []);
-
                     return (
                         <div className="space-y-3 pt-1">
                             {checkboxOptions.map((option, index) => {
@@ -463,10 +456,7 @@ export default function PublicFormPage() {
                                             disabled={submitting || processingPayment}
                                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                                         />
-                                        <Label
-                                            htmlFor={`${field.fieldName}-${index}`}
-                                            className="text-sm font-normal cursor-pointer"
-                                        >
+                                        <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer">
                                             {optionLabel}
                                         </Label>
                                     </div>
@@ -497,10 +487,7 @@ export default function PublicFormPage() {
                                         disabled={submitting || processingPayment}
                                         className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
                                     />
-                                    <Label
-                                        htmlFor={`${field.fieldName}-${index}`}
-                                        className="text-sm font-normal cursor-pointer"
-                                    >
+                                    <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer">
                                         {optionLabel}
                                     </Label>
                                 </div>
@@ -513,11 +500,7 @@ export default function PublicFormPage() {
             case 'select': {
                 const selectOptions = parseOptions(field.options);
                 return (
-                    <select
-                        {...commonProps}
-                        value={value || ''}
-                        onChange={(e) => handleFieldChange(field.fieldName, e.target.value)}
-                    >
+                    <select {...commonProps} value={value || ''} onChange={(e) => handleFieldChange(field.fieldName, e.target.value)}>
                         <option value="">{field.placeholder || 'Select an option'}</option>
                         {selectOptions.map((option, index) => {
                             const optionValue = typeof option === 'object' ? (option.value || option.label || option) : option;
@@ -579,6 +562,36 @@ export default function PublicFormPage() {
                         <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                         <h2 className="text-xl font-semibold mb-2">Form Not Found</h2>
                         <p className="text-muted-foreground">The form you're looking for doesn't exist or has been removed.</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    // Check if form requires authentication
+    if (form.formType === 'authenticated' && !isLoggedIn) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <Card className="max-w-md w-full mx-4">
+                    <CardContent className="p-8 text-center">
+                        <div className="flex justify-center mb-4">
+                            <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900/30">
+                                <Lock className="h-8 w-8 text-amber-600" />
+                            </div>
+                        </div>
+                        <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+                        <p className="text-muted-foreground mb-6">
+                            This form requires you to be logged in to submit. Please login to continue.
+                        </p>
+                        <div className="flex gap-3 justify-center">
+                            <Button onClick={() => router.push('/login')} className="gap-2">
+                                <LogIn className="h-4 w-4" />
+                                Login
+                            </Button>
+                            <Button variant="outline" onClick={() => router.back()}>
+                                Go Back
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -704,38 +717,27 @@ export default function PublicFormPage() {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {fields.map((field) => (
                                 <div key={field.id} className="space-y-2">
-                                    {/* Show label for all fields except single checkbox (which has label inside) */}
                                     {!(field.fieldType === 'checkbox' && parseOptions(field.options).length === 0) && (
                                         <Label htmlFor={field.fieldName} className="text-base font-medium">
                                             {field.fieldLabel}
-                                            {field.isRequired && (
-                                                <span className="text-red-500 ml-1">*</span>
-                                            )}
+                                            {field.isRequired && <span className="text-red-500 ml-1">*</span>}
                                         </Label>
                                     )}
 
                                     {renderField(field)}
 
                                     {field.helpText && (
-                                        <p className="text-xs text-gray-500">
-                                            {field.helpText}
-                                        </p>
+                                        <p className="text-xs text-gray-500">{field.helpText}</p>
                                     )}
 
                                     {errors[field.fieldName] && (
-                                        <p className="text-sm text-red-500">
-                                            {errors[field.fieldName]}
-                                        </p>
+                                        <p className="text-sm text-red-500">{errors[field.fieldName]}</p>
                                     )}
                                 </div>
                             ))}
 
                             {fields.length > 0 && (
-                                <Button
-                                    type="submit"
-                                    className="w-full"
-                                    disabled={submitting || processingPayment}
-                                >
+                                <Button type="submit" className="w-full" disabled={submitting || processingPayment}>
                                     {submitting || processingPayment ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin mr-2" />

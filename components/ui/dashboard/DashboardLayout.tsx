@@ -17,14 +17,14 @@ import {
   ChevronDown,
   Search,
   Sparkles,
-  Shield,
   Star,
   FileText,
-  Bookmark,
   Clock,
   AlertCircle,
   CheckCircle,
   Award,
+  Moon,
+  Sun,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from 'next-themes';
 
 interface NavItem {
   name: string;
@@ -69,19 +70,16 @@ const navItems: NavItem[] = [
     name: 'Internships', 
     href: '/dashboard/internships', 
     icon: GraduationCap, 
-     
   },
   { 
     name: 'My Applications', 
     href: '/dashboard/internships/my-applications', 
     icon: FileText, 
-    
   },
   { 
     name: 'My Jobs History',
     href: '/dashboard/my-jobs-history', 
     icon: Clock, 
-    
   },
   { name: 'Careers', href: '/dashboard/careers', icon: Briefcase},
   { name: 'Projects', href: '/dashboard/projects', icon: FolderOpen },
@@ -89,6 +87,11 @@ const navItems: NavItem[] = [
     name: 'Certificates', 
     href: '/dashboard/certificates', 
     icon: Award,
+  },
+  { 
+    name: 'Forms', 
+    href: '/dashboard/forms', 
+    icon: FileText,
   },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
@@ -98,8 +101,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -153,53 +162,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-white border-r border-gray-100">
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
       {/* Logo Section */}
-      <div className="flex h-16 items-center justify-between px-5 border-b border-gray-100">
+      <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2.5">
           <div className="relative">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50"></div>
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50 dark:shadow-indigo-950/50"></div>
             <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
           </div>
           <div>
-            <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent">
-              CompanyPortal
+            <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+              Sqrock Portal
             </span>
-            <p className="text-[10px] text-gray-400 -mt-0.5">Enterprise Suite</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 -mt-0.5">Enterprise Suite</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
       {/* User Profile Summary (Mobile) */}
-      <div className="lg:hidden px-4 py-5 border-b border-gray-100">
+      <div className="lg:hidden px-4 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 ring-2 ring-indigo-100">
+          <Avatar className="h-12 w-12 ring-2 ring-indigo-100 dark:ring-indigo-950">
             <AvatarImage src={user?.profileImgUrl || ''} />
             <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
               {getUserInitials()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="font-semibold text-gray-800">{user?.name || 'User'}</p>
-            <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
+            <p className="font-semibold text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
             <div className="flex items-center gap-1 mt-1">
               {user?.verified ? (
                 <>
                   <CheckCircle className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600">Verified Account</span>
+                  <span className="text-xs text-green-600 dark:text-green-400">Verified Account</span>
                 </>
               ) : (
                 <>
                   <AlertCircle className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600">Not Verified</span>
+                  <span className="text-xs text-yellow-600 dark:text-yellow-400">Not Verified</span>
                 </>
               )}
             </div>
@@ -221,17 +230,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 variant="ghost"
                 className={`w-full justify-between group relative ${
                   isActive 
-                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 border-r-2 border-indigo-500' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 text-indigo-700 dark:text-indigo-400 border-r-2 border-indigo-500 dark:border-indigo-400' 
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200'
                 }`}
                 onClick={() => router.push(item.href)}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                  <item.icon className={`h-5 w-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
                   <span className="font-medium">{item.name}</span>
                 </div>
                 {item.badge && (
-                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100">
+                  <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950">
                     {item.badge}
                   </Badge>
                 )}
@@ -242,18 +251,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-100 p-4 mt-auto">
-        <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 p-3 mb-3">
+      <div className="border-t border-gray-200 dark:border-gray-800 p-4 mt-auto">
+        <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-3 mb-3">
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-            <span className="text-xs font-semibold text-gray-700">Pro Plan</span>
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Pro Plan</span>
           </div>
-          <p className="text-xs text-gray-600">You're on the Professional tier</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">You're on the Professional tier</p>
         </div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 hover:bg-gray-50">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </Button>
@@ -274,8 +283,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   );
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
@@ -285,14 +298,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         transition={{ duration: 0.2, type: 'spring', stiffness: 300 }}
         className="hidden lg:block relative"
       >
-        <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-200 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent" />
         
-        <div className="flex h-full flex-col bg-white">
+        <div className="flex h-full flex-col bg-white dark:bg-gray-950">
           {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between px-5 border-b border-gray-100">
+          <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2.5 overflow-hidden">
               <div className="relative flex-shrink-0">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50"></div>
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50 dark:shadow-indigo-950/50"></div>
                 <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
               </div>
               {sidebarOpen && (
@@ -302,10 +315,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   exit={{ opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 bg-clip-text text-transparent">
-                    CompanyPortal
+                  <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                    Sqrock Portal
                   </span>
-                  <p className="text-[10px] text-gray-400 -mt-0.5">Enterprise Suite</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 -mt-0.5">Enterprise Suite</p>
                 </motion.div>
               )}
             </div>
@@ -313,7 +326,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 flex-shrink-0"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
@@ -325,10 +338,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="px-4 py-5 border-b border-gray-100"
+              className="px-4 py-5 border-b border-gray-200 dark:border-gray-800"
             >
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 ring-2 ring-indigo-100">
+                <Avatar className="h-12 w-12 ring-2 ring-indigo-100 dark:ring-indigo-950">
                   <AvatarImage src={user?.profileImgUrl || ''} />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                     {getUserInitials()}
@@ -337,23 +350,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="flex-1">
                   {loading ? (
                     <>
-                      <Skeleton className="h-4 w-24 mb-1" />
-                      <Skeleton className="h-3 w-32" />
+                      <Skeleton className="h-4 w-24 mb-1 dark:bg-gray-800" />
+                      <Skeleton className="h-3 w-32 dark:bg-gray-800" />
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-gray-800">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email || 'user@example.com'}</p>
+                      <p className="font-semibold text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || 'user@example.com'}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {user?.verified ? (
                           <>
                             <CheckCircle className="h-3 w-3 text-green-500" />
-                            <span className="text-xs text-green-600">Verified</span>
+                            <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
                           </>
                         ) : (
                           <>
                             <AlertCircle className="h-3 w-3 text-yellow-500" />
-                            <span className="text-xs text-yellow-600">Not Verified</span>
+                            <span className="text-xs text-yellow-600 dark:text-yellow-400">Not Verified</span>
                           </>
                         )}
                       </div>
@@ -378,17 +391,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     variant="ghost"
                     className={`w-full justify-between group relative ${
                       isActive 
-                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700' 
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 text-indigo-700 dark:text-indigo-400' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200'
                     } ${!sidebarOpen && 'justify-center'}`}
                     onClick={() => router.push(item.href)}
                   >
                     <div className={`flex items-center gap-3 ${!sidebarOpen && 'justify-center w-full'}`}>
-                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
                       {sidebarOpen && <span className="font-medium">{item.name}</span>}
                     </div>
                     {sidebarOpen && item.badge && (
-                      <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
+                      <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400">
                         {item.badge}
                       </Badge>
                     )}
@@ -399,14 +412,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-100 p-4 mt-auto">
+          <div className="border-t border-gray-200 dark:border-gray-800 p-4 mt-auto">
             {sidebarOpen && (
-              <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 p-3 mb-3">
+              <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-3 mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-                  <span className="text-xs font-semibold text-gray-700">Professional Plan</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Professional Plan</span>
                 </div>
-                <p className="text-xs text-gray-600">Access all premium features</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Access all premium features</p>
               </div>
             )}
             
@@ -414,7 +427,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className={`w-full text-gray-600 hover:bg-gray-50 ${!sidebarOpen && 'justify-center'}`}
+                  className={`w-full text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 ${!sidebarOpen && 'justify-center'}`}
                 >
                   <LogOut className="h-4 w-4 flex-shrink-0" />
                   {sidebarOpen && <span className="ml-3">Logout</span>}
@@ -440,7 +453,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 shadow-sm bg-white">
+          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 shadow-sm bg-white dark:bg-gray-950">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
@@ -456,15 +469,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-40"
+          className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40"
         >
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-4 flex-1">
               <div className="hidden lg:block">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
                   {navItems.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h1>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}! 👋
                 </p>
               </div>
@@ -472,28 +485,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Search Bar */}
               <div className="hidden md:flex items-center max-w-md flex-1 ml-8">
                 <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <Input
                     placeholder="Search internships, projects..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 bg-gray-50 border-gray-200 focus:bg-white transition-colors"
+                    className="pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                   />
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative text-gray-600 hover:bg-gray-100">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </Button>
+
+              <Button variant="ghost" size="icon" className="relative text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950"></span>
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2 hover:bg-gray-100">
+                  <Button variant="ghost" className="gap-2 hover:bg-gray-100 dark:hover:bg-gray-800">
                     {loading ? (
-                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <Skeleton className="h-8 w-8 rounded-full dark:bg-gray-800" />
                     ) : (
                       <>
                         <Avatar className="h-8 w-8">
@@ -502,10 +529,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {getUserInitials()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="hidden sm:inline text-sm font-medium text-gray-700">
+                        <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
                           {user?.name?.split(' ')[0] || 'User'}
                         </span>
-                        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                        <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
                       </>
                     )}
                   </Button>
@@ -513,8 +540,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
-                      <span>{user?.name || 'User'}</span>
-                      <span className="text-xs text-gray-500 font-normal">{user?.email}</span>
+                      <span className="text-gray-900 dark:text-gray-100">{user?.name || 'User'}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">{user?.email}</span>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -523,12 +550,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {user?.verified ? (
                         <>
                           <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                          <span className="text-green-600 text-xs">Verified Account</span>
+                          <span className="text-green-600 dark:text-green-400 text-xs">Verified Account</span>
                         </>
                       ) : (
                         <>
                           <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-                          <span className="text-yellow-600 text-xs">Not Verified</span>
+                          <span className="text-yellow-600 dark:text-yellow-400 text-xs">Not Verified</span>
                         </>
                       )}
                     </div>

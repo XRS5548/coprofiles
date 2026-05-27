@@ -1,7 +1,9 @@
-// app/dashboard/my-jobs-history/page.tsx - Updated with new fields
+// app/dashboard/my-jobs-history/page.tsx - Complete with Dark/Light Theme
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { JobStatsCards } from './JobStatsCards';
@@ -146,17 +148,17 @@ export default function MyJobsHistoryPage() {
     return (
       <div className="space-y-6">
         <div>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
+          <Skeleton className="h-8 w-48 dark:bg-gray-800" />
+          <Skeleton className="h-4 w-64 mt-2 dark:bg-gray-800" />
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <Skeleton key={i} className="h-24 rounded-lg dark:bg-gray-800" />
           ))}
         </div>
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+            <Skeleton key={i} className="h-32 rounded-lg dark:bg-gray-800" />
           ))}
         </div>
       </div>
@@ -167,10 +169,10 @@ export default function MyJobsHistoryPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
           My Jobs History
         </h1>
-        <p className="text-gray-500 mt-1">
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
           Track all the jobs you've applied for
         </p>
       </div>

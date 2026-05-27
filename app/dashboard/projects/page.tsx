@@ -1,3 +1,5 @@
+// app/dashboard/projects/page.tsx - Complete with Dark/Light Theme (No Status/Progress)
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +11,7 @@ import dynamic from 'next/dynamic';
 import type { Project, ProjectStats, ProjectFormData } from '@/types/project';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
-// सभी components को dynamically import करो (SSR बंद करने के लिए)
+// Dynamic imports with SSR disabled
 const ProjectStatsCards = dynamic(
   () => import('./ProjectStatsCards').then(mod => mod.ProjectStatsCards),
   { 
@@ -17,7 +19,7 @@ const ProjectStatsCards = dynamic(
     loading: () => (
       <div className="grid gap-4 md:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-24 rounded-lg" />
+          <Skeleton key={i} className="h-24 rounded-lg dark:bg-gray-800" />
         ))}
       </div>
     )
@@ -28,7 +30,7 @@ const ProjectSearchBar = dynamic(
   () => import('./ProjectSearchBar').then(mod => mod.ProjectSearchBar),
   { 
     ssr: false,
-    loading: () => <Skeleton className="h-10 w-full" />
+    loading: () => <Skeleton className="h-10 w-full dark:bg-gray-800" />
   }
 );
 
@@ -69,33 +71,24 @@ export default function ProjectsPage() {
     posts: '',
   });
 
-  // Helper functions (ये safe हैं क्योंकि ये window use नहीं करतीं)
+  // Extract tech stack from description
   const extractTechStack = (description: string): string[] => {
-    const commonTech = ['React', 'Node.js', 'Python', 'JavaScript', 'TypeScript', 'Next.js', 'Tailwind', 'MongoDB', 'PostgreSQL'];
+    const commonTech = ['React', 'Node.js', 'Python', 'JavaScript', 'TypeScript', 'Next.js', 'Tailwind', 'MongoDB', 'PostgreSQL', 'Express', 'Django', 'Flask', 'Vue', 'Angular'];
     const found: string[] = [];
     commonTech.forEach(tech => {
       if (description.toLowerCase().includes(tech.toLowerCase())) {
         found.push(tech);
       }
     });
-    return found.length > 0 ? found.slice(0, 4) : ['React', 'Node.js'];
-  };
-
-  const getRandomStatus = (): 'completed' | 'in-progress' | 'planning' => {
-    const statuses: ('completed' | 'in-progress' | 'planning')[] = ['in-progress', 'planning', 'completed'];
-    return statuses[Math.floor(Math.random() * statuses.length)];
-  };
-
-  const getRandomProgress = (): number => {
-    return Math.floor(Math.random() * 100);
+    return found.length > 0 ? found.slice(0, 4) : [];
   };
 
   const detectCategory = (name: string, description: string): Project['category'] => {
     const text = (name + ' ' + description).toLowerCase();
-    if (text.includes('mobile') || text.includes('app')) return 'mobile';
-    if (text.includes('api') || text.includes('backend') || text.includes('server')) return 'backend';
-    if (text.includes('ai') || text.includes('ml') || text.includes('machine learning')) return 'ai-ml';
-    if (text.includes('design') || text.includes('ui') || text.includes('ux')) return 'design';
+    if (text.includes('mobile') || text.includes('app') || text.includes('android') || text.includes('ios')) return 'mobile';
+    if (text.includes('api') || text.includes('backend') || text.includes('server') || text.includes('database')) return 'backend';
+    if (text.includes('ai') || text.includes('ml') || text.includes('machine learning') || text.includes('deep learning')) return 'ai-ml';
+    if (text.includes('design') || text.includes('ui') || text.includes('ux') || text.includes('figma')) return 'design';
     return 'web';
   };
 
@@ -117,12 +110,6 @@ export default function ProjectsPage() {
         stars: Math.floor(Math.random() * 100),
         forks: Math.floor(Math.random() * 50),
         techStack: extractTechStack(project.description || ''),
-        status: getRandomStatus(),
-        progress: getRandomProgress(),
-        teamMembers: ['You'],
-        startDate: project.createdAt,
-        endDate: null,
-        featured: false,
         category: detectCategory(project.name, project.description || ''),
       }));
       setProjects(transformedProjects);
@@ -278,25 +265,25 @@ export default function ProjectsPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-8 w-48 dark:bg-gray-800" />
+            <Skeleton className="h-4 w-64 mt-2 dark:bg-gray-800" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 dark:bg-gray-800" />
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <Skeleton key={i} className="h-24 rounded-lg dark:bg-gray-800" />
           ))}
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="dark:bg-gray-900">
               <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full mt-2" />
+                <Skeleton className="h-6 w-3/4 dark:bg-gray-800" />
+                <Skeleton className="h-4 w-full mt-2 dark:bg-gray-800" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full dark:bg-gray-800" />
               </CardContent>
             </Card>
           ))}
@@ -310,10 +297,10 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
             My Projects
           </h1>
-          <p className="text-gray-500 mt-1">Manage and showcase your coding projects</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage and showcase your coding projects</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />

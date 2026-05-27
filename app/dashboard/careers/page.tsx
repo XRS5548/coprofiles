@@ -1,4 +1,5 @@
-// app/dashboard/careers/page.tsx
+// app/dashboard/careers/page.tsx - Complete with Dark/Light Theme
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -95,9 +96,9 @@ interface Pagination {
 }
 
 const tierConfig = {
-  1: { label: 'Tier 1 - Elite', color: 'bg-purple-100 text-purple-700', icon: Award },
-  2: { label: 'Tier 2 - Premium', color: 'bg-blue-100 text-blue-700', icon: Star },
-  3: { label: 'Tier 3 - Standard', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  1: { label: 'Tier 1 - Elite', color: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400', icon: Award },
+  2: { label: 'Tier 2 - Premium', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400', icon: Star },
+  3: { label: 'Tier 3 - Standard', color: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400', icon: CheckCircle },
 };
 
 export default function CareersPage() {
@@ -159,7 +160,7 @@ export default function CareersPage() {
     fetchCareers();
   }, [fetchCareers]);
 
-  // Apply for job - matches your API exactly
+  // Apply for job
   const handleApply = async () => {
     if (!selectedCareer) return;
     
@@ -182,7 +183,6 @@ export default function CareersPage() {
           icon: <ThumbsUp className="h-5 w-5" />,
         });
         
-        // Update the career in the list to show as applied
         setCareers(prev =>
           prev.map(career =>
             career.id === selectedCareer.id
@@ -194,12 +194,10 @@ export default function CareersPage() {
         setIsApplyOpen(false);
         setSelectedCareer(null);
       } else if (response.status === 409) {
-        // Already applied
         toast.error('Already Applied', {
           description: data.error || 'You have already applied for this position',
         });
         
-        // Mark as applied in UI
         setCareers(prev =>
           prev.map(career =>
             career.id === selectedCareer.id ? { ...career, hasApplied: true } : career
@@ -234,7 +232,7 @@ export default function CareersPage() {
     const config = tierConfig[tier as 1 | 2 | 3];
     const Icon = config.icon;
     return (
-      <Badge className={config.color}>
+      <Badge className={`${config.color} border-none`}>
         <Icon className="h-3 w-3 mr-1" />
         {config.label}
       </Badge>
@@ -254,20 +252,20 @@ export default function CareersPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-8 w-48 dark:bg-gray-800" />
+            <Skeleton className="h-4 w-64 mt-2 dark:bg-gray-800" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 dark:bg-gray-800" />
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="dark:bg-gray-900">
               <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full mt-2" />
+                <Skeleton className="h-6 w-3/4 dark:bg-gray-800" />
+                <Skeleton className="h-4 w-full mt-2 dark:bg-gray-800" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full dark:bg-gray-800" />
               </CardContent>
             </Card>
           ))}
@@ -281,15 +279,15 @@ export default function CareersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
             Career Opportunities
           </h1>
-          <p className="text-gray-500 mt-1">Find your dream job at top companies</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Find your dream job at top companies</p>
         </div>
         <Button 
           variant="outline" 
           onClick={() => setShowFilters(!showFilters)}
-          className="gap-2"
+          className="gap-2 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           <Filter className="h-4 w-4" />
           {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -304,52 +302,56 @@ export default function CareersPage() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <Card className="p-4">
+            <Card className="p-4 dark:bg-gray-900">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div>
-                  <Label>Search by Job Title</Label>
+                  <Label className="dark:text-gray-300">Search by Job Title</Label>
                   <Input
                     placeholder="e.g., Software Engineer"
                     value={filters.search}
                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    className="dark:bg-gray-800 dark:border-gray-700"
                   />
                 </div>
                 <div>
-                  <Label>Position/Level</Label>
+                  <Label className="dark:text-gray-300">Position/Level</Label>
                   <Input
                     placeholder="e.g., Senior, Junior"
                     value={filters.position}
                     onChange={(e) => setFilters({ ...filters, position: e.target.value })}
+                    className="dark:bg-gray-800 dark:border-gray-700"
                   />
                 </div>
                 <div>
-                  <Label>Min Salary (₹)</Label>
+                  <Label className="dark:text-gray-300">Min Salary (₹)</Label>
                   <Input
                     type="number"
                     placeholder="e.g., 500000"
                     value={filters.minSalary}
                     onChange={(e) => setFilters({ ...filters, minSalary: e.target.value })}
+                    className="dark:bg-gray-800 dark:border-gray-700"
                   />
                 </div>
                 <div>
-                  <Label>Max Salary (₹)</Label>
+                  <Label className="dark:text-gray-300">Max Salary (₹)</Label>
                   <Input
                     type="number"
                     placeholder="e.g., 2000000"
                     value={filters.maxSalary}
                     onChange={(e) => setFilters({ ...filters, maxSalary: e.target.value })}
+                    className="dark:bg-gray-800 dark:border-gray-700"
                   />
                 </div>
                 <div>
-                  <Label>Min Tier Score</Label>
+                  <Label className="dark:text-gray-300">Min Tier Score</Label>
                   <Select 
                     value={filters.minTierScore} 
                     onValueChange={(v) => setFilters({ ...filters, minTierScore: v })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                       <SelectValue placeholder="Any Tier" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                       <SelectItem value="">Any Tier</SelectItem>
                       <SelectItem value="80">Tier 1 (80+)</SelectItem>
                       <SelectItem value="60">Tier 2 (60+)</SelectItem>
@@ -365,7 +367,7 @@ export default function CareersPage() {
                 }}>
                   Apply Filters
                 </Button>
-                <Button variant="outline" onClick={resetFilters}>
+                <Button variant="outline" onClick={resetFilters} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                   Reset
                 </Button>
               </div>
@@ -376,17 +378,17 @@ export default function CareersPage() {
 
       {/* Results Count */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Found {pagination.total} job{pagination.total !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Careers Grid */}
       {careers.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600">No jobs found</h3>
-          <p className="text-gray-400 mt-1">Try adjusting your search filters</p>
+        <Card className="p-12 text-center dark:bg-gray-900">
+          <Briefcase className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400">No jobs found</h3>
+          <p className="text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search filters</p>
         </Card>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -397,10 +399,10 @@ export default function CareersPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="hover:shadow-xl transition-all hover:-translate-y-1 h-full flex flex-col relative">
+              <Card className="hover:shadow-xl transition-all hover:-translate-y-1 h-full flex flex-col relative dark:bg-gray-900">
                 {career.hasApplied && (
                   <div className="absolute top-3 right-3">
-                    <Badge className="bg-green-100 text-green-700">
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-none">
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Applied
                     </Badge>
@@ -416,12 +418,12 @@ export default function CareersPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <CardTitle className="text-lg">{career.name}</CardTitle>
-                        <CardDescription>{career.companyName}</CardDescription>
+                        <CardTitle className="text-lg dark:text-gray-200">{career.name}</CardTitle>
+                        <CardDescription className="dark:text-gray-400">{career.companyName}</CardDescription>
                       </div>
                     </div>
                     {career.companyVerified && (
-                      <Badge className="bg-green-100 text-green-700">
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-none">
                         <CheckCircle className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
@@ -430,13 +432,13 @@ export default function CareersPage() {
                 </CardHeader>
                 
                 <CardContent className="space-y-3 flex-1">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Briefcase className="h-3 w-3" />
                     <span>{career.position || 'Not specified'}</span>
                   </div>
                   
                   {career.salaryFormatted && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 font-medium">
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 font-medium">
                       <DollarSign className="h-3 w-3" />
                       <span>{career.salaryFormatted} / year</span>
                     </div>
@@ -444,19 +446,19 @@ export default function CareersPage() {
                   
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
-                      <Users className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs">{career.applicationsCount} applicants</span>
+                      <Users className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{career.applicationsCount} applicants</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs">Posted {formatDate(career.createdAt)}</span>
+                      <Calendar className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Posted {formatDate(career.createdAt)}</span>
                     </div>
                   </div>
                   
                   {career.tierScore && getTierBadge(career.tierScore)}
                   
                   {career.content && (
-                    <p className="text-sm text-gray-600 line-clamp-2 mt-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-2">
                       {career.content}
                     </p>
                   )}
@@ -465,7 +467,7 @@ export default function CareersPage() {
                 <CardFooter className="flex gap-2 pt-3">
                   <Button 
                     variant="outline" 
-                    className="flex-1 gap-1"
+                    className="flex-1 gap-1 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     onClick={() => setSelectedCareer(career)}
                   >
                     <Eye className="h-3 w-3" />
@@ -504,12 +506,13 @@ export default function CareersPage() {
             size="sm"
             onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
             disabled={!pagination.hasPrevPage}
+            className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
           </Button>
           <div className="flex items-center gap-2">
-            <span className="text-sm">
+            <span className="text-sm dark:text-gray-400">
               Page {pagination.page} of {pagination.totalPages}
             </span>
           </div>
@@ -518,6 +521,7 @@ export default function CareersPage() {
             size="sm"
             onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
             disabled={!pagination.hasNextPage}
+            className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Next
             <ChevronRight className="h-4 w-4" />
@@ -527,7 +531,7 @@ export default function CareersPage() {
 
       {/* Job Details Dialog */}
       <Dialog open={!!selectedCareer && !isApplyOpen} onOpenChange={() => setSelectedCareer(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto dark:bg-gray-900">
           {selectedCareer && (
             <>
               <DialogHeader>
@@ -538,20 +542,20 @@ export default function CareersPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <DialogTitle className="text-2xl">{selectedCareer.name}</DialogTitle>
-                    <DialogDescription className="text-base">
+                    <DialogTitle className="text-2xl dark:text-gray-200">{selectedCareer.name}</DialogTitle>
+                    <DialogDescription className="text-base dark:text-gray-400">
                       {selectedCareer.companyName}
                     </DialogDescription>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {selectedCareer.companyVerified && (
-                        <Badge className="bg-green-100 text-green-700">
+                        <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-none">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Verified Company
                         </Badge>
                       )}
                       {selectedCareer.tierScore && getTierBadge(selectedCareer.tierScore)}
                       {selectedCareer.hasApplied && (
-                        <Badge className="bg-green-100 text-green-700">
+                        <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-none">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Already Applied
                         </Badge>
@@ -561,54 +565,54 @@ export default function CareersPage() {
                 </div>
               </DialogHeader>
 
-              <Separator />
+              <Separator className="dark:bg-gray-800" />
 
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500">Position</p>
-                    <p className="font-medium">{selectedCareer.position || 'Not specified'}</p>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Position</p>
+                    <p className="font-medium dark:text-gray-300">{selectedCareer.position || 'Not specified'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Salary</p>
-                    <p className="font-medium text-green-600">{selectedCareer.salaryFormatted || 'Not disclosed'}</p>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Salary</p>
+                    <p className="font-medium text-green-600 dark:text-green-400">{selectedCareer.salaryFormatted || 'Not disclosed'}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Posted On</p>
-                    <p className="font-medium">{formatDate(selectedCareer.createdAt)}</p>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Posted On</p>
+                    <p className="font-medium dark:text-gray-300">{formatDate(selectedCareer.createdAt)}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Applicants</p>
-                    <p className="font-medium">{selectedCareer.applicationsCount} applied</p>
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Applicants</p>
+                    <p className="font-medium dark:text-gray-300">{selectedCareer.applicationsCount} applied</p>
                   </div>
                 </div>
 
                 {selectedCareer.content && (
                   <div>
-                    <h4 className="font-semibold mb-2">Job Description</h4>
+                    <h4 className="font-semibold mb-2 dark:text-gray-300">Job Description</h4>
                     <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-700 whitespace-pre-wrap">
+                      <p className="text-gray-700 dark:text-gray-400 whitespace-pre-wrap">
                         {selectedCareer.content}
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-800/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2 dark:text-gray-300">
                     <Building className="h-4 w-4" />
                     About {selectedCareer.companyName}
                   </h4>
                   {selectedCareer.companyCategory && (
-                    <p className="text-sm text-gray-600">Category: {selectedCareer.companyCategory}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Category: {selectedCareer.companyCategory}</p>
                   )}
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="dark:bg-gray-800" />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedCareer(null)}>
+                <Button variant="outline" onClick={() => setSelectedCareer(null)} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                   Close
                 </Button>
                 <Button 
@@ -625,33 +629,33 @@ export default function CareersPage() {
 
       {/* Application Confirmation Dialog */}
       <Dialog open={isApplyOpen} onOpenChange={setIsApplyOpen}>
-        <DialogContent>
+        <DialogContent className="dark:bg-gray-900">
           <DialogHeader>
-            <DialogTitle>Confirm Application</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="dark:text-gray-200">Confirm Application</DialogTitle>
+            <DialogDescription className="dark:text-gray-400">
               You are about to apply for this position
             </DialogDescription>
           </DialogHeader>
           
           {selectedCareer && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                     {selectedCareer.companyName?.charAt(0) || 'C'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold">{selectedCareer.name}</h3>
-                  <p className="text-sm text-gray-600">{selectedCareer.companyName}</p>
+                  <h3 className="font-semibold dark:text-gray-200">{selectedCareer.name}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedCareer.companyName}</p>
                   {selectedCareer.salaryFormatted && (
-                    <p className="text-sm text-green-600">{selectedCareer.salaryFormatted} / year</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">{selectedCareer.salaryFormatted} / year</p>
                   )}
                 </div>
               </div>
               
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <p className="text-sm text-yellow-800">
+              <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <p className="text-sm text-yellow-800 dark:text-yellow-300">
                   By clicking "Confirm Application", you agree to submit your application for this position. 
                   The company will review your profile and contact you if shortlisted.
                 </p>
@@ -660,7 +664,7 @@ export default function CareersPage() {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsApplyOpen(false)}>
+            <Button variant="outline" onClick={() => setIsApplyOpen(false)} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
               Cancel
             </Button>
             <Button onClick={handleApply} disabled={applying}>

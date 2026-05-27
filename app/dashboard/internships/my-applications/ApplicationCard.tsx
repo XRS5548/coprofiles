@@ -1,4 +1,5 @@
-// components/dashboard/internships/ApplicationCard.tsx
+// components/dashboard/internships/ApplicationCard.tsx - Perfect Dark/Light Theme
+
 'use client';
 
 import { motion } from 'framer-motion';
@@ -16,7 +17,6 @@ interface ApplicationCardProps {
 }
 
 export function ApplicationCard({ application, index, onViewDetails }: ApplicationCardProps) {
-  // Use appliedDate instead of appliedAt
   const appliedDate = application.appliedDate 
     ? new Date(application.appliedDate).toLocaleDateString() 
     : 'Date not available';
@@ -25,19 +25,33 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
     ? new Date(application.lastApplyDate).toLocaleDateString() 
     : null;
 
-  // Get status badge color and text
   const getStatusBadge = () => {
     switch (application.status) {
       case 'pending':
-        return { color: 'bg-yellow-100 text-yellow-700', text: 'Pending Review' };
+        return { 
+          color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-400', 
+          text: 'Pending Review' 
+        };
       case 'accepted':
-        return { color: 'bg-green-100 text-green-700', text: 'Accepted' };
+        return { 
+          color: 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-400', 
+          text: 'Accepted' 
+        };
       case 'rejected':
-        return { color: 'bg-red-100 text-red-700', text: 'Rejected' };
+        return { 
+          color: 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-400', 
+          text: 'Rejected' 
+        };
       case 'completed':
-        return { color: 'bg-blue-100 text-blue-700', text: 'Completed' };
+        return { 
+          color: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-400', 
+          text: 'Completed' 
+        };
       default:
-        return { color: 'bg-gray-100 text-gray-700', text: 'Unknown' };
+        return { 
+          color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400', 
+          text: 'Unknown' 
+        };
     }
   };
 
@@ -49,12 +63,12 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card className="hover:shadow-lg transition-all">
+      <Card className="hover:shadow-lg transition-all duration-300 dark:bg-gray-900/90 dark:border-gray-800">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             {/* Left Section - Company Info */}
             <div className="flex items-start gap-4 flex-1">
-              <Avatar className="h-14 w-14">
+              <Avatar className="h-14 w-14 ring-2 ring-indigo-100 dark:ring-indigo-900/50">
                 {application.companyLogo ? (
                   <AvatarImage src={application.companyLogo} alt={application.companyName} />
                 ) : (
@@ -65,31 +79,33 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
               </Avatar>
               <div className="space-y-2">
                 <div>
-                  <h3 className="font-semibold text-xl">{application.internshipTitle}</h3>
-                  <p className="text-gray-600 flex items-center gap-1">
-                    <Building className="h-3 w-3" />
+                  <h3 className="font-semibold text-xl text-gray-900 dark:text-gray-100">
+                    {application.internshipTitle}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 flex items-center gap-1 text-sm">
+                    <Building className="h-3.5 w-3.5" />
                     {application.companyName}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                <div className="flex flex-wrap gap-3 text-sm text-gray-500 dark:text-gray-400">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" />
                     Applied: {appliedDate}
                   </span>
                   {application.rollNo && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       Roll No: {application.rollNo}
                     </span>
                   )}
                   {application.certificateUnlocked && (
-                    <span className="flex items-center gap-1 text-green-600">
-                      <Award className="h-3 w-3" />
-                      Certificate Ready
-                  </span>
+                    <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+                      <Award className="h-3.5 w-3.5" />
+                      Certificate Available
+                    </span>
                   )}
                   {lastApplyDate && (
-                    <span className="flex items-center gap-1 text-orange-600">
-                      <Calendar className="h-3 w-3" />
+                    <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+                      <Calendar className="h-3.5 w-3.5" />
                       Deadline: {lastApplyDate}
                     </span>
                   )}
@@ -97,48 +113,51 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
               </div>
             </div>
 
-            {/* Status Badge */}
+            {/* Right Section - Status Badges */}
             <div className="flex flex-col items-end gap-2">
-              <Badge className={statusBadge.color}>
+              <Badge className={`${statusBadge.color} border-none px-3 py-1 text-sm font-medium`}>
                 {statusBadge.text}
               </Badge>
               {application.examDate && (
-                <Badge variant="outline" className="text-xs">
-                  Exam: {new Date(application.examDate).toLocaleDateString()}
+                <Badge 
+                  variant="outline" 
+                  className="text-xs border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                >
+                  📅 Exam: {new Date(application.examDate).toLocaleDateString()}
                 </Badge>
               )}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t">
+          <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2"
+              className="gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
               onClick={() => onViewDetails(application)}
             >
-              <Eye className="h-3 w-3" />
+              <Eye className="h-3.5 w-3.5" />
               View Details
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2"
-              onClick={() => window.location.href = `/dashboard/internships/${application.id}`}
+              className="gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+              onClick={() => window.location.href = `/dashboard/internships/${application.internshipId}`}
             >
-              <ExternalLink className="h-3 w-3" />
+              <ExternalLink className="h-3.5 w-3.5" />
               View Internship
             </Button>
             {application.certificateUnlocked && (
               <Button 
                 variant="default" 
                 size="sm" 
-                className="gap-2 bg-green-600 hover:bg-green-700"
-                onClick={() => window.location.href = `/dashboard/certificate/${application.id}`}
+                className="gap-2 bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white shadow-sm"
+                onClick={() => window.location.href = '/dashboard/certificates'}
               >
-                <FileCheck className="h-3 w-3" />
-                Get My Certificate
+                <FileCheck className="h-3.5 w-3.5" />
+                View Certificates
               </Button>
             )}
           </div>

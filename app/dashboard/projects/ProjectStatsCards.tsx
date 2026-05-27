@@ -1,4 +1,5 @@
 // components/dashboard/projects/ProjectStatsCards.tsx
+
 'use client';
 
 import { FolderOpen, Globe, Lock, Mail as Github } from 'lucide-react';
@@ -22,17 +23,17 @@ export function ProjectStatsCards({ stats }: ProjectStatsCardsProps) {
   ];
 
   const colorClasses = {
-    blue: "bg-blue-100 text-blue-600",
-    green: "bg-green-100 text-green-600",
-    purple: "bg-purple-100 text-purple-600",
-    orange: "bg-orange-100 text-orange-600",
+    blue: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
+    green: "bg-green-100 text-green-600 dark:bg-green-950 dark:text-green-400",
+    purple: "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400",
+    orange: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400",
   };
 
   const valueColors = {
-    blue: "text-blue-700",
-    green: "text-green-700",
-    purple: "text-purple-700",
-    orange: "text-orange-700",
+    blue: "text-blue-700 dark:text-blue-400",
+    green: "text-green-700 dark:text-green-400",
+    purple: "text-purple-700 dark:text-purple-400",
+    orange: "text-orange-700 dark:text-orange-400",
   };
 
   return (
@@ -40,13 +41,13 @@ export function ProjectStatsCards({ stats }: ProjectStatsCardsProps) {
       {statsConfig.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index}>
+          <Card key={index} className="dark:bg-gray-900">
             <CardContent className="p-4 flex items-center gap-3">
               <div className={`rounded-lg ${colorClasses[stat.color as keyof typeof colorClasses]} p-2`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{stat.label}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
                 <p className={`text-2xl font-bold ${valueColors[stat.color as keyof typeof valueColors]}`}>
                   {stat.value}
                 </p>

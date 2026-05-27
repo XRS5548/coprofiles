@@ -1,4 +1,5 @@
-// app/dashboard/internships/page.tsx - Fixed version
+// app/dashboard/internships/page.tsx - Complete Fixed Version with Dark/Light Theme
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -97,7 +98,7 @@ export default function InternshipsPage() {
         }
         
         const data = await response.json();
-        console.log('API Response:', data); // Debug log
+        console.log('API Response:', data);
         
         if (data.success && data.internships) {
           setInternships(data.internships);
@@ -175,7 +176,7 @@ export default function InternshipsPage() {
     }
   };
 
-  // Save internship (mock for now - implement API later)
+  // Save internship
   const handleSave = async (internshipId: number) => {
     setSaving(internshipId);
     
@@ -219,29 +220,29 @@ export default function InternshipsPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="h-8 w-48 dark:bg-gray-800" />
+            <Skeleton className="h-4 w-64 mt-2 dark:bg-gray-800" />
           </div>
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 dark:bg-gray-800" />
         </div>
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
+            <Card key={i} className="dark:bg-gray-900">
               <CardHeader>
                 <div className="flex items-start gap-3">
-                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <Skeleton className="h-12 w-12 rounded-full dark:bg-gray-800" />
                   <div className="flex-1">
-                    <Skeleton className="h-5 w-32" />
-                    <Skeleton className="h-4 w-24 mt-1" />
+                    <Skeleton className="h-5 w-32 dark:bg-gray-800" />
+                    <Skeleton className="h-4 w-24 mt-1 dark:bg-gray-800" />
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-full dark:bg-gray-800" />
+                <Skeleton className="h-4 w-3/4 dark:bg-gray-800" />
                 <div className="flex gap-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-16 dark:bg-gray-800" />
+                  <Skeleton className="h-6 w-20 dark:bg-gray-800" />
                 </div>
               </CardContent>
             </Card>
@@ -256,12 +257,12 @@ export default function InternshipsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
             Find Internships
           </h1>
-          <p className="text-gray-500 mt-1">Discover opportunities that match your skills</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Discover opportunities that match your skills</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
           <TrendingUp className="h-4 w-4" />
           <span>{internships.length} internships available</span>
         </div>
@@ -269,72 +270,72 @@ export default function InternshipsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <Briefcase className="h-5 w-5 text-blue-600" />
+            <div className="rounded-lg bg-blue-100 dark:bg-blue-950 p-2">
+              <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Available Positions</p>
-              <p className="text-xl font-bold">{internships.length}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Available Positions</p>
+              <p className="text-xl font-bold dark:text-gray-200">{internships.length}</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-green-100 p-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+            <div className="rounded-lg bg-green-100 dark:bg-green-950 p-2">
+              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Your Applications</p>
-              <p className="text-xl font-bold">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Your Applications</p>
+              <p className="text-xl font-bold dark:text-gray-200">
                 {internships.filter(i => i.applicationStatus.hasApplied).length}
               </p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-purple-100 p-2">
-              <Bookmark className="h-5 w-5 text-purple-600" />
+            <div className="rounded-lg bg-purple-100 dark:bg-purple-950 p-2">
+              <Bookmark className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Saved Jobs</p>
-              <p className="text-xl font-bold">0</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Saved Jobs</p>
+              <p className="text-xl font-bold dark:text-gray-200">0</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="dark:bg-gray-900">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-lg bg-yellow-100 p-2">
-              <GraduationCap className="h-5 w-5 text-yellow-600" />
+            <div className="rounded-lg bg-yellow-100 dark:bg-yellow-950 p-2">
+              <GraduationCap className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Profile Match</p>
-              <p className="text-xl font-bold">85%</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Profile Match</p>
+              <p className="text-xl font-bold dark:text-gray-200">85%</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="p-4 dark:bg-gray-900">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
             <Input
               placeholder="Search by title or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
+              className="pl-9 dark:bg-gray-800 dark:border-gray-700"
             />
           </div>
           <div className="flex gap-2 flex-wrap">
             <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue placeholder="Company" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                 <SelectItem value="all">All Companies</SelectItem>
                 {uniqueCompanies.map((company) => (
                   <SelectItem key={company} value={company}>
@@ -344,10 +345,10 @@ export default function InternshipsPage() {
               </SelectContent>
             </Select>
             <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue placeholder="Duration" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-gray-800 dark:border-gray-700">
                 <SelectItem value="all">All Durations</SelectItem>
                 <SelectItem value="lessThan3">Less than 3 months</SelectItem>
                 <SelectItem value="3to6">3-6 months</SelectItem>
@@ -360,10 +361,10 @@ export default function InternshipsPage() {
 
       {/* Internship Cards */}
       {filteredInternships.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600">No internships found</h3>
-          <p className="text-gray-400 mt-1">Try adjusting your search or filters</p>
+        <Card className="p-12 text-center dark:bg-gray-900">
+          <Search className="h-12 w-12 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-600 dark:text-gray-400">No internships found</h3>
+          <p className="text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search or filters</p>
         </Card>
       ) : (
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -374,7 +375,7 @@ export default function InternshipsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className="hover:shadow-xl transition-all hover:-translate-y-1 h-full flex flex-col">
+              <Card className="hover:shadow-xl transition-all hover:-translate-y-1 h-full flex flex-col dark:bg-gray-900">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -384,15 +385,15 @@ export default function InternshipsPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <CardTitle className="text-lg line-clamp-1">{internship.title}</CardTitle>
-                        <CardDescription className="text-sm">{internship.company.name}</CardDescription>
+                        <CardTitle className="text-lg line-clamp-1 dark:text-gray-200">{internship.title}</CardTitle>
+                        <CardDescription className="text-sm dark:text-gray-400">{internship.company.name}</CardDescription>
                       </div>
                     </div>
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 dark:hover:bg-gray-800"
                         onClick={() => handleSave(internship.id)}
                         disabled={saving === internship.id}
                       >
@@ -402,7 +403,7 @@ export default function InternshipsPage() {
                           <Bookmark className="h-4 w-4" />
                         )}
                       </Button>
-                      <Badge className={internship.isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                      <Badge className={internship.isLive ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"}>
                         {internship.isLive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
@@ -410,15 +411,15 @@ export default function InternshipsPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 flex-1">
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                       <MapPin className="h-3 w-3" />
                       <span className="text-xs">{internship.company.category || 'Remote'}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                       <Clock className="h-3 w-3" />
                       <span className="text-xs">{internship.duration}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600">
+                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                       <Building className="h-3 w-3" />
                       <span className="text-xs">
                         {internship.company.verified ? 'Verified' : 'Unverified'}
@@ -426,11 +427,11 @@ export default function InternshipsPage() {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                     {internship.description}
                   </p>
                   
-                  <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-500 pt-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>Posted: {formatDate(internship.createdAt)}</span>
@@ -444,7 +445,7 @@ export default function InternshipsPage() {
                 <CardFooter className="pt-3 flex gap-2">
                   <Button 
                     variant="outline" 
-                    className="flex-1 gap-2 text-sm"
+                    className="flex-1 gap-2 text-sm dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                     onClick={() => setSelectedInternship(internship)}
                   >
                     <Eye className="h-3 w-3" />
@@ -474,7 +475,7 @@ export default function InternshipsPage() {
 
       {/* Internship Details Dialog */}
       <Dialog open={!!selectedInternship} onOpenChange={() => setSelectedInternship(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto dark:bg-gray-900">
           {selectedInternship && (
             <>
               <DialogHeader>
@@ -485,15 +486,15 @@ export default function InternshipsPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <DialogTitle className="text-2xl">{selectedInternship.title}</DialogTitle>
-                    <DialogDescription className="text-base">
+                    <DialogTitle className="text-2xl dark:text-gray-200">{selectedInternship.title}</DialogTitle>
+                    <DialogDescription className="text-base dark:text-gray-400">
                       {selectedInternship.company.name}
                     </DialogDescription>
                     <div className="flex gap-2 mt-2">
-                      <Badge className={selectedInternship.isLive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}>
+                      <Badge className={selectedInternship.isLive ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"}>
                         {selectedInternship.isLive ? 'Active' : 'Inactive'}
                       </Badge>
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="dark:border-gray-700 dark:text-gray-400">
                         {selectedInternship.company.verified ? 'Verified Company' : 'Company'}
                       </Badge>
                     </div>
@@ -501,6 +502,7 @@ export default function InternshipsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    className="dark:hover:bg-gray-800"
                     onClick={() => handleSave(selectedInternship.id)}
                     disabled={saving === selectedInternship.id}
                   >
@@ -514,47 +516,47 @@ export default function InternshipsPage() {
               </DialogHeader>
 
               <Tabs defaultValue="details" className="space-y-4">
-                <TabsList className="w-full">
-                  <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-                  <TabsTrigger value="description" className="flex-1">Description</TabsTrigger>
+                <TabsList className="w-full dark:bg-gray-800">
+                  <TabsTrigger value="details" className="flex-1 dark:data-[state=active]:bg-gray-900">Details</TabsTrigger>
+                  <TabsTrigger value="description" className="flex-1 dark:data-[state=active]:bg-gray-900">Description</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="details" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div>
-                      <p className="text-xs text-gray-500">Company</p>
-                      <p className="font-medium text-sm">{selectedInternship.company.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Company</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{selectedInternship.company.name}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Location</p>
-                      <p className="font-medium text-sm">{selectedInternship.company.category || 'Remote'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Location</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{selectedInternship.company.category || 'Remote'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Duration</p>
-                      <p className="font-medium text-sm">{selectedInternship.duration}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Duration</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{selectedInternship.duration}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Posted Date</p>
-                      <p className="font-medium text-sm">{formatDate(selectedInternship.createdAt)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Posted Date</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{formatDate(selectedInternship.createdAt)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Last Apply Date</p>
-                      <p className="font-medium text-sm">{formatDate(selectedInternship.lastApplyDate)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Last Apply Date</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{formatDate(selectedInternship.lastApplyDate)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Auto Cancel</p>
-                      <p className="font-medium text-sm">{selectedInternship.autoCancel ? 'Yes' : 'No'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Auto Cancel</p>
+                      <p className="font-medium text-sm dark:text-gray-300">{selectedInternship.autoCancel ? 'Yes' : 'No'}</p>
                     </div>
                   </div>
                   
                   {selectedInternship.applicationStatus.hasApplied && (
-                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span className="font-medium text-green-700">You have applied for this internship</span>
+                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        <span className="font-medium text-green-700 dark:text-green-400">You have applied for this internship</span>
                       </div>
                       {selectedInternship.applicationStatus.certificateUnlocked && (
-                        <p className="text-sm text-green-600 mt-2">
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-2">
                           Certificate has been unlocked for this internship!
                         </p>
                       )}
@@ -563,9 +565,9 @@ export default function InternshipsPage() {
                 </TabsContent>
 
                 <TabsContent value="description">
-                  <Card>
+                  <Card className="dark:bg-gray-800">
                     <CardContent className="p-4">
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                         {selectedInternship.description}
                       </p>
                     </CardContent>
@@ -573,10 +575,10 @@ export default function InternshipsPage() {
                 </TabsContent>
               </Tabs>
 
-              <Separator />
+              <Separator className="dark:bg-gray-800" />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedInternship(null)}>
+                <Button variant="outline" onClick={() => setSelectedInternship(null)} className="dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
                   Close
                 </Button>
                 <Button

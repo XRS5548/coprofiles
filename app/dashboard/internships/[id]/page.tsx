@@ -1,4 +1,4 @@
-// app/dashboard/internships/my-applications/[id]/page.tsx - Updated with Razorpay payment
+// app/dashboard/internships/my-applications/[id]/page.tsx - Fixed version
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -37,33 +37,49 @@ declare global {
 
 type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'completed';
 
-interface InternshipDetails {
-  id: number;
-  title: string;
-  company: string;
-  companyLogo?: string | null;
-  location: string;
-  duration: string;
-  description: string;
-  requirements: string[];
-  lastApplyDate?: Date | string | null;
-  autoCancel?: boolean;
-  companyVerified?: boolean;
-  companyDescription?: string | null;
-}
-
 interface ApplicationDetails {
   id: number;
   internshipId: number;
   userId: number;
-  certificateUnlocked: boolean;
-  certificatePaid: boolean;
   status: ApplicationStatus;
   rollNo: string | null;
   examDate: string | null;
+  certificateUnlocked: boolean;
+  certificatePaid: boolean;
   internshipActive: boolean;
   appliedAt?: Date | string | null;
-  internship: InternshipDetails;
+  // Direct fields from API (not nested)
+  internshipTitle?: string;
+  companyName?: string;
+  companyLogo?: string | null;
+  location?: string;
+  duration?: string;
+  description?: string;
+  lastApplyDate?: Date | string | null;
+  autoCancel?: boolean;
+  companyVerified?: boolean;
+  companyDescription?: string | null;
+  // Nested internship object (alternative structure)
+  internship?: {
+    id: number;
+    title: string;
+    company: string;
+    companyLogo?: string | null;
+    location: string;
+    duration: string;
+    description: string;
+    requirements: string[];
+    lastApplyDate?: Date | string | null;
+    autoCancel?: boolean;
+    companyVerified?: boolean;
+    companyDescription?: string | null;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+  };
 }
 
 export default function ApplicationDetailsPage() {
@@ -108,7 +124,43 @@ export default function ApplicationDetailsPage() {
         }
 
         console.log('Application data received:', data);
-        setApplication(data.application);
+        
+        // Handle both nested and flat structure
+        let appData = data.application;
+        
+        // If the API returns nested structure, use it
+        if (appData && !appData.internshipTitle && appData.internship) {
+          // Already has nested structure, use as is
+          setApplication(appData);
+        } else if (appData) {
+          // Transform flat structure to expected format
+          setApplication({
+            id: appData.id,
+            internshipId: appData.internshipId,
+            userId: appData.userId,
+            status: appData.status,
+            rollNo: appData.rollNo,
+            examDate: appData.examDate,
+            certificateUnlocked: appData.certificateUnlocked,
+            certificatePaid: appData.certificatePaid,
+            internshipActive: appData.internshipActive,
+            appliedAt: appData.appliedAt,
+            internship: {
+              id: appData.internshipId,
+              title: appData.internshipTitle || appData.internship?.title,
+              company: appData.companyName || appData.internship?.company,
+              companyLogo: appData.companyLogo,
+              location: appData.location || 'Remote',
+              duration: appData.duration || 'Not specified',
+              description: appData.description || 'No description provided',
+              requirements: [],
+              lastApplyDate: appData.lastApplyDate,
+              autoCancel: appData.autoCancel,
+              companyVerified: appData.companyVerified,
+              companyDescription: appData.companyDescription,
+            }
+          });
+        }
       } catch (error) {
         console.error('Error fetching application details:', error);
         toast.error('Failed to load application details', {
@@ -124,21 +176,74 @@ export default function ApplicationDetailsPage() {
     }
   }, [params.id, router]);
 
+  // Helper to safely get internship title
+  const getInternshipTitle = () => {
+    if (!application) return '';
+    if (application.internship?.title) return application.internship.title;
+    if (application.internshipTitle) return application.internshipTitle;
+    return 'Internship';
+  };
+
+  // Helper to safely get company name
+  const getCompanyName = () => {
+    if (!application) return '';
+    if (application.internship?.company) return application.internship.company;
+    if (application.companyName) return application.companyName;
+    return 'Company';
+  };
+
+  // Helper to safely get location
+  const getLocation = () => {
+    if (!application) return 'Remote';
+    if (application.internship?.location) return application.internship.location;
+    if (application.location) return application.location;
+    return 'Remote';
+  };
+
+  // Helper to safely get duration
+  const getDuration = () => {
+    if (!application) return 'Not specified';
+    if (application.internship?.duration) return application.internship.duration;
+    if (application.duration) return application.duration;
+    return 'Not specified';
+  };
+
+  // Helper to safely get description
+  const getDescription = () => {
+    if (!application) return 'No description provided';
+    if (application.internship?.description) return application.internship.description;
+    if (application.description) return application.description;
+    return 'No description provided';
+  };
+
+  // Helper to safely get last apply date
+  const getLastApplyDate = () => {
+    if (!application) return null;
+    if (application.internship?.lastApplyDate) return application.internship.lastApplyDate;
+    if (application.lastApplyDate) return application.lastApplyDate;
+    return null;
+  };
+
+  // Helper to safely get auto cancel
+  const getAutoCancel = () => {
+    if (!application) return false;
+    if (application.internship?.autoCancel !== undefined) return application.internship.autoCancel;
+    if (application.autoCancel !== undefined) return application.autoCancel;
+    return false;
+  };
+
   const handlePayment = async () => {
     if (!application) return;
 
     setProcessingPayment(true);
     
     try {
-      // Create order on backend
       const orderResponse = await fetch('/api/payments/create-certificate-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId: application.id,
-          amount: 100, // 1 INR in paise
+          amount: 100,
         }),
         credentials: 'include',
       });
@@ -149,21 +254,17 @@ export default function ApplicationDetailsPage() {
         throw new Error(orderData.message || 'Failed to create payment order');
       }
 
-      // Initialize Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Coprofiles',
-        description: `Certificate for ${application.internship.title}`,
+        description: `Certificate for ${getInternshipTitle()}`,
         order_id: orderData.orderId,
         handler: async (response: any) => {
-          // Verify payment
           const verifyResponse = await fetch('/api/payments/verify-certificate-payment', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               applicationId: application.id,
               razorpay_order_id: response.razorpay_order_id,
@@ -177,7 +278,6 @@ export default function ApplicationDetailsPage() {
 
           if (verifyResponse.ok) {
             toast.success('Payment successful! Certificate unlocked!');
-            // Update application state
             setApplication({
               ...application,
               certificatePaid: true,
@@ -188,12 +288,10 @@ export default function ApplicationDetailsPage() {
           }
         },
         prefill: {
-          name: 'Student Name', // You can get from user context
-          email: 'student@example.com', // You can get from user context
+          name: application.user?.name || 'Student',
+          email: application.user?.email || 'student@example.com',
         },
-        theme: {
-          color: '#6366f1',
-        },
+        theme: { color: '#6366f1' },
       };
 
       const razorpay = new window.Razorpay(options);
@@ -370,11 +468,7 @@ export default function ApplicationDetailsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="gap-2"
-      >
+      <Button variant="ghost" onClick={() => router.back()} className="gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back to Applications
       </Button>
@@ -383,16 +477,16 @@ export default function ApplicationDetailsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-            {application.internship.title}
+            {getInternshipTitle()}
           </h1>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <div className="flex items-center gap-1">
               <Building2 className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">{application.internship.company}</span>
+              <span className="text-gray-600">{getCompanyName()}</span>
             </div>
             <div className="flex items-center gap-1">
               <MapPin className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-600">{application.internship.location || 'Remote'}</span>
+              <span className="text-gray-600">{getLocation()}</span>
             </div>
           </div>
         </div>
@@ -405,55 +499,43 @@ export default function ApplicationDetailsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Applied Date
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Applied Date</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">
-                {formatDate(application.appliedAt)}
-              </span>
+              <span className="font-medium">{formatDate(application.appliedAt)}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Duration
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Duration</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">{application.internship.duration}</span>
+              <span className="font-medium">{getDuration()}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Roll Number
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Roll Number</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Hash className="h-4 w-4 text-gray-400" />
-              <span className="font-medium">
-                {application.rollNo || 'Not provided'}
-              </span>
+              <span className="font-medium">{application.rollNo || 'Not provided'}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              Certificate Status
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-500">Certificate Status</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -472,7 +554,7 @@ export default function ApplicationDetailsPage() {
         </Card>
       </div>
 
-      {/* Exam Date Card - Only show if exam date exists */}
+      {/* Exam Date Card */}
       {application.examDate && (
         <Card className="border-purple-200 bg-purple-50/30">
           <CardHeader className="pb-3">
@@ -483,9 +565,7 @@ export default function ApplicationDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-purple-700">
-                {formatExamDate(application.examDate)}
-              </span>
+              <span className="font-medium text-purple-700">{formatExamDate(application.examDate)}</span>
             </div>
           </CardContent>
         </Card>
@@ -500,20 +580,7 @@ export default function ApplicationDetailsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {application.internship.description}
-          </p>
-          
-          {application.internship.requirements && application.internship.requirements.length > 0 && (
-            <div className="mt-6">
-              <h3 className="font-semibold text-gray-800 mb-3">Requirements</h3>
-              <ul className="list-disc list-inside space-y-2">
-                {application.internship.requirements.map((req, index) => (
-                  <li key={index} className="text-gray-600">{req}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{getDescription()}</p>
         </CardContent>
       </Card>
 
@@ -521,9 +588,7 @@ export default function ApplicationDetailsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Application Status</CardTitle>
-          <CardDescription>
-            Track the progress of your application
-          </CardDescription>
+          <CardDescription>Track the progress of your application</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -535,7 +600,6 @@ export default function ApplicationDetailsPage() {
               </div>
             </div>
 
-            {/* Show internship active status */}
             {application.internshipActive && application.status === 'pending' && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-sm text-blue-700">
@@ -545,8 +609,7 @@ export default function ApplicationDetailsPage() {
               </div>
             )}
 
-            {/* Show auto cancel info */}
-            {application.internship.autoCancel && application.status === 'accepted' && (
+            {getAutoCancel() && application.status === 'accepted' && (
               <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
                 <p className="text-sm text-yellow-700">
                   <span className="font-semibold">Note: </span>
@@ -555,12 +618,11 @@ export default function ApplicationDetailsPage() {
               </div>
             )}
 
-            {/* Show last apply date if available */}
-            {application.internship.lastApplyDate && (
+            {getLastApplyDate() && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">
                   <span className="font-semibold">Last Application Date: </span>
-                  {formatDate(application.internship.lastApplyDate)}
+                  {formatDate(getLastApplyDate())}
                 </p>
               </div>
             )}
@@ -568,7 +630,7 @@ export default function ApplicationDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Certificate Section - Updated with payment option */}
+      {/* Certificate Section */}
       {application.status === 'completed' && (
         <Card className="border-green-200 bg-green-50/30">
           <CardHeader>
@@ -576,9 +638,7 @@ export default function ApplicationDetailsPage() {
               <Award className="h-5 w-5" />
               Internship Certificate
             </CardTitle>
-            <CardDescription>
-              You have successfully completed this internship!
-            </CardDescription>
+            <CardDescription>You have successfully completed this internship!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!application.certificatePaid && !application.certificateUnlocked && (
@@ -592,11 +652,7 @@ export default function ApplicationDetailsPage() {
                     Unlock your internship certificate for just ₹129. Get a verified certificate that you can share on LinkedIn and with employers.
                   </p>
                 </div>
-                <Button
-                  onClick={handlePayment}
-                  disabled={processingPayment}
-                  className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700"
-                >
+                <Button onClick={handlePayment} disabled={processingPayment} className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700">
                   {processingPayment ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -619,15 +675,9 @@ export default function ApplicationDetailsPage() {
                     <CheckCircle2 className="h-4 w-4" />
                     Certificate Unlocked!
                   </h4>
-                  <p className="text-sm text-green-700 mt-1">
-                    Your certificate is ready for download.
-                  </p>
+                  <p className="text-sm text-green-700 mt-1">Your certificate is ready for download.</p>
                 </div>
-                <Button
-                  onClick={handleDownloadCertificate}
-                  disabled={downloadingCertificate}
-                  className="w-full gap-2 bg-green-600 hover:bg-green-700"
-                >
+                <Button onClick={handleDownloadCertificate} disabled={downloadingCertificate} className="w-full gap-2 bg-green-600 hover:bg-green-700">
                   {downloadingCertificate ? (
                     <>
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -652,13 +702,6 @@ export default function ApplicationDetailsPage() {
           <Button variant="outline" onClick={() => router.push('/dashboard/internships')}>
             Browse More Internships
             <ExternalLink className="h-4 w-4 ml-2" />
-          </Button>
-        )}
-        
-        {application.status === 'accepted' && (
-          <Button variant="outline" onClick={() => router.push('/dashboard/internships/my-applications')}>
-            <UserCheck className="h-4 w-4 mr-2" />
-            View All Applications
           </Button>
         )}
         

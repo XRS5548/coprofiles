@@ -27,6 +27,8 @@ import {
   MessageSquare,
   Download,
   Eye,
+  MessageCircle,
+  Smartphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -95,6 +97,19 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    name: 'WhatsApp',
+    href: '/manager/whatsapp',
+    icon: MessageCircle,
+    badge: 3,
+    children: [
+      { name: 'Dashboard', href: '/manager/whatsapp', icon: LayoutDashboard },
+      { name: 'Accounts', href: '/manager/whatsapp/accounts', icon: Smartphone },
+      { name: 'Conversations', href: '/manager/whatsapp/conversations', icon: MessageSquare },
+      { name: 'Templates', href: '/manager/whatsapp/templates', icon: FileText },
+      { name: 'Analytics', href: '/manager/whatsapp/analytics', icon: TrendingUp },
+    ],
+  },
+  {
     name: 'Company',
     href: '/manager/company',
     icon: Building2,
@@ -115,7 +130,6 @@ const navItems: NavItem[] = [
     icon: Settings,
   },
 ];
-
 interface ManagerLayoutProps {
   children: React.ReactNode;
 }

@@ -125,7 +125,7 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
               variant="outline" 
               size="sm" 
               className="gap-2"
-              onClick={() => window.location.href = `/dashboard/internships/${application.internshipId}`}
+              onClick={() => window.location.href = `/dashboard/internships/${application.id}`}
             >
               <ExternalLink className="h-3 w-3" />
               View Internship

@@ -144,7 +144,7 @@ export function ApplicationCard({ application, index, onViewDetails }: Applicati
               variant="outline" 
               size="sm" 
               className="gap-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
-              onClick={() => window.location.href = `/dashboard/internships/${application.internshipId}`}
+              onClick={() => window.location.href = `/dashboard/internships/${application.id}`}
             >
               <ExternalLink className="h-3.5 w-3.5" />
               View Internship

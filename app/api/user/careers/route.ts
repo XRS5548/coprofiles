@@ -1,11 +1,24 @@
-// app/api/user/careers/route.ts
+// app/api/user/careers/route.ts - Fixed version
 import { db } from "@/db";
-import { careers, companies } from "@/db/schema";
+import { careers, companies, careerApplications, users } from "@/db/schema";
 import { eq, desc, like, gte, lte, and, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
 export async function GET(request: NextRequest) {
     try {
+        const token = request.cookies.get("token")?.value;
+        let userId: number | null = null;
+        
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+                userId = decoded.id;
+            } catch (error) {
+                console.error("Token verification error:", error);
+            }
+        }
+
         const searchParams = request.nextUrl.searchParams;
         const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
         const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "10")));
@@ -20,32 +33,21 @@ export async function GET(request: NextRequest) {
         // Build where conditions
         const conditions = [];
 
-        // Search filter (title or position)
         if (search && search.trim()) {
-            conditions.push(
-                like(careers.name, `%${search.trim()}%`)
-            );
+            conditions.push(like(careers.name, `%${search.trim()}%`));
         }
-
-        // Company filter
         if (companyId && !isNaN(parseInt(companyId))) {
             conditions.push(eq(careers.companyId, parseInt(companyId)));
         }
-
-        // Salary range filter
         if (minSalary && !isNaN(parseInt(minSalary))) {
             conditions.push(gte(careers.salary, parseInt(minSalary)));
         }
         if (maxSalary && !isNaN(parseInt(maxSalary))) {
             conditions.push(lte(careers.salary, parseInt(maxSalary)));
         }
-
-        // Tier score filter
         if (minTierScore && !isNaN(parseInt(minTierScore))) {
             conditions.push(gte(careers.tierScore, parseInt(minTierScore)));
         }
-
-        // Position filter
         if (position && position.trim()) {
             conditions.push(like(careers.position, `%${position.trim()}%`));
         }
@@ -82,33 +84,54 @@ export async function GET(request: NextRequest) {
             .limit(limit)
             .offset(offset);
 
-        // Get application counts for each career
+        // Get career IDs
         const careerIds = allCareers.map(c => c.id);
+        
+        // Get application counts and user's applied status
         let applicationsMap = new Map();
+        let userAppliedMap = new Map();
+        let userAppliedIdMap = new Map();
         
         if (careerIds.length > 0) {
-            // You'll need to import careerApplications
-            const { careerApplications } = await import("@/db/schema");
-            const allApplications = await db.select({
-                careerId: careerApplications.careerId,
-                id: careerApplications.id
-            }).from(careerApplications)
+            // Get all applications for these careers
+            const allApplications = await db
+                .select({
+                    careerId: careerApplications.careerId,
+                    id: careerApplications.id,
+                    userId: careerApplications.userId,
+                })
+                .from(careerApplications)
                 .where(inArray(careerApplications.careerId, careerIds));
             
+            // Count total applications per career
             allApplications.forEach(app => {
                 applicationsMap.set(
                     app.careerId,
                     (applicationsMap.get(app.careerId) || 0) + 1
                 );
             });
+            
+            // Check if user has applied to any of these careers
+            if (userId) {
+                const userApplications = allApplications.filter(app => app.userId === userId);
+                userApplications.forEach(app => {
+                    userAppliedMap.set(app.careerId, true);
+                    userAppliedIdMap.set(app.careerId, app.id);
+                });
+            }
         }
 
-        // Format careers with additional info
-        const careersWithStats = allCareers.map(career => ({
-            ...career,
-            salaryFormatted: career.salary ? formatSalary(career.salary) : null,
-            applicationsCount: applicationsMap.get(career.id) || 0
-        }));
+        // Format careers with additional info (without await in map)
+        const careersWithStats = [];
+        for (const career of allCareers) {
+            careersWithStats.push({
+                ...career,
+                salaryFormatted: career.salary ? formatSalary(career.salary) : null,
+                applicationsCount: applicationsMap.get(career.id) || 0,
+                hasApplied: userAppliedMap.get(career.id) || false,
+                appliedId: userAppliedIdMap.get(career.id) || null
+            });
+        }
 
         return NextResponse.json({
             success: true,
@@ -141,7 +164,6 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Helper function to format salary
 function formatSalary(salary: number): string {
     if (salary >= 10000000) {
         return `₹${(salary / 10000000).toFixed(1)}Cr`;

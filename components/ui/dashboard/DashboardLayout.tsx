@@ -1,6 +1,7 @@
+// components/dashboard/DashboardLayout.tsx - Updated with working search
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,6 +26,8 @@ import {
   Award,
   Moon,
   Sun,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -43,6 +46,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface NavItem {
   name: string;
@@ -64,35 +68,25 @@ interface UserProfile {
   authBy: string | null;
 }
 
+interface SearchResult {
+  type: 'internship' | 'career' | 'project' | 'form';
+  id: number;
+  title: string;
+  description: string | null;
+  company?: string;
+  location?: string;
+  url: string;
+}
+
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { 
-    name: 'Internships', 
-    href: '/dashboard/internships', 
-    icon: GraduationCap, 
-  },
-  { 
-    name: 'My Applications', 
-    href: '/dashboard/internships/my-applications', 
-    icon: FileText, 
-  },
-  { 
-    name: 'My Jobs History',
-    href: '/dashboard/my-jobs-history', 
-    icon: Clock, 
-  },
-  { name: 'Careers', href: '/dashboard/careers', icon: Briefcase},
+  { name: 'Internships', href: '/dashboard/internships', icon: GraduationCap },
+  { name: 'My Applications', href: '/dashboard/internships/my-applications', icon: FileText },
+  { name: 'My Jobs History', href: '/dashboard/my-jobs-history', icon: Clock },
+  { name: 'Careers', href: '/dashboard/careers', icon: Briefcase },
   { name: 'Projects', href: '/dashboard/projects', icon: FolderOpen },
-  { 
-    name: 'Certificates', 
-    href: '/dashboard/certificates', 
-    icon: Award,
-  },
-  { 
-    name: 'Forms', 
-    href: '/dashboard/forms', 
-    icon: FileText,
-  },
+  { name: 'Certificates', href: '/dashboard/certificates', icon: Award },
+  { name: 'Forms', href: '/dashboard/forms', icon: FileText },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -101,13 +95,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Load recent searches from localStorage
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -135,6 +143,72 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     
     fetchUserProfile();
   }, [router]);
+
+  // Search functionality
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (searchQuery.length >= 2) {
+        performSearch();
+      } else if (searchQuery.length === 0) {
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
+  const performSearch = async () => {
+    if (searchQuery.length < 2) return;
+    
+    setSearching(true);
+    try {
+      const response = await fetch(`/api/user/search?q=${encodeURIComponent(searchQuery)}`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSearchResults(data.results);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      addToRecentSearches(searchQuery);
+      setShowSearchDialog(true);
+      performSearch();
+    }
+  };
+
+  const addToRecentSearches = (query: string) => {
+    const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    addToRecentSearches(searchQuery);
+    setShowSearchDialog(false);
+    setSearchQuery('');
+    router.push(result.url);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown as any);
+    return () => document.removeEventListener('keydown', handleKeyDown as any);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -487,9 +561,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <Input
-                    placeholder="Search internships, projects..."
+                    ref={searchInputRef}
+                    placeholder="Search internships, careers, projects, forms... (Ctrl+K)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowSearchDialog(true)}
                     className="pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                   />
                 </div>
@@ -497,7 +573,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             
             <div className="flex items-center gap-2">
-              {/* Theme Toggle */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -597,6 +672,82 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </motion.main>
       </div>
+
+      {/* Search Dialog */}
+      <Dialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Search Results</DialogTitle>
+          </DialogHeader>
+          
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              autoFocus
+            />
+          </div>
+
+          {searching ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          ) : searchResults.length === 0 && searchQuery.length > 0 ? (
+            <div className="text-center py-8">
+              <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No results found for "{searchQuery}"</p>
+            </div>
+          ) : searchResults.length > 0 ? (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {searchResults.map((result, index) => (
+                <div
+                  key={`${result.type}-${result.id}`}
+                  className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                  onClick={() => handleResultClick(result)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+                        </Badge>
+                        <span className="text-sm font-medium">{result.title}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 line-clamp-1">{result.description}</p>
+                      {result.company && (
+                        <p className="text-xs text-gray-400 mt-1">{result.company}</p>
+                      )}
+                    </div>
+                    <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentSearches.length > 0 ? (
+            <div>
+              <p className="text-sm text-gray-500 mb-2">Recent Searches</p>
+              <div className="space-y-1">
+                {recentSearches.map((search, index) => (
+                  <div
+                    key={index}
+                    className="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer flex items-center gap-2"
+                    onClick={() => {
+                      setSearchQuery(search);
+                      performSearch();
+                    }}
+                  >
+                    <Search className="h-3 w-3 text-gray-400" />
+                    <span className="text-sm">{search}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

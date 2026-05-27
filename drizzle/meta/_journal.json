@@ -43,6 +43,13 @@
       "when": 1779819140755,
       "tag": "0005_clammy_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779868566398,
+      "tag": "0006_peaceful_christian_walker",
+      "breakpoints": true
     }
   ]
 }

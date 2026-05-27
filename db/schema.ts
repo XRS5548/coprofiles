@@ -954,3 +954,285 @@ export const whatsappMessageAttachments = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
   }
 );
+
+
+
+
+
+
+// ================= FORMS ENUMS =================
+
+export const formStatusEnum = pgEnum(
+  "form_status",
+  [
+    "draft",      // Form is in draft mode
+    "active",     // Form is active and accepting responses
+    "paused",     // Form is temporarily paused
+    "closed",     // Form is closed for responses
+    "archived",   // Form is archived
+  ]
+);
+
+export const formTypeEnum = pgEnum(
+  "form_type",
+  [
+    "public",     // Anyone can fill without authentication
+    "private",    // Requires passkey to access
+    "authenticated", // Requires user login
+  ]
+);
+
+export const fieldTypeEnum = pgEnum(
+  "field_type",
+  [
+    "text",       // Short text input
+    "textarea",   // Long text / paragraph
+    "email",      // Email address
+    "phone",      // Phone number
+    "number",     // Number input
+    "date",       // Date picker
+    "checkbox",   // Checkbox
+    "radio",      // Radio buttons
+    "select",     // Dropdown select
+    "multi_select", // Multi-select dropdown
+    "file",       // File upload
+    "rating",     // Star rating
+    "range",      // Slider range
+    "payment",    // Payment field (Razorpay)
+  ]
+);
+
+export const paymentStatusEnum = pgEnum(
+  "payment_status",
+  [
+    "pending",    // Payment pending
+    "completed",  // Payment completed
+    "failed",     // Payment failed
+    "refunded",   // Payment refunded
+  ]
+);
+
+// ================= FORMS TABLE =================
+
+export const forms = pgTable(
+  "forms",
+  {
+    id: serial("id").primaryKey(),
+
+    // Owner
+    userId: integer("user_id")
+      .references(() => users.id)
+      .notNull(),
+
+    companyId: integer("company_id")
+      .references(() => companies.id),
+
+    // Basic info
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+    slug: varchar("slug", { length: 255 }).unique().notNull(), // Unique URL slug
+    formType: formTypeEnum("form_type").default("public").notNull(),
+    status: formStatusEnum("status").default("draft").notNull(),
+
+    // Privacy settings
+    passkey: varchar("passkey", { length: 100 }), // For private forms
+    requireAuth: boolean("require_auth").default(false),
+    requireEmailVerification: boolean("require_email_verification").default(false),
+
+    // Payment settings
+    collectPayment: boolean("collect_payment").default(false),
+    paymentAmount: integer("payment_amount"), // Amount in paise
+    paymentCurrency: varchar("payment_currency", { length: 3 }).default("INR"),
+    paymentDescription: text("payment_description"),
+
+    // Design settings
+    theme: json("theme").$type<{
+      primaryColor?: string;
+      backgroundColor?: string;
+      fontFamily?: string;
+      logoUrl?: string;
+      bannerUrl?: string;
+      customCss?: string;
+    }>(),
+
+    // Settings
+    confirmationMessage: text("confirmation_message"),
+    redirectUrl: varchar("redirect_url", { length: 500 }),
+    sendEmailCopy: boolean("send_email_copy").default(false),
+    collectUserData: boolean("collect_user_data").default(false),
+
+    // Limits
+    maxSubmissions: integer("max_submissions"),
+    submissionDeadline: timestamp("submission_deadline"),
+
+    // Metadata
+    metadata: json("metadata").$type<{
+      views?: number;
+      submissions?: number;
+      conversionRate?: number;
+      tags?: string[];
+    }>(),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+    publishedAt: timestamp("published_at"),
+  }
+);
+
+// ================= FORM FIELDS TABLE =================
+
+export const formFields = pgTable(
+  "form_fields",
+  {
+    id: serial("id").primaryKey(),
+    formId: integer("form_id").references(() => forms.id).notNull(),
+
+    // Field properties
+    fieldLabel: varchar("field_label", { length: 255 }).notNull(),
+    fieldName: varchar("field_name", { length: 100 }).notNull(),
+    fieldType: fieldTypeEnum("field_type").notNull(),
+    placeholder: varchar("placeholder", { length: 500 }),
+    helpText: text("help_text"),
+    isRequired: boolean("is_required").default(false),
+    order: integer("order").default(0),
+
+    // Options for select/radio/checkbox
+    options: json("options").$type<Array<{
+      value: string;
+      label: string;
+      price?: number; // For payment options
+    }>>(),
+
+    // Validation
+    validation: json("validation").$type<{
+      min?: number;
+      max?: number;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: string;
+      customError?: string;
+    }>(),
+
+    // Conditional logic
+    conditionalLogic: json("conditional_logic").$type<{
+      dependsOn?: string;
+      condition?: string;
+      value?: any;
+      action?: "show" | "hide" | "require";
+    }>(),
+
+    // Appearance
+    appearance: json("appearance").$type<{
+      width?: string;
+      placeholder?: string;
+      defaultValue?: any;
+      icon?: string;
+    }>(),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  }
+);
+
+// ================= FORM SUBMISSIONS TABLE =================
+
+export const formSubmissions = pgTable(
+  "form_submissions",
+  {
+    id: serial("id").primaryKey(),
+    formId: integer("form_id").references(() => forms.id).notNull(),
+
+    // Submitter info
+    userId: integer("user_id").references(() => users.id), // Null for anonymous
+    submitterName: varchar("submitter_name", { length: 255 }),
+    submitterEmail: varchar("submitter_email", { length: 255 }),
+    submitterPhone: varchar("submitter_phone", { length: 20 }),
+    ipAddress: varchar("ip_address", { length: 45 }),
+    userAgent: text("user_agent"),
+
+    // Response data
+    responseData: json("response_data").$type<Record<string, any>>(),
+
+    // Payment info
+    paymentId: varchar("payment_id", { length: 255 }),
+    paymentStatus: paymentStatusEnum("payment_status").default("pending"),
+    paymentAmount: integer("payment_amount"),
+    paymentCurrency: varchar("payment_currency", { length: 3 }),
+    paymentReceiptUrl: text("payment_receipt_url"),
+
+    // Submission status
+    status: varchar("status", { length: 50 }).default("pending"), // pending, approved, rejected, spam
+    notes: text("notes"),
+
+    // Tracking
+    referrer: varchar("referrer", { length: 500 }),
+    utmSource: varchar("utm_source", { length: 255 }),
+    utmMedium: varchar("utm_medium", { length: 255 }),
+    utmCampaign: varchar("utm_campaign", { length: 255 }),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  }
+);
+
+// ================= FORM PAYMENT TRANSACTIONS =================
+
+export const formPayments = pgTable(
+  "form_payments",
+  {
+    id: serial("id").primaryKey(),
+    submissionId: integer("submission_id").references(() => formSubmissions.id).notNull(),
+    formId: integer("form_id").references(() => forms.id).notNull(),
+
+    // Razorpay details
+    razorpayOrderId: varchar("razorpay_order_id", { length: 255 }).notNull(),
+    razorpayPaymentId: varchar("razorpay_payment_id", { length: 255 }),
+    razorpaySignature: varchar("razorpay_signature", { length: 255 }),
+
+    // Payment details
+    amount: integer("amount").notNull(),
+    currency: varchar("currency", { length: 3 }).default("INR"),
+    status: paymentStatusEnum("status").default("pending"),
+
+    // Customer details
+    customerName: varchar("customer_name", { length: 255 }),
+    customerEmail: varchar("customer_email", { length: 255 }),
+    customerPhone: varchar("customer_phone", { length: 20 }),
+
+    // Metadata
+    metadata: json("metadata").$type<Record<string, any>>(),
+    receipt: text("receipt"),
+
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  }
+);
+
+// ================= FORM ANALYTICS =================
+
+export const formAnalytics = pgTable(
+  "form_analytics",
+  {
+    id: serial("id").primaryKey(),
+    formId: integer("form_id").references(() => forms.id).notNull(),
+
+    date: timestamp("date").defaultNow(),
+    views: integer("views").default(0),
+    starts: integer("starts").default(0),
+    completions: integer("completions").default(0),
+    dropoffs: integer("dropoffs").default(0),
+    conversionRate: integer("conversion_rate").default(0),
+
+    // Device stats
+    desktopCount: integer("desktop_count").default(0),
+    mobileCount: integer("mobile_count").default(0),
+    tabletCount: integer("tablet_count").default(0),
+
+    // Source stats
+    directCount: integer("direct_count").default(0),
+    socialCount: integer("social_count").default(0),
+    referralCount: integer("referral_count").default(0),
+
+    createdAt: timestamp("created_at").defaultNow(),
+  }
+);

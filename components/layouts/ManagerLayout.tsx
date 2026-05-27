@@ -29,6 +29,7 @@ import {
   Eye,
   MessageCircle,
   Smartphone,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -107,6 +108,18 @@ const navItems: NavItem[] = [
       { name: 'Conversations', href: '/manager/whatsapp/conversations', icon: MessageSquare },
       { name: 'Templates', href: '/manager/whatsapp/templates', icon: FileText },
       { name: 'Analytics', href: '/manager/whatsapp/analytics', icon: TrendingUp },
+    ],
+  },
+  {
+    name: 'Forms',
+    href: '/manager/forms',
+    icon: FileText,
+    badge: 0,
+    children: [
+      { name: 'All Forms', href: '/manager/forms', icon: FileText },
+      { name: 'Create Form', href: '/manager/forms/create', icon: Plus },
+      { name: 'Submissions', href: '/manager/forms/submissions', icon: Users },
+      { name: 'Analytics', href: '/manager/forms/analytics', icon: TrendingUp },
     ],
   },
   {

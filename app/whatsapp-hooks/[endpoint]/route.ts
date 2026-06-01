@@ -344,21 +344,27 @@ const allowedTypes=[
 "sticker",
 "reaction"
 
-];
+] as const;
+
+type WhatsAppMessageType = typeof allowedTypes[number];
 
 
-const messageType=
-allowedTypes.includes(
+const messageType: WhatsAppMessageType =
+(allowedTypes as readonly string[]).includes(
 message.type
 )
 ?
-message.type
+message.type as WhatsAppMessageType
 :
 "text";
 
 
 
 let textBody="";
+let mediaId:string | null=null;
+let mediaMimeType:string | null=null;
+let caption:string | null=null;
+let lastMessagePreview="";
 
 
 if(
@@ -379,6 +385,26 @@ textBody=
 message.button?.text || "";
 
 }
+
+if(
+message.type==="image"
+){
+
+mediaId=
+message.image?.id || null;
+
+mediaMimeType=
+message.image?.mime_type || null;
+
+caption=
+message.image?.caption || null;
+
+}
+
+lastMessagePreview=
+textBody ||
+caption ||
+(message.type==="image" ? "Image message" : `${messageType} message`);
 
 
 
@@ -408,7 +434,7 @@ toNumber:
 whatsappAccount.phoneNumber,
 
 messageType:
-messageType as any,
+messageType,
 
 direction:
 "incoming",
@@ -418,6 +444,15 @@ status:
 
 textBody:
 textBody,
+
+mediaId:
+mediaId,
+
+mediaMimeType:
+mediaMimeType,
+
+caption:
+caption,
 
 metadata:{
 
@@ -483,7 +518,7 @@ lastMessageAt:
 new Date(),
 
 lastMessagePreview:
-textBody,
+lastMessagePreview,
 
 totalMessages:
 (existing[0]
@@ -522,7 +557,7 @@ value?.contacts?.[0]
 totalMessages:1,
 
 lastMessagePreview:
-textBody,
+lastMessagePreview,
 
 lastMessageAt:
 new Date()

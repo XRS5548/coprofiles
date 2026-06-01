@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -17,14 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   MessageCircle,
   Send,
@@ -38,7 +29,7 @@ import {
   CheckCheck,
   Loader2,
   RefreshCw,
-  Image,
+  Image as ImageIcon,
   File,
   Video,
   Music,
@@ -105,6 +96,31 @@ interface WhatsAppAccount {
   verified: boolean;
 }
 
+function MediaImagePreview({ message }: { message: Message }) {
+  const [failed, setFailed] = useState(false);
+  const src = message.mediaId
+    ? `/api/manager/whatsapp/media?messageId=${message.id}`
+    : message.mediaUrl;
+
+  if (!src || failed) {
+    return (
+      <div className="mb-2 flex min-h-28 items-center justify-center rounded-md border border-border/60 bg-background/40 px-4 py-6 text-xs opacity-75">
+        Image unavailable
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={message.caption || 'WhatsApp image'}
+      className="mb-2 max-h-72 w-full rounded-md object-cover"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export default function WhatsAppConversationsPage() {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -156,7 +172,7 @@ export default function WhatsAppConversationsPage() {
     return () => clearInterval(interval);
   }, [selectedConversation, selectedAccount]);
 
-  const fetchAccounts = async () => {
+  async function fetchAccounts() {
     try {
       const response = await fetch('/api/manager/whatsapp/accounts', {
         credentials: 'include',
@@ -174,9 +190,9 @@ export default function WhatsAppConversationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchConversations = async () => {
+  async function fetchConversations() {
     if (!selectedAccount) return;
     
     try {
@@ -190,9 +206,9 @@ export default function WhatsAppConversationsPage() {
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
-  };
+  }
 
-  const fetchMessages = async () => {
+  async function fetchMessages() {
     if (!selectedConversation || !selectedAccount) return;
     
     setMessagesLoading(true);
@@ -209,9 +225,9 @@ export default function WhatsAppConversationsPage() {
     } finally {
       setMessagesLoading(false);
     }
-  };
+  }
 
-  const markConversationAsRead = async () => {
+  async function markConversationAsRead() {
     if (!selectedConversation) return;
     
     try {
@@ -232,7 +248,7 @@ export default function WhatsAppConversationsPage() {
     } catch (error) {
       console.error('Error marking as read:', error);
     }
-  };
+  }
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !selectedAccount) return;
@@ -278,11 +294,11 @@ export default function WhatsAppConversationsPage() {
     toast.success('Refreshed');
   };
 
-  const scrollToBottom = () => {
+  function scrollToBottom() {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
-  };
+  }
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -315,7 +331,7 @@ export default function WhatsAppConversationsPage() {
   const getMessageTypeIcon = (type: string) => {
     switch (type) {
       case 'image':
-        return <Image className="h-4 w-4" />;
+        return <ImageIcon className="h-4 w-4" />;
       case 'video':
         return <Video className="h-4 w-4" />;
       case 'audio':
@@ -542,9 +558,12 @@ export default function WhatsAppConversationsPage() {
                             <span className="text-xs opacity-75 capitalize">{msg.messageType}</span>
                           </div>
                         )}
-                        <p className="text-sm break-words whitespace-pre-wrap">
-                          {msg.textBody || msg.caption || 'Media message'}
-                        </p>
+                        {msg.messageType === 'image' && <MediaImagePreview message={msg} />}
+                        {(msg.textBody || msg.caption || msg.messageType !== 'image') && (
+                          <p className="text-sm break-words whitespace-pre-wrap">
+                            {msg.textBody || msg.caption || 'Media message'}
+                          </p>
+                        )}
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-xs opacity-75">
                             {formatTime(msg.createdAt)}

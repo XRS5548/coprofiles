@@ -365,6 +365,7 @@ let mediaId:string | null=null;
 let mediaMimeType:string | null=null;
 let caption:string | null=null;
 let lastMessagePreview="";
+let fileName:string | null=null;
 
 
 if(
@@ -386,25 +387,39 @@ message.button?.text || "";
 
 }
 
-if(
-message.type==="image"
-){
+if(message.type==="image"){
+mediaId=message.image?.id || null;
+mediaMimeType=message.image?.mime_type || null;
+caption=message.image?.caption || null;
+}
 
-mediaId=
-message.image?.id || null;
+if(message.type==="video"){
+mediaId=message.video?.id || null;
+mediaMimeType=message.video?.mime_type || null;
+caption=message.video?.caption || null;
+}
 
-mediaMimeType=
-message.image?.mime_type || null;
+if(message.type==="audio"){
+mediaId=message.audio?.id || null;
+mediaMimeType=message.audio?.mime_type || null;
+}
 
-caption=
-message.image?.caption || null;
-
+if(message.type==="document"){
+mediaId=message.document?.id || null;
+mediaMimeType=message.document?.mime_type || null;
+caption=message.document?.caption || null;
+fileName=message.document?.filename || null;
 }
 
 lastMessagePreview=
 textBody ||
 caption ||
-(message.type==="image" ? "Image message" : `${messageType} message`);
+fileName ||
+(message.type==="image" ? "Image message" :
+message.type==="video" ? "Video message" :
+message.type==="audio" ? "Audio message" :
+message.type==="document" ? "Document message" :
+`${messageType} message`);
 
 
 
@@ -462,6 +477,11 @@ message.timestamp,
 profileName:
 value?.contacts?.[0]
 ?.profile?.name
+
+,
+
+fileName:
+fileName
 
 },
 

@@ -1,9 +1,71 @@
-// app/api/manager/whatsapp/send-message/route.ts - Complete with template support
+// app/api/manager/whatsapp/send-message/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { whatsappAccounts, whatsappMessages, whatsappConversations, whatsappTemplates } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import jwt from "jsonwebtoken";
+
+type DecodedToken = {
+  id: number;
+  roleType: string;
+};
+
+type SendPayload = {
+  accountId: number;
+  toNumber: string;
+  message: string;
+  messageType: string;
+  templateName?: string;
+  templateVariables?: {
+    header?: string;
+    body?: string[];
+  };
+  media?: File;
+};
+
+function getMessageTypeFromFile(file: File) {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
+  if (file.type.startsWith("audio/")) return "audio";
+  return "document";
+}
+
+function getPreviewText(messageType: string, message: string, fileName?: string) {
+  if (message) return message.substring(0, 100);
+  if (messageType === "image") return "Image message";
+  if (messageType === "video") return "Video message";
+  if (messageType === "audio") return "Audio message";
+  if (messageType === "document") return fileName || "Document message";
+  return "";
+}
+
+async function readPayload(request: NextRequest): Promise<SendPayload> {
+  const contentType = request.headers.get("content-type") || "";
+
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    const media = formData.get("media");
+    const file = media instanceof File ? media : undefined;
+
+    return {
+      accountId: Number(formData.get("accountId")),
+      toNumber: String(formData.get("toNumber") || ""),
+      message: String(formData.get("message") || ""),
+      messageType: file ? getMessageTypeFromFile(file) : "text",
+      media: file,
+    };
+  }
+
+  const body = await request.json();
+  return {
+    accountId: Number(body.accountId),
+    toNumber: body.toNumber,
+    message: body.message || "",
+    messageType: body.messageType || "text",
+    templateName: body.templateName,
+    templateVariables: body.templateVariables,
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,16 +74,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; roleType: string };
-    if (decoded.roleType !== 'manager') {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
+    if (decoded.roleType !== "manager") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { accountId, toNumber, message, messageType, templateName, templateVariables } = await request.json();
+    const { accountId, toNumber, message, messageType, templateName, templateVariables, media } =
+      await readPayload(request);
 
-    console.log("Sending message:", { accountId, toNumber, message, messageType, templateName, templateVariables });
+    if (!accountId || !toNumber) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
 
-    // Get WhatsApp account
+    if (!media && messageType !== "template" && !message.trim()) {
+      return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
     const accountResult = await db
       .select()
       .from(whatsappAccounts)
@@ -33,13 +101,81 @@ export async function POST(request: NextRequest) {
     }
 
     const whatsappAccount = accountResult[0];
-    let responseData;
-    let messageId;
+    let responseData: { messages?: Array<{ id?: string; status?: string }>; error?: { message?: string } } = {};
+    let messageId: string | undefined;
     let textBody = message;
+    let mediaId: string | null = null;
+    let mediaMimeType: string | null = null;
+    let caption: string | null = null;
+    let storedMessageType = messageType;
 
-    // Send based on message type
-    if (messageType === "template" && templateName) {
-      // Get template from database
+    if (media) {
+      storedMessageType = getMessageTypeFromFile(media);
+      mediaMimeType = media.type || null;
+      caption = message.trim() || null;
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("messaging_product", "whatsapp");
+      uploadFormData.append("file", media, media.name);
+
+      const uploadResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/media`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${whatsappAccount.accessToken}`,
+          },
+          body: uploadFormData,
+        }
+      );
+      const uploadData = await uploadResponse.json();
+
+      if (!uploadResponse.ok || !uploadData.id) {
+        throw new Error(uploadData.error?.message || "Failed to upload media");
+      }
+
+      mediaId = uploadData.id;
+
+      const mediaBody: Record<string, unknown> = {
+        id: mediaId,
+      };
+
+      if (storedMessageType === "image" || storedMessageType === "video" || storedMessageType === "document") {
+        if (caption) {
+          mediaBody.caption = caption;
+        }
+      }
+
+      if (storedMessageType === "document") {
+        mediaBody.filename = media.name;
+      }
+
+      const sendResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${whatsappAccount.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: toNumber,
+            type: storedMessageType,
+            [storedMessageType]: mediaBody,
+          }),
+        }
+      );
+
+      responseData = await sendResponse.json();
+      if (!sendResponse.ok) {
+        throw new Error(responseData.error?.message || "Failed to send media message");
+      }
+
+      messageId = responseData.messages?.[0]?.id;
+      textBody = "";
+    } else if (messageType === "template" && templateName) {
       const templateResult = await db
         .select()
         .from(whatsappTemplates)
@@ -54,10 +190,8 @@ export async function POST(request: NextRequest) {
       }
 
       const template = templateResult[0];
-
-      // Prepare template components
       const components = [];
-      
+
       if (template.headerText) {
         components.push({
           type: "HEADER",
@@ -67,8 +201,7 @@ export async function POST(request: NextRequest) {
           }] : []
         });
       }
-      
-      // Body with variables
+
       const bodyComponents = [];
       if (templateVariables?.body && Array.isArray(templateVariables.body)) {
         for (const variable of templateVariables.body) {
@@ -78,12 +211,12 @@ export async function POST(request: NextRequest) {
           });
         }
       }
-      
+
       components.push({
         type: "BODY",
         parameters: bodyComponents
       });
-      
+
       if (template.footerText) {
         components.push({
           type: "FOOTER",
@@ -91,10 +224,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Send template message via WhatsApp API
-      const url = `https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/messages`;
-      
-      const templateBody: any = {
+      const templateBody: Record<string, unknown> = {
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: toNumber,
@@ -104,14 +234,11 @@ export async function POST(request: NextRequest) {
           language: {
             code: template.language || "en",
           },
+          components,
         },
       };
 
-      if (components.length > 0) {
-        templateBody.template.components = components;
-      }
-
-      const response = await fetch(url, {
+      const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/messages`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${whatsappAccount.accessToken}`,
@@ -121,28 +248,22 @@ export async function POST(request: NextRequest) {
       });
 
       responseData = await response.json();
-      console.log("WhatsApp Template API response:", responseData);
-
       if (!response.ok) {
         throw new Error(responseData.error?.message || "Failed to send template message");
       }
 
       messageId = responseData.messages?.[0]?.id;
       textBody = template.bodyText;
-      
-      // Replace variables in text body for preview
+
       if (templateVariables?.body && Array.isArray(templateVariables.body)) {
         let previewText = template.bodyText;
         templateVariables.body.forEach((variable: string, index: number) => {
-          previewText = previewText.replace(new RegExp(`\\{\\{${index + 1}\\}\\}`, 'g'), variable);
+          previewText = previewText.replace(new RegExp(`\\{\\{${index + 1}\\}\\}`, "g"), variable);
         });
         textBody = previewText;
       }
     } else {
-      // Send text message
-      const url = `https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/messages`;
-      
-      const response = await fetch(url, {
+      const response = await fetch(`https://graph.facebook.com/v18.0/${whatsappAccount.phoneNumberId}/messages`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${whatsappAccount.accessToken}`,
@@ -161,17 +282,17 @@ export async function POST(request: NextRequest) {
       });
 
       responseData = await response.json();
-      console.log("WhatsApp Text API response:", responseData);
-
       if (!response.ok) {
         throw new Error(responseData.error?.message || "Failed to send message");
       }
 
       messageId = responseData.messages?.[0]?.id;
       textBody = message;
+      storedMessageType = "text";
     }
 
-    // Store message in database
+    const previewText = getPreviewText(storedMessageType, textBody || caption || "", media?.name);
+
     const savedMessageResult = await db
       .insert(whatsappMessages)
       .values({
@@ -180,11 +301,14 @@ export async function POST(request: NextRequest) {
         waMessageId: messageId,
         toNumber: toNumber,
         fromNumber: whatsappAccount.phoneNumber,
-        messageType: messageType === "template" ? "template" : "text",
+        messageType: storedMessageType,
         direction: "outgoing",
         status: responseData.messages?.[0]?.status || "sent",
-        textBody: textBody,
-        templateData: messageType === "template" ? { name: templateName, variables: templateVariables } : null,
+        textBody: textBody || null,
+        mediaId,
+        mediaMimeType,
+        caption,
+        templateData: storedMessageType === "template" ? { name: templateName, variables: templateVariables } : null,
         createdAt: new Date(),
       })
       .returning();
@@ -193,9 +317,6 @@ export async function POST(request: NextRequest) {
       ? savedMessageResult[0]
       : savedMessageResult.rows?.[0];
 
-    console.log("Message stored in DB:", savedMessage);
-
-    // Update or create conversation
     const existingConversation = await db
       .select()
       .from(whatsappConversations)
@@ -210,7 +331,7 @@ export async function POST(request: NextRequest) {
         .update(whatsappConversations)
         .set({
           lastMessageAt: new Date(),
-          lastMessagePreview: textBody?.substring(0, 100) || '',
+          lastMessagePreview: previewText,
           totalMessages: (existingConversation[0].totalMessages || 0) + 1,
           updatedAt: new Date(),
         })
@@ -223,7 +344,7 @@ export async function POST(request: NextRequest) {
           customerNumber: toNumber,
           customerName: toNumber,
           lastMessageAt: new Date(),
-          lastMessagePreview: textBody?.substring(0, 100) || '',
+          lastMessagePreview: previewText,
           totalMessages: 1,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -238,8 +359,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error sending message:", error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : "Failed to send message" 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "Failed to send message"
     }, { status: 500 });
   }
 }

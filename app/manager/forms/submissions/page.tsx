@@ -69,10 +69,11 @@ interface Submission {
   submitterName: string | null;
   submitterEmail: string | null;
   submitterPhone: string | null;
-  responseData: Record<string, any>;
+  responseData: Record<string, string | number | boolean | null>;
   paymentId: string | null;
   paymentStatus: string | null;
   paymentAmount: number | null;
+  paymentCurrency?: string | null;
   status: string;
   createdAt: string;
 }
@@ -148,6 +149,12 @@ export default function FormSubmissionsPage() {
       const data = await response.json();
       if (data.success) {
         toast.success(`Submission ${status} successfully`);
+        setSubmissions(prev => prev.map(sub =>
+          sub.id === submissionId ? { ...sub, status } : sub
+        ));
+        setSelectedSubmission(prev =>
+          prev?.id === submissionId ? { ...prev, status } : prev
+        );
         fetchSubmissions();
       } else {
         throw new Error(data.error || 'Failed to update status');
@@ -192,7 +199,7 @@ export default function FormSubmissionsPage() {
     toast.success('Exported successfully');
   };
 
-  const convertToCSV = (data: any[]) => {
+  const convertToCSV = (data: Array<Record<string, unknown>>) => {
     const headers = Object.keys(data[0]);
     const rows = data.map(obj => headers.map(header => JSON.stringify(obj[header] || '')).join(','));
     return [headers.join(','), ...rows].join('\n');
@@ -257,7 +264,9 @@ export default function FormSubmissionsPage() {
     approved: submissions.filter(s => s.status === 'approved').length,
     rejected: submissions.filter(s => s.status === 'rejected').length,
     paid: submissions.filter(s => s.paymentStatus === 'completed').length,
-    totalRevenue: submissions.reduce((sum, s) => sum + (s.paymentAmount || 0), 0),
+    totalRevenue: submissions
+      .filter(s => s.paymentStatus === 'completed')
+      .reduce((sum, s) => sum + (s.paymentAmount || 0), 0),
   };
 
   if (loading) {

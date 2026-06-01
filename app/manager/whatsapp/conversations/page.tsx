@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -30,7 +31,7 @@ import {
   Loader2,
   RefreshCw,
   Image as ImageIcon,
-  File,
+  File as FileIcon,
   Video,
   Music,
   MapPin,
@@ -38,6 +39,8 @@ import {
   XCircle,
   Edit,
   Plus,
+  Paperclip,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -96,17 +99,59 @@ interface WhatsAppAccount {
   verified: boolean;
 }
 
-function MediaImagePreview({ message }: { message: Message }) {
-  const [failed, setFailed] = useState(false);
-  const src = message.mediaId
+function getMediaSrc(message: Message) {
+  return message.mediaId
     ? `/api/manager/whatsapp/media?messageId=${message.id}`
     : message.mediaUrl;
+}
+
+function MediaPreview({ message }: { message: Message }) {
+  const [failed, setFailed] = useState(false);
+  const src = getMediaSrc(message);
 
   if (!src || failed) {
     return (
       <div className="mb-2 flex min-h-28 items-center justify-center rounded-md border border-border/60 bg-background/40 px-4 py-6 text-xs opacity-75">
-        Image unavailable
+        Media unavailable
       </div>
+    );
+  }
+
+  if (message.messageType === 'video') {
+    return (
+      <video
+        src={src}
+        className="mb-2 max-h-80 w-full rounded-md bg-black"
+        controls
+        preload="metadata"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  if (message.messageType === 'audio') {
+    return (
+      <audio
+        src={src}
+        className="mb-2 w-full"
+        controls
+        preload="metadata"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+
+  if (message.messageType === 'document') {
+    return (
+      <a
+        href={src}
+        target="_blank"
+        rel="noreferrer"
+        className="mb-2 flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-3 py-2 text-sm underline-offset-4 hover:underline"
+      >
+        <FileIcon className="h-4 w-4" />
+        Open document
+      </a>
     );
   }
 
@@ -134,9 +179,12 @@ export default function WhatsAppConversationsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [newMessage, setNewMessage] = useState('');
+  const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchAccounts();
@@ -161,6 +209,8 @@ export default function WhatsAppConversationsPage() {
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
+    if (!autoRefreshEnabled) return;
+
     const interval = setInterval(() => {
       if (selectedConversation) {
         fetchMessages();
@@ -170,7 +220,7 @@ export default function WhatsAppConversationsPage() {
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [selectedConversation, selectedAccount]);
+  }, [selectedConversation, selectedAccount, autoRefreshEnabled]);
 
   async function fetchAccounts() {
     try {
@@ -251,25 +301,40 @@ export default function WhatsAppConversationsPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !selectedAccount) return;
+    if ((!newMessage.trim() && !selectedMedia) || !selectedConversation || !selectedAccount) return;
     
     setSendingMessage(true);
     try {
+      const body = selectedMedia
+        ? (() => {
+            const formData = new FormData();
+            formData.append('accountId', String(selectedAccount.id));
+            formData.append('toNumber', selectedConversation.customerNumber);
+            formData.append('message', newMessage);
+            formData.append('media', selectedMedia);
+            return formData;
+          })()
+        : JSON.stringify({
+            accountId: selectedAccount.id,
+            toNumber: selectedConversation.customerNumber,
+            message: newMessage,
+            messageType: 'text',
+          });
+
       const response = await fetch('/api/manager/whatsapp/send-message', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          accountId: selectedAccount.id,
-          toNumber: selectedConversation.customerNumber,
-          message: newMessage,
-          messageType: 'text',
-        }),
+        headers: selectedMedia ? undefined : { 'Content-Type': 'application/json' },
+        body,
         credentials: 'include',
       });
       
       const data = await response.json();
       if (data.success) {
         setNewMessage('');
+        setSelectedMedia(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         await fetchMessages();
         await fetchConversations();
         toast.success('Message sent');
@@ -337,7 +402,7 @@ export default function WhatsAppConversationsPage() {
       case 'audio':
         return <Music className="h-4 w-4" />;
       case 'document':
-        return <File className="h-4 w-4" />;
+        return <FileIcon className="h-4 w-4" />;
       case 'location':
         return <MapPin className="h-4 w-4" />;
       case 'contact':
@@ -408,6 +473,12 @@ export default function WhatsAppConversationsPage() {
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
             <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
             Refresh
+          </Button>
+          <Button
+            variant={autoRefreshEnabled ? "default" : "outline"}
+            onClick={() => setAutoRefreshEnabled((enabled) => !enabled)}
+          >
+            Auto refresh {autoRefreshEnabled ? 'On' : 'Off'}
           </Button>
         </div>
       </div>
@@ -558,8 +629,10 @@ export default function WhatsAppConversationsPage() {
                             <span className="text-xs opacity-75 capitalize">{msg.messageType}</span>
                           </div>
                         )}
-                        {msg.messageType === 'image' && <MediaImagePreview message={msg} />}
-                        {(msg.textBody || msg.caption || msg.messageType !== 'image') && (
+                        {['image', 'video', 'audio', 'document'].includes(msg.messageType) && (
+                          <MediaPreview message={msg} />
+                        )}
+                        {(msg.textBody || msg.caption || !['image', 'video', 'audio', 'document'].includes(msg.messageType)) && (
                           <p className="text-sm break-words whitespace-pre-wrap">
                             {msg.textBody || msg.caption || 'Media message'}
                           </p>
@@ -579,15 +652,54 @@ export default function WhatsAppConversationsPage() {
 
               {/* Message Input */}
               <div className="p-4 border-t flex-shrink-0 border-border bg-background">
-                <div className="flex gap-2">
-                  <Input
+                {selectedMedia && (
+                  <div className="mb-2 flex items-center justify-between rounded-md border border-border bg-muted px-3 py-2 text-sm">
+                    <span className="truncate">
+                      {selectedMedia.name}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedMedia(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-end gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                    className="hidden"
+                    onChange={(e) => setSelectedMedia(e.target.files?.[0] || null)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sendingMessage}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  <Textarea
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    className="min-h-11 flex-1 resize-none"
                   />
-                  <Button onClick={handleSendMessage} disabled={sendingMessage || !newMessage.trim()}>
+                  <Button onClick={handleSendMessage} disabled={sendingMessage || (!newMessage.trim() && !selectedMedia)}>
                     {sendingMessage ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

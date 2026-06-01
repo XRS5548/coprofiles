@@ -44,7 +44,8 @@ export async function GET(
       .where(eq(formSubmissions.formId, formId))
       .orderBy(desc(formSubmissions.createdAt));
 
-    // Get payment info for each submission
+    // Get payment info for each submission. Prefer payment transaction rows,
+    // but fall back to denormalized submission payment fields.
     const submissionsWithPayments = await Promise.all(
       submissions.map(async (submission) => {
         const payment = await db
@@ -55,9 +56,10 @@ export async function GET(
         
         return {
           ...submission,
-          paymentStatus: payment[0]?.status || null,
-          paymentAmount: payment[0]?.amount || null,
-          paymentId: payment[0]?.razorpayPaymentId || null,
+          paymentStatus: payment[0]?.status || submission.paymentStatus || null,
+          paymentAmount: payment[0]?.amount || submission.paymentAmount || null,
+          paymentId: payment[0]?.razorpayPaymentId || submission.paymentId || null,
+          paymentCurrency: payment[0]?.currency || submission.paymentCurrency || null,
         };
       })
     );

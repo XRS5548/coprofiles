@@ -236,43 +236,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+    <div className="flex h-full flex-col bg-white dark:bg-[#09090B] border-r border-gray-200 dark:border-[#3F3F46]">
       {/* Logo Section */}
-      <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-gray-800">
+      <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-[#3F3F46]">
         <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50 dark:shadow-indigo-950/50"></div>
-            <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-          </div>
           <div>
-            <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-              Sqrock Portal
+            <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">
+              CO-PROFILES
             </span>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 -mt-0.5">Enterprise Suite</p>
+            <p className="text-[10px] text-gray-500 dark:text-[#A1A1AA] -mt-0.5 uppercase tracking-wide">Student Portal</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="lg:hidden text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]"
         >
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
       {/* User Profile Summary (Mobile) */}
-      <div className="lg:hidden px-4 py-5 border-b border-gray-200 dark:border-gray-800">
+      <div className="lg:hidden px-4 py-5 border-b border-gray-200 dark:border-[#3F3F46]">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 ring-2 ring-indigo-100 dark:ring-indigo-950">
+          <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-[#3F3F46]">
             <AvatarImage src={user?.profileImgUrl || ''} />
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+            <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA]">
               {getUserInitials()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="font-semibold text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'user@example.com'}</p>
+            <p className="font-semibold text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</p>
+            <p className="text-xs text-gray-500 dark:text-[#A1A1AA]">{user?.email || 'user@example.com'}</p>
             <div className="flex items-center gap-1 mt-1">
               {user?.verified ? (
                 <>
@@ -304,17 +300,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 variant="ghost"
                 className={`w-full justify-between group relative ${
                   isActive 
-                    ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 text-indigo-700 dark:text-indigo-400 border-r-2 border-indigo-500 dark:border-indigo-400' 
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200'
+                    ? 'bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border-r-2 border-[#DFE104]' 
+                    : 'text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]'
                 }`}
                 onClick={() => router.push(item.href)}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
+                  <item.icon className={`h-5 w-5 ${isActive ? 'text-[#DFE104]' : 'text-gray-500 dark:text-[#A1A1AA] group-hover:text-gray-900 dark:group-hover:text-[#FAFAFA]'}`} />
                   <span className="font-medium">{item.name}</span>
                 </div>
                 {item.badge && (
-                  <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950">
+                  <Badge variant="secondary" className="bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border border-gray-200 dark:border-[#3F3F46]">
                     {item.badge}
                   </Badge>
                 )}
@@ -325,29 +321,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-4 mt-auto">
-        <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-3 mb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Pro Plan</span>
-          </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">You're on the Professional tier</p>
-        </div>
-        
+      <div className="border-t border-gray-200 dark:border-[#3F3F46] p-4 mt-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-3 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="start" side="right">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+          <DropdownMenuContent className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]" align="start" side="right">
+            <DropdownMenuLabel className="text-gray-900 dark:text-[#FAFAFA]">My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>
@@ -362,7 +350,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-[#09090B]">
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
@@ -372,16 +360,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         transition={{ duration: 0.2, type: 'spring', stiffness: 300 }}
         className="hidden lg:block relative"
       >
-        <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-px bg-gray-200 dark:bg-[#3F3F46]" />
         
-        <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+        <div className="flex h-full flex-col bg-white dark:bg-[#09090B]">
           {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-[#3F3F46]">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="relative flex-shrink-0">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-200/50 dark:shadow-indigo-950/50"></div>
-                <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-              </div>
               {sidebarOpen && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -389,18 +373,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   exit={{ opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                    Sqrock Portal
+                  <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">
+                    CO-PROFILES
                   </span>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 -mt-0.5">Enterprise Suite</p>
+                  <p className="text-[10px] text-gray-500 dark:text-[#A1A1AA] -mt-0.5 uppercase tracking-wide">Student Portal</p>
                 </motion.div>
+              )}
+              {!sidebarOpen && (
+                <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">CP</span>
               )}
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0"
+              className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A] flex-shrink-0"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
@@ -412,25 +399,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="px-4 py-5 border-b border-gray-200 dark:border-gray-800"
+              className="px-4 py-5 border-b border-gray-200 dark:border-[#3F3F46]"
             >
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 ring-2 ring-indigo-100 dark:ring-indigo-950">
+                <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-[#3F3F46]">
                   <AvatarImage src={user?.profileImgUrl || ''} />
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                  <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA]">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   {loading ? (
                     <>
-                      <Skeleton className="h-4 w-24 mb-1 dark:bg-gray-800" />
-                      <Skeleton className="h-3 w-32 dark:bg-gray-800" />
+                      <Skeleton className="h-4 w-24 mb-1 bg-gray-100 dark:bg-[#27272A]" />
+                      <Skeleton className="h-3 w-32 bg-gray-100 dark:bg-[#27272A]" />
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-gray-800 dark:text-gray-200">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || 'user@example.com'}</p>
+                      <p className="font-semibold text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</p>
+                      <p className="text-xs text-gray-500 dark:text-[#A1A1AA] truncate">{user?.email || 'user@example.com'}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {user?.verified ? (
                           <>
@@ -465,17 +452,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     variant="ghost"
                     className={`w-full justify-between group relative ${
                       isActive 
-                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 text-indigo-700 dark:text-indigo-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200'
+                        ? 'bg-gray-100 dark:bg-[#27272A] text-[#DFE104]' 
+                        : 'text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]'
                     } ${!sidebarOpen && 'justify-center'}`}
                     onClick={() => router.push(item.href)}
                   >
                     <div className={`flex items-center gap-3 ${!sidebarOpen && 'justify-center w-full'}`}>
-                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`} />
+                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-[#DFE104]' : 'text-gray-500 dark:text-[#A1A1AA] group-hover:text-gray-900 dark:group-hover:text-[#FAFAFA]'}`} />
                       {sidebarOpen && <span className="font-medium">{item.name}</span>}
                     </div>
                     {sidebarOpen && item.badge && (
-                      <Badge variant="secondary" className="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400">
+                      <Badge variant="secondary" className="bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border border-gray-200 dark:border-[#3F3F46]">
                         {item.badge}
                       </Badge>
                     )}
@@ -486,35 +473,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-800 p-4 mt-auto">
-            {sidebarOpen && (
-              <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 p-3 mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-400" />
-                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Professional Plan</span>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Access all premium features</p>
-              </div>
-            )}
-            
+          <div className="border-t border-gray-200 dark:border-[#3F3F46] p-4 mt-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className={`w-full text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 ${!sidebarOpen && 'justify-center'}`}
+                  className={`w-full text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA] ${!sidebarOpen && 'justify-center'}`}
                 >
                   <LogOut className="h-4 w-4 flex-shrink-0" />
                   {sidebarOpen && <span className="ml-3">Logout</span>}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start" side={sidebarOpen ? "right" : "right"}>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+              <DropdownMenuContent className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]" align="start" side="right">
+                <DropdownMenuLabel className="text-gray-900 dark:text-[#FAFAFA]">My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
+                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
                   <User className="mr-2 h-4 w-4" />
                   Profile Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
@@ -527,11 +504,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 shadow-sm bg-white dark:bg-gray-950">
-            <Menu className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 bg-white dark:bg-[#09090B] border border-gray-200 dark:border-[#3F3F46]">
+            <Menu className="h-5 w-5 text-gray-900 dark:text-[#FAFAFA]" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-80">
+        <SheetContent side="left" className="p-0 w-80 bg-white dark:bg-[#09090B] border-r-gray-200 dark:border-r-[#3F3F46]">
           <SidebarContent />
         </SheetContent>
       </Sheet>
@@ -543,30 +520,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40"
+          className="bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#3F3F46] sticky top-0 z-40"
         >
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-4 flex-1">
               <div className="hidden lg:block">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-[#FAFAFA]">
                   {navItems.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                  {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}! 👋
+                <p className="text-sm text-gray-500 dark:text-[#A1A1AA] mt-0.5">
+                  {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}!
                 </p>
               </div>
               
               {/* Search Bar */}
               <div className="hidden md:flex items-center max-w-md flex-1 ml-8">
                 <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-[#A1A1AA]" />
                   <Input
                     ref={searchInputRef}
                     placeholder="Search internships, careers, projects, forms... (Ctrl+K)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSearchDialog(true)}
-                    className="pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:bg-white dark:focus:bg-gray-800 transition-colors"
+                    className="pl-9 bg-gray-100 dark:bg-[#27272A] border-gray-200 dark:border-[#3F3F46] text-gray-900 dark:text-[#FAFAFA] placeholder:text-gray-500 dark:placeholder:text-[#A1A1AA] focus:bg-gray-100 dark:focus:bg-[#27272A] transition-colors"
                   />
                 </div>
               </div>
@@ -577,7 +554,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]"
               >
                 {theme === 'dark' ? (
                   <Sun className="h-5 w-5" />
@@ -586,40 +563,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               </Button>
 
-              <Button variant="ghost" size="icon" className="relative text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <Button variant="ghost" size="icon" className="relative text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950"></span>
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#09090B]"></span>
               </Button>
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Button variant="ghost" className="gap-2 hover:bg-gray-100 dark:hover:bg-[#27272A]">
                     {loading ? (
-                      <Skeleton className="h-8 w-8 rounded-full dark:bg-gray-800" />
+                      <Skeleton className="h-8 w-8 rounded-full bg-gray-100 dark:bg-[#27272A]" />
                     ) : (
                       <>
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user?.profileImgUrl || ''} />
-                          <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-xs">
+                          <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA] text-xs">
                             {getUserInitials()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">
                           {user?.name?.split(' ')[0] || 'User'}
                         </span>
-                        <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                        <ChevronDown className="h-3.5 w-3.5 text-gray-500 dark:text-[#A1A1AA]" />
                       </>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
-                      <span className="text-gray-900 dark:text-gray-100">{user?.name || 'User'}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">{user?.email}</span>
+                      <span className="text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</span>
+                      <span className="text-xs text-gray-500 dark:text-[#A1A1AA] font-normal">{user?.email}</span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
                   <div className="px-2 py-1.5">
                     <div className="flex items-center gap-2 text-sm">
                       {user?.verified ? (
@@ -635,12 +612,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       )}
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
                     <User className="mr-2 h-4 w-4" />
                     Profile Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>
@@ -655,7 +632,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto bg-white dark:bg-[#09090B]"
         >
           <div className="p-6 lg:p-8">
             <AnimatePresence mode="wait">
@@ -675,72 +652,72 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Search Dialog */}
       <Dialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]">
           <DialogHeader>
-            <DialogTitle>Search Results</DialogTitle>
+            <DialogTitle className="text-gray-900 dark:text-[#FAFAFA]">Search Results</DialogTitle>
           </DialogHeader>
           
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-[#A1A1AA]" />
             <Input
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 bg-gray-100 dark:bg-[#27272A] border-gray-200 dark:border-[#3F3F46] text-gray-900 dark:text-[#FAFAFA] placeholder:text-gray-500 dark:placeholder:text-[#A1A1AA]"
               autoFocus
             />
           </div>
 
           {searching ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              <Loader2 className="h-8 w-8 animate-spin text-[#DFE104]" />
             </div>
           ) : searchResults.length === 0 && searchQuery.length > 0 ? (
             <div className="text-center py-8">
-              <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No results found for "{searchQuery}"</p>
+              <Search className="h-12 w-12 text-gray-300 dark:text-[#3F3F46] mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-[#A1A1AA]">No results found for "{searchQuery}"</p>
             </div>
           ) : searchResults.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {searchResults.map((result, index) => (
                 <div
                   key={`${result.type}-${result.id}`}
-                  className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                  className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer transition-colors"
                   onClick={() => handleResultClick(result)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-gray-200 dark:border-[#3F3F46] text-gray-500 dark:text-[#A1A1AA]">
                           {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                         </Badge>
-                        <span className="text-sm font-medium">{result.title}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">{result.title}</span>
                       </div>
-                      <p className="text-sm text-gray-500 line-clamp-1">{result.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-[#A1A1AA] line-clamp-1">{result.description}</p>
                       {result.company && (
-                        <p className="text-xs text-gray-400 mt-1">{result.company}</p>
+                        <p className="text-xs text-gray-500 dark:text-[#A1A1AA] mt-1">{result.company}</p>
                       )}
                     </div>
-                    <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0 ml-2" />
+                    <ExternalLink className="h-4 w-4 text-gray-500 dark:text-[#A1A1AA] flex-shrink-0 ml-2" />
                   </div>
                 </div>
               ))}
             </div>
           ) : recentSearches.length > 0 ? (
             <div>
-              <p className="text-sm text-gray-500 mb-2">Recent Searches</p>
+              <p className="text-sm text-gray-500 dark:text-[#A1A1AA] mb-2">Recent Searches</p>
               <div className="space-y-1">
                 {recentSearches.map((search, index) => (
                   <div
                     key={index}
-                    className="p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer flex items-center gap-2"
+                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer flex items-center gap-2"
                     onClick={() => {
                       setSearchQuery(search);
                       performSearch();
                     }}
                   >
-                    <Search className="h-3 w-3 text-gray-400" />
-                    <span className="text-sm">{search}</span>
+                    <Search className="h-3 w-3 text-gray-500 dark:text-[#A1A1AA]" />
+                    <span className="text-sm text-gray-900 dark:text-[#FAFAFA]">{search}</span>
                   </div>
                 ))}
               </div>

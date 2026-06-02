@@ -6,7 +6,13 @@ import { motion } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 
-const navItems = ["Home", "Internships", "About", "Hiring Process", "Contact"]
+const navItems = [
+  { label: "Home", href: "/" },
+  { label: "Internships", href: "/#internships" },
+  { label: "About", href: "/about" },
+  { label: "Hiring Process", href: "/#hiring-process" },
+  { label: "Contact", href: "/contact" },
+]
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -41,13 +47,13 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
+              <Link
+                key={item.label}
+                href={item.href}
                 className="text-sm font-medium text-[#A1A1AA] hover:text-[#DFE104] transition-colors duration-200 uppercase tracking-wide"
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
           </div>
 
@@ -76,14 +82,14 @@ export function Navbar() {
             className="md:hidden mt-4 pt-4 border-t border-[#3F3F46]"
           >
             {navItems.map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(" ", "-")}`}
+              <Link
+                key={item.label}
+                href={item.href}
                 className="block py-3 text-base text-[#A1A1AA] hover:text-[#DFE104] transition-colors duration-200 uppercase"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {item}
-              </a>
+                {item.label}
+              </Link>
             ))}
             <div className="flex flex-col gap-3 pt-4">
               <Link href="/login" className="w-full px-5 py-2 text-sm font-medium text-center text-[#FAFAFA] border border-[#3F3F46] hover:border-[#DFE104] hover:text-[#DFE104] transition-all duration-200 uppercase" onClick={() => setIsMobileMenuOpen(false)}>

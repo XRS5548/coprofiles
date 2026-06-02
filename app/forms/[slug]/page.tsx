@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Navbar } from '@/page_components/home/navbar';
+import { Footer } from '@/page_components/home/footer';
 
 declare global {
     interface Window {
@@ -81,6 +83,7 @@ export default function PublicFormPage() {
     const [passkeyVerified, setPasskeyVerified] = useState(false);
     const [passkeyError, setPasskeyError] = useState('');
     const [processingPayment, setProcessingPayment] = useState(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState<any>(null);
 
@@ -228,6 +231,7 @@ export default function PublicFormPage() {
 
     const initiateRazorpayPayment = async (orderData: any) => {
         setProcessingPayment(true);
+        setPaymentError(null);
 
         const options = {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -262,15 +266,18 @@ export default function PublicFormPage() {
                     const verifyData = await verifyResponse.json();
                     if (verifyData.success) {
                         setSubmitted(true);
+                        setPaymentError(null);
                         toast.success('Payment successful! Form submitted.');
                         if (verifyData.redirectUrl) {
                             window.location.href = verifyData.redirectUrl;
                         }
                     } else {
+                        setPaymentError(verifyData.error || 'Payment verification failed. Please try again.');
                         toast.error('Payment verification failed');
                     }
                 } catch (error) {
                     console.error('Payment verification error:', error);
+                    setPaymentError('Payment verification failed due to a server error. Please try again.');
                     toast.error('Payment verification failed');
                 } finally {
                     setProcessingPayment(false);
@@ -279,6 +286,7 @@ export default function PublicFormPage() {
             modal: {
                 ondismiss: () => {
                     setProcessingPayment(false);
+                    setPaymentError('Payment was cancelled. Please try again.');
                     toast.info('Payment cancelled');
                 },
             },
@@ -340,6 +348,7 @@ export default function PublicFormPage() {
                 return newErrors;
             });
         }
+        if (paymentError) setPaymentError(null);
     };
 
     const renderField = (field: FormField) => {
@@ -351,10 +360,10 @@ export default function PublicFormPage() {
             placeholder: field.placeholder || undefined,
             disabled: submitting || processingPayment,
             className: cn(
-                "w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "w-full rounded-md border bg-[#27272A] px-3 py-2 text-sm text-[#FAFAFA] placeholder:text-[#A1A1AA]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#DFE104] focus-visible:ring-offset-0",
                 "disabled:cursor-not-allowed disabled:opacity-50",
-                error && "border-red-500 focus-visible:ring-red-500"
+                error ? "border-red-500 focus-visible:ring-red-500" : "border-[#3F3F46]"
             ),
         };
 
@@ -413,16 +422,16 @@ export default function PublicFormPage() {
                 const checkboxOptions = parseOptions(field.options);
                 if (checkboxOptions.length === 0) {
                     return (
-                        <div className="flex items-start gap-3 rounded-md border p-3">
+                        <div className="flex items-start gap-3 rounded-md border border-[#3F3F46] p-3">
                             <input
                                 type="checkbox"
                                 id={field.fieldName}
                                 checked={value || false}
                                 onChange={(e) => handleFieldChange(field.fieldName, e.target.checked)}
                                 disabled={submitting || processingPayment}
-                                className="mt-1 h-4 w-4 shrink-0"
+                                className="mt-1 h-4 w-4 shrink-0 accent-[#DFE104]"
                             />
-                            <Label htmlFor={field.fieldName} className="text-sm font-normal leading-5 cursor-pointer">
+                            <Label htmlFor={field.fieldName} className="text-sm font-normal leading-5 cursor-pointer text-[#FAFAFA]">
                                 {field.fieldLabel}
                                 {field.isRequired && <span className="text-red-500 ml-1">*</span>}
                             </Label>
@@ -454,9 +463,9 @@ export default function PublicFormPage() {
                                                 handleFieldChange(field.fieldName, newValues);
                                             }}
                                             disabled={submitting || processingPayment}
-                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+                                            className="h-4 w-4 rounded border-[#3F3F46] text-[#DFE104] focus:ring-[#DFE104] bg-[#27272A] accent-[#DFE104]"
                                         />
-                                        <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer">
+                                        <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer text-[#FAFAFA]">
                                             {optionLabel}
                                         </Label>
                                     </div>
@@ -485,9 +494,9 @@ export default function PublicFormPage() {
                                         checked={value === optionValue}
                                         onChange={(e) => handleFieldChange(field.fieldName, e.target.value)}
                                         disabled={submitting || processingPayment}
-                                        className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+                                        className="h-4 w-4 border-[#3F3F46] text-[#DFE104] focus:ring-[#DFE104] bg-[#27272A] accent-[#DFE104]"
                                     />
-                                    <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer">
+                                    <Label htmlFor={`${field.fieldName}-${index}`} className="text-sm font-normal cursor-pointer text-[#FAFAFA]">
                                         {optionLabel}
                                     </Label>
                                 </div>
@@ -501,13 +510,13 @@ export default function PublicFormPage() {
                 const selectOptions = parseOptions(field.options);
                 return (
                     <select {...commonProps} value={value || ''} onChange={(e) => handleFieldChange(field.fieldName, e.target.value)}>
-                        <option value="">{field.placeholder || 'Select an option'}</option>
+                        <option value="" className="bg-[#27272A]">{field.placeholder || 'Select an option'}</option>
                         {selectOptions.map((option, index) => {
                             const optionValue = typeof option === 'object' ? (option.value || option.label || option) : option;
                             const optionLabel = typeof option === 'object' ? (option.label || option.value || option) : option;
 
                             return (
-                                <option key={index} value={optionValue}>
+                                <option key={index} value={optionValue} className="bg-[#27272A]">
                                     {optionLabel}
                                 </option>
                             );
@@ -527,9 +536,9 @@ export default function PublicFormPage() {
 
             case 'file':
                 return (
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Click or drag file to upload</p>
+                    <div className="border-2 border-dashed border-[#3F3F46] rounded-lg p-6 text-center">
+                        <Upload className="h-8 w-8 mx-auto mb-2 text-[#A1A1AA]" />
+                        <p className="text-sm text-[#A1A1AA]">Click or drag file to upload</p>
                         <input type="file" className="hidden" disabled />
                     </div>
                 );
@@ -548,22 +557,30 @@ export default function PublicFormPage() {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#DFE104]" />
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (!form) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Form Not Found</h2>
-                        <p className="text-muted-foreground">The form you're looking for doesn't exist or has been removed.</p>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Form Not Found</h2>
+                            <p className="text-[#A1A1AA]">The form you're looking for doesn't exist or has been removed.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
@@ -571,191 +588,233 @@ export default function PublicFormPage() {
     // Check if form requires authentication
     if (form.formType === 'authenticated' && !isLoggedIn) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <div className="flex justify-center mb-4">
-                            <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900/30">
-                                <Lock className="h-8 w-8 text-amber-600" />
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <div className="flex justify-center mb-4">
+                                <div className="rounded-full bg-amber-100/10 p-3">
+                                    <Lock className="h-8 w-8 text-amber-500" />
+                                </div>
                             </div>
-                        </div>
-                        <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-                        <p className="text-muted-foreground mb-6">
-                            This form requires you to be logged in to submit. Please login to continue.
-                        </p>
-                        <div className="flex gap-3 justify-center">
-                            <Button onClick={() => router.push('/login')} className="gap-2">
-                                <LogIn className="h-4 w-4" />
-                                Login
-                            </Button>
-                            <Button variant="outline" onClick={() => router.back()}>
-                                Go Back
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Authentication Required</h2>
+                            <p className="text-[#A1A1AA] mb-6">
+                                This form requires you to be logged in to submit. Please login to continue.
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <Button onClick={() => router.push('/login')} className="bg-[#DFE104] text-black hover:bg-[#DFE104]/90 gap-2">
+                                    <LogIn className="h-4 w-4" />
+                                    Login
+                                </Button>
+                                <Button variant="outline" onClick={() => router.back()} className="border-[#3F3F46] text-[#FAFAFA] hover:bg-[#3F3F46]/50">
+                                    Go Back
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (form.status !== 'active') {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Form is {form.status}</h2>
-                        <p className="text-muted-foreground">This form is currently not accepting responses.</p>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Form is {form.status}</h2>
+                            <p className="text-[#A1A1AA]">This form is currently not accepting responses.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (form.maxSubmissions && (form.submissionCount || 0) >= form.maxSubmissions) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Form Closed</h2>
-                        <p className="text-muted-foreground">This form has reached its maximum number of submissions.</p>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Form Closed</h2>
+                            <p className="text-[#A1A1AA]">This form has reached its maximum number of submissions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (form.submissionDeadline && new Date(form.submissionDeadline) < new Date()) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Submission Deadline Passed</h2>
-                        <p className="text-muted-foreground">The submission deadline for this form has passed.</p>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Submission Deadline Passed</h2>
+                            <p className="text-[#A1A1AA]">The submission deadline for this form has passed.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (form.formType === 'private' && !passkeyVerified) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8">
-                        <div className="text-center mb-6">
-                            <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <h2 className="text-xl font-semibold mb-2">This form is private</h2>
-                            <p className="text-muted-foreground">Please enter the passkey to access this form.</p>
-                        </div>
-                        <div className="space-y-4">
-                            <Input
-                                type="password"
-                                placeholder="Enter passkey"
-                                value={passkey}
-                                onChange={(e) => setPasskey(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && verifyPasskey()}
-                            />
-                            {passkeyError && <p className="text-sm text-red-500">{passkeyError}</p>}
-                            <Button onClick={verifyPasskey} className="w-full">Access Form</Button>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8">
+                            <div className="text-center mb-6">
+                                <Lock className="h-12 w-12 text-[#A1A1AA] mx-auto mb-4" />
+                                <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">This form is private</h2>
+                                <p className="text-[#A1A1AA]">Please enter the passkey to access this form.</p>
+                            </div>
+                            <div className="space-y-4">
+                                <Input
+                                    type="password"
+                                    placeholder="Enter passkey"
+                                    value={passkey}
+                                    onChange={(e) => setPasskey(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && verifyPasskey()}
+                                    className="bg-[#27272A] border-[#3F3F46] text-[#FAFAFA] placeholder:text-[#A1A1AA]"
+                                />
+                                {passkeyError && <p className="text-sm text-red-500">{passkeyError}</p>}
+                                <Button onClick={verifyPasskey} className="w-full bg-[#DFE104] text-black hover:bg-[#DFE104]/90">Access Form</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     if (submitted) {
         return (
-            <div className="flex justify-center items-center min-h-screen">
-                <Card className="max-w-md w-full mx-4">
-                    <CardContent className="p-8 text-center">
-                        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-xl font-semibold mb-2">Thank You!</h2>
-                        <p className="text-muted-foreground">
-                            {form.confirmationMessage || 'Your response has been submitted successfully.'}
-                        </p>
-                    </CardContent>
-                </Card>
+            <div className="bg-[#09090B]">
+                <Navbar />
+                <div className="flex justify-center items-center min-h-screen pt-20 px-4">
+                    <Card className="max-w-md w-full mx-4 bg-[#18181B] border-[#3F3F46]">
+                        <CardContent className="p-8 text-center">
+                            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2 text-[#FAFAFA]">Thank You!</h2>
+                            <p className="text-[#A1A1AA]">
+                                {form.confirmationMessage || 'Your response has been submitted successfully.'}
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+                <Footer />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12">
-            <div className="container max-w-3xl mx-auto px-4">
-                <Card className="shadow-lg">
-                    <CardContent className="p-6 md:p-8">
-                        <div className="mb-8">
-                            <h1 className="text-2xl md:text-3xl font-bold">{form.title}</h1>
-                            {form.description && (
-                                <p className="text-gray-500 dark:text-gray-400 mt-2">{form.description}</p>
-                            )}
-                            {form.collectPayment && (
-                                <div className="mt-4 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <DollarSign className="h-5 w-5 text-green-600" />
-                                        <span className="font-semibold">Payment Required: ₹{(form.paymentAmount || 0) / 100}</span>
+        <div className="bg-[#09090B] min-h-screen">
+            <Navbar />
+            <div className="pt-28 pb-16">
+                <div className="container max-w-3xl mx-auto px-4">
+                    <Card className="bg-[#18181B] border-[#3F3F46] shadow-lg">
+                        <CardContent className="p-6 md:p-8">
+                            <div className="mb-8">
+                                <h1 className="text-2xl md:text-3xl font-bold text-[#FAFAFA]">{form.title}</h1>
+                                {form.description && (
+                                    <p className="text-[#A1A1AA] mt-2">{form.description}</p>
+                                )}
+                                {form.collectPayment && (
+                                    <div className="mt-4 p-4 bg-green-950/30 border border-green-800/50 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <DollarSign className="h-5 w-5 text-green-500" />
+                                            <span className="font-semibold text-[#FAFAFA]">Payment Required: ₹{(form.paymentAmount || 0) / 100}</span>
+                                        </div>
+                                        {form.paymentDescription && (
+                                            <p className="text-sm text-[#A1A1AA] mt-1">{form.paymentDescription}</p>
+                                        )}
                                     </div>
-                                    {form.paymentDescription && (
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{form.paymentDescription}</p>
-                                    )}
-                                </div>
-                            )}
-                            {processingPayment && (
-                                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                                        <span className="font-semibold">Redirecting to payment...</span>
+                                )}
+                                {processingPayment && (
+                                    <div className="mt-4 p-4 bg-blue-950/30 border border-blue-800/50 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                                            <span className="font-semibold text-[#FAFAFA]">Redirecting to payment...</span>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                                {paymentError && (
+                                    <div className="mt-4 p-4 bg-red-950/30 border border-red-800/50 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                            <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                                            <div>
+                                                <span className="font-semibold text-[#FAFAFA]">Payment Failed</span>
+                                                <p className="text-sm text-[#A1A1AA] mt-0.5">{paymentError}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {fields.map((field) => (
-                                <div key={field.id} className="space-y-2">
-                                    {!(field.fieldType === 'checkbox' && parseOptions(field.options).length === 0) && (
-                                        <Label htmlFor={field.fieldName} className="text-base font-medium">
-                                            {field.fieldLabel}
-                                            {field.isRequired && <span className="text-red-500 ml-1">*</span>}
-                                        </Label>
-                                    )}
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                {fields.map((field) => (
+                                    <div key={field.id} className="space-y-2">
+                                        {!(field.fieldType === 'checkbox' && parseOptions(field.options).length === 0) && (
+                                            <Label htmlFor={field.fieldName} className="text-base font-medium text-[#FAFAFA]">
+                                                {field.fieldLabel}
+                                                {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                                            </Label>
+                                        )}
 
-                                    {renderField(field)}
+                                        {renderField(field)}
 
-                                    {field.helpText && (
-                                        <p className="text-xs text-gray-500">{field.helpText}</p>
-                                    )}
+                                        {field.helpText && (
+                                            <p className="text-xs text-[#A1A1AA]">{field.helpText}</p>
+                                        )}
 
-                                    {errors[field.fieldName] && (
-                                        <p className="text-sm text-red-500">{errors[field.fieldName]}</p>
-                                    )}
-                                </div>
-                            ))}
+                                        {errors[field.fieldName] && (
+                                            <p className="text-sm text-red-500">{errors[field.fieldName]}</p>
+                                        )}
+                                    </div>
+                                ))}
 
-                            {fields.length > 0 && (
-                                <Button type="submit" className="w-full" disabled={submitting || processingPayment}>
-                                    {submitting || processingPayment ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            {processingPayment ? 'Redirecting to payment...' : 'Submitting...'}
-                                        </>
-                                    ) : (
-                                        form.collectPayment ? `Pay ₹${(form.paymentAmount || 0) / 100} & Submit` : 'Submit'
-                                    )}
-                                </Button>
-                            )}
-                        </form>
+                                {fields.length > 0 && (
+                                    <Button type="submit" className="w-full bg-[#DFE104] text-black hover:bg-[#DFE104]/90" disabled={submitting || processingPayment}>
+                                        {submitting || processingPayment ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                {processingPayment ? 'Redirecting to payment...' : 'Submitting...'}
+                                            </>
+                                        ) : paymentError ? (
+                                            'Retry Payment'
+                                        ) : (
+                                            form.collectPayment ? `Pay ₹${(form.paymentAmount || 0) / 100} & Submit` : 'Submit'
+                                        )}
+                                    </Button>
+                                )}
+                            </form>
 
-                        <div className="mt-6 text-center text-xs text-gray-400">
-                            Powered by Coprofiles
-                        </div>
-                    </CardContent>
-                </Card>
+                            <div className="mt-6 text-center text-xs text-[#3F3F46]">
+                                Powered by Coprofiles
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
+            <Footer />
         </div>
     );
 }

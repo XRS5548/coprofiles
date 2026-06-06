@@ -30,6 +30,7 @@ import {
   MessageCircle,
   Smartphone,
   Plus,
+  Send,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -107,6 +108,7 @@ const navItems: NavItem[] = [
       { name: 'Accounts', href: '/manager/whatsapp/accounts', icon: Smartphone },
       { name: 'Conversations', href: '/manager/whatsapp/conversations', icon: MessageSquare },
       { name: 'Templates', href: '/manager/whatsapp/templates', icon: FileText },
+      { name: 'Bulk Send', href: '/manager/whatsapp/bulk-template-send', icon: Send },
       { name: 'Analytics', href: '/manager/whatsapp/analytics', icon: TrendingUp },
     ],
   },

@@ -1,4 +1,3 @@
-// components/dashboard/DashboardLayout.tsx - Updated with working search
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -17,8 +16,6 @@ import {
   User,
   ChevronDown,
   Search,
-  Sparkles,
-  Star,
   FileText,
   Clock,
   AlertCircle,
@@ -40,7 +37,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -107,7 +103,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     setMounted(true);
-    // Load recent searches from localStorage
     const saved = localStorage.getItem('recentSearches');
     if (saved) {
       try {
@@ -124,12 +119,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const res = await fetch('/api/user/profile', {
           credentials: 'include',
         });
-        
+
         if (res.status === 401) {
           setLoading(false);
           return;
         }
-        
+
         const data = await res.json();
         if (data.success && data.user) {
           setUser(data.user);
@@ -140,11 +135,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
   }, [router]);
 
-  // Search functionality
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (searchQuery.length >= 2) {
@@ -159,7 +153,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const performSearch = async () => {
     if (searchQuery.length < 2) return;
-    
+
     setSearching(true);
     try {
       const response = await fetch(`/api/user/search?q=${encodeURIComponent(searchQuery)}`, {
@@ -236,49 +230,49 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-white dark:bg-[#09090B] border-r border-gray-200 dark:border-[#3F3F46]">
+    <div className="flex h-full flex-col bg-background border-r-2 border-foreground">
       {/* Logo Section */}
-      <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-[#3F3F46]">
+      <div className="flex h-16 items-center justify-between px-5 border-b-2 border-foreground">
         <div className="flex items-center gap-2.5">
           <div>
-            <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">
+            <span className="text-lg font-bold tracking-tighter text-foreground font-serif">
               CO-PROFILES
             </span>
-            <p className="text-[10px] text-gray-500 dark:text-[#A1A1AA] -mt-0.5 uppercase tracking-wide">Student Portal</p>
+            <p className="text-[10px] text-muted-foreground -mt-0.5 uppercase tracking-widest font-mono">Student Portal</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]"
+          className="lg:hidden text-muted-foreground hover:bg-foreground hover:text-background"
         >
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
       {/* User Profile Summary (Mobile) */}
-      <div className="lg:hidden px-4 py-5 border-b border-gray-200 dark:border-[#3F3F46]">
+      <div className="lg:hidden px-4 py-5 border-b-2 border-foreground">
         <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-[#3F3F46]">
+          <Avatar className="h-12 w-12 border-2 border-foreground">
             <AvatarImage src={user?.profileImgUrl || ''} />
-            <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA]">
+            <AvatarFallback className="bg-background text-foreground">
               {getUserInitials()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="font-semibold text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</p>
-            <p className="text-xs text-gray-500 dark:text-[#A1A1AA]">{user?.email || 'user@example.com'}</p>
+            <p className="font-serif font-semibold text-foreground">{user?.name || 'User'}</p>
+            <p className="text-xs text-muted-foreground font-mono">{user?.email || 'user@example.com'}</p>
             <div className="flex items-center gap-1 mt-1">
               {user?.verified ? (
                 <>
-                  <CheckCircle className="h-3 w-3 text-green-500" />
-                  <span className="text-xs text-green-600 dark:text-green-400">Verified Account</span>
+                  <CheckCircle className="h-3 w-3 text-foreground" />
+                  <span className="text-xs text-foreground font-mono">Verified Account</span>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-3 w-3 text-yellow-500" />
-                  <span className="text-xs text-yellow-600 dark:text-yellow-400">Not Verified</span>
+                  <AlertCircle className="h-3 w-3 text-foreground" />
+                  <span className="text-xs text-foreground font-mono">Not Verified</span>
                 </>
               )}
             </div>
@@ -299,18 +293,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Button
                 variant="ghost"
                 className={`w-full justify-between group relative ${
-                  isActive 
-                    ? 'bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border-r-2 border-[#DFE104]' 
-                    : 'text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]'
+                  isActive
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:bg-foreground hover:text-background'
                 }`}
                 onClick={() => router.push(item.href)}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon className={`h-5 w-5 ${isActive ? 'text-[#DFE104]' : 'text-gray-500 dark:text-[#A1A1AA] group-hover:text-gray-900 dark:group-hover:text-[#FAFAFA]'}`} />
+                  <item.icon className={`h-5 w-5 ${isActive ? 'text-background' : 'text-muted-foreground group-hover:text-background'}`} />
                   <span className="font-medium">{item.name}</span>
                 </div>
                 {item.badge && (
-                  <Badge variant="secondary" className="bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border border-gray-200 dark:border-[#3F3F46]">
+                  <Badge variant="outline" className="border-2 border-foreground text-foreground">
                     {item.badge}
                   </Badge>
                 )}
@@ -321,21 +315,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 dark:border-[#3F3F46] p-4 mt-auto">
+      <div className="border-t-2 border-foreground p-4 mt-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]">
+            <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:bg-foreground hover:text-background">
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]" align="start" side="right">
-            <DropdownMenuLabel className="text-gray-900 dark:text-[#FAFAFA]">My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
-            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+          <DropdownMenuContent className="w-56 bg-background border-2 border-foreground" align="start" side="right">
+            <DropdownMenuLabel className="text-foreground">My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-foreground" />
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-muted-foreground hover:bg-foreground hover:text-background">
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+            <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground hover:bg-foreground hover:text-background">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>
@@ -350,7 +344,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white dark:bg-[#09090B]">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Desktop Sidebar */}
       <motion.aside
         initial={false}
@@ -360,11 +354,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         transition={{ duration: 0.2, type: 'spring', stiffness: 300 }}
         className="hidden lg:block relative"
       >
-        <div className="absolute inset-y-0 right-0 w-px bg-gray-200 dark:bg-[#3F3F46]" />
-        
-        <div className="flex h-full flex-col bg-white dark:bg-[#09090B]">
+        <div className="flex h-full flex-col bg-background border-r-2 border-foreground">
           {/* Logo Section */}
-          <div className="flex h-16 items-center justify-between px-5 border-b border-gray-200 dark:border-[#3F3F46]">
+          <div className="flex h-16 items-center justify-between px-5 border-b-2 border-foreground">
             <div className="flex items-center gap-2.5 overflow-hidden">
               {sidebarOpen && (
                 <motion.div
@@ -373,21 +365,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   exit={{ opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">
+                  <span className="text-lg font-bold tracking-tighter text-foreground font-serif">
                     CO-PROFILES
                   </span>
-                  <p className="text-[10px] text-gray-500 dark:text-[#A1A1AA] -mt-0.5 uppercase tracking-wide">Student Portal</p>
+                  <p className="text-[10px] text-muted-foreground -mt-0.5 uppercase tracking-widest font-mono">Student Portal</p>
                 </motion.div>
               )}
               {!sidebarOpen && (
-                <span className="text-lg font-bold tracking-tighter text-gray-900 dark:text-[#FAFAFA]">CP</span>
+                <span className="text-lg font-bold tracking-tighter text-foreground font-serif">CP</span>
               )}
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A] flex-shrink-0"
+              className="text-muted-foreground hover:bg-foreground hover:text-background flex-shrink-0"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
@@ -399,35 +391,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="px-4 py-5 border-b border-gray-200 dark:border-[#3F3F46]"
+              className="px-4 py-5 border-b-2 border-foreground"
             >
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 ring-2 ring-gray-200 dark:ring-[#3F3F46]">
+                <Avatar className="h-12 w-12 border-2 border-foreground">
                   <AvatarImage src={user?.profileImgUrl || ''} />
-                  <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA]">
+                  <AvatarFallback className="bg-background text-foreground">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   {loading ? (
                     <>
-                      <Skeleton className="h-4 w-24 mb-1 bg-gray-100 dark:bg-[#27272A]" />
-                      <Skeleton className="h-3 w-32 bg-gray-100 dark:bg-[#27272A]" />
+                      <Skeleton className="h-4 w-24 mb-1 bg-muted" />
+                      <Skeleton className="h-3 w-32 bg-muted" />
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 dark:text-[#A1A1AA] truncate">{user?.email || 'user@example.com'}</p>
+                      <p className="font-serif font-semibold text-foreground">{user?.name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">{user?.email || 'user@example.com'}</p>
                       <div className="flex items-center gap-1 mt-1">
                         {user?.verified ? (
                           <>
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                            <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
+                            <CheckCircle className="h-3 w-3 text-foreground" />
+                            <span className="text-xs text-foreground font-mono">Verified</span>
                           </>
                         ) : (
                           <>
-                            <AlertCircle className="h-3 w-3 text-yellow-500" />
-                            <span className="text-xs text-yellow-600 dark:text-yellow-400">Not Verified</span>
+                            <AlertCircle className="h-3 w-3 text-foreground" />
+                            <span className="text-xs text-foreground font-mono">Not Verified</span>
                           </>
                         )}
                       </div>
@@ -451,18 +443,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Button
                     variant="ghost"
                     className={`w-full justify-between group relative ${
-                      isActive 
-                        ? 'bg-gray-100 dark:bg-[#27272A] text-[#DFE104]' 
-                        : 'text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA]'
+                      isActive
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground hover:bg-foreground hover:text-background'
                     } ${!sidebarOpen && 'justify-center'}`}
                     onClick={() => router.push(item.href)}
                   >
                     <div className={`flex items-center gap-3 ${!sidebarOpen && 'justify-center w-full'}`}>
-                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-[#DFE104]' : 'text-gray-500 dark:text-[#A1A1AA] group-hover:text-gray-900 dark:group-hover:text-[#FAFAFA]'}`} />
+                      <item.icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-background' : 'text-muted-foreground group-hover:text-background'}`} />
                       {sidebarOpen && <span className="font-medium">{item.name}</span>}
                     </div>
                     {sidebarOpen && item.badge && (
-                      <Badge variant="secondary" className="bg-gray-100 dark:bg-[#27272A] text-[#DFE104] border border-gray-200 dark:border-[#3F3F46]">
+                      <Badge variant="outline" className="border-2 border-foreground text-foreground">
                         {item.badge}
                       </Badge>
                     )}
@@ -473,25 +465,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-[#3F3F46] p-4 mt-auto">
+          <div className="border-t-2 border-foreground p-4 mt-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className={`w-full text-gray-500 dark:text-[#A1A1AA] hover:bg-gray-100 dark:hover:bg-[#27272A] hover:text-gray-900 dark:hover:text-[#FAFAFA] ${!sidebarOpen && 'justify-center'}`}
+                <Button
+                  variant="ghost"
+                  className={`w-full text-muted-foreground hover:bg-foreground hover:text-background ${!sidebarOpen && 'justify-center'}`}
                 >
                   <LogOut className="h-4 w-4 flex-shrink-0" />
                   {sidebarOpen && <span className="ml-3">Logout</span>}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]" align="start" side="right">
-                <DropdownMenuLabel className="text-gray-900 dark:text-[#FAFAFA]">My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
-                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+              <DropdownMenuContent className="w-56 bg-background border-2 border-foreground" align="start" side="right">
+                <DropdownMenuLabel className="text-foreground">My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-foreground" />
+                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                   <User className="mr-2 h-4 w-4" />
                   Profile Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+                <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground hover:bg-foreground hover:text-background">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
@@ -504,11 +496,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile Sidebar */}
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 bg-white dark:bg-[#09090B] border border-gray-200 dark:border-[#3F3F46]">
-            <Menu className="h-5 w-5 text-gray-900 dark:text-[#FAFAFA]" />
+          <Button variant="ghost" size="icon" className="lg:hidden fixed left-4 top-4 z-50 bg-background border-2 border-foreground">
+            <Menu className="h-5 w-5 text-foreground" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-80 bg-white dark:bg-[#09090B] border-r-gray-200 dark:border-r-[#3F3F46]">
+        <SheetContent side="left" className="p-0 w-80 bg-background border-r-2 border-foreground">
           <SidebarContent />
         </SheetContent>
       </Sheet>
@@ -520,41 +512,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="bg-white/80 dark:bg-[#09090B]/80 backdrop-blur-md border-b border-gray-200 dark:border-[#3F3F46] sticky top-0 z-40"
+          className="bg-background border-b-2 border-foreground sticky top-0 z-40"
         >
           <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-4 flex-1">
               <div className="hidden lg:block">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-[#FAFAFA]">
+                <h1 className="text-2xl font-bold text-foreground font-serif">
                   {navItems.find(item => item.href === pathname)?.name || 'Dashboard'}
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-[#A1A1AA] mt-0.5">
+                <p className="text-sm text-muted-foreground mt-0.5 font-mono">
                   {getGreeting()}, {user?.name?.split(' ')[0] || 'there'}!
                 </p>
               </div>
-              
+
               {/* Search Bar */}
               <div className="hidden md:flex items-center max-w-md flex-1 ml-8">
                 <div className="relative w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-[#A1A1AA]" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     ref={searchInputRef}
                     placeholder="Search internships, careers, projects, forms... (Ctrl+K)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSearchDialog(true)}
-                    className="pl-9 bg-gray-100 dark:bg-[#27272A] border-gray-200 dark:border-[#3F3F46] text-gray-900 dark:text-[#FAFAFA] placeholder:text-gray-500 dark:placeholder:text-[#A1A1AA] focus:bg-gray-100 dark:focus:bg-[#27272A] transition-colors"
+                    className="pl-9 border-2 border-foreground bg-background text-foreground placeholder:text-muted-foreground focus:bg-foreground focus:text-background"
                   />
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]"
+                className="text-muted-foreground hover:bg-foreground hover:text-background"
               >
                 {theme === 'dark' ? (
                   <Sun className="h-5 w-5" />
@@ -563,61 +555,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               </Button>
 
-              <Button variant="ghost" size="icon" className="relative text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+              <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:bg-foreground hover:text-background">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#09090B]"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-foreground"></span>
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2 hover:bg-gray-100 dark:hover:bg-[#27272A]">
+                  <Button variant="ghost" className="gap-2 hover:bg-foreground hover:text-background">
                     {loading ? (
-                      <Skeleton className="h-8 w-8 rounded-full bg-gray-100 dark:bg-[#27272A]" />
+                      <Skeleton className="h-8 w-8 bg-muted" />
                     ) : (
                       <>
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-8 w-8 border-2 border-foreground">
                           <AvatarImage src={user?.profileImgUrl || ''} />
-                          <AvatarFallback className="bg-gray-100 dark:bg-[#27272A] text-gray-900 dark:text-[#FAFAFA] text-xs">
+                          <AvatarFallback className="bg-background text-foreground text-xs">
                             {getUserInitials()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">
+                        <span className="hidden sm:inline text-sm font-medium text-foreground font-serif">
                           {user?.name?.split(' ')[0] || 'User'}
                         </span>
-                        <ChevronDown className="h-3.5 w-3.5 text-gray-500 dark:text-[#A1A1AA]" />
+                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                       </>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]">
+                <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-foreground">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
-                      <span className="text-gray-900 dark:text-[#FAFAFA]">{user?.name || 'User'}</span>
-                      <span className="text-xs text-gray-500 dark:text-[#A1A1AA] font-normal">{user?.email}</span>
+                      <span className="text-foreground">{user?.name || 'User'}</span>
+                      <span className="text-xs text-muted-foreground font-mono font-normal">{user?.email}</span>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
+                  <DropdownMenuSeparator className="bg-foreground" />
                   <div className="px-2 py-1.5">
                     <div className="flex items-center gap-2 text-sm">
                       {user?.verified ? (
                         <>
-                          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                          <span className="text-green-600 dark:text-green-400 text-xs">Verified Account</span>
+                          <CheckCircle className="h-3.5 w-3.5 text-foreground" />
+                          <span className="text-foreground text-xs font-mono">Verified Account</span>
                         </>
                       ) : (
                         <>
-                          <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-                          <span className="text-yellow-600 dark:text-yellow-400 text-xs">Not Verified</span>
+                          <AlertCircle className="h-3.5 w-3.5 text-foreground" />
+                          <span className="text-foreground text-xs font-mono">Not Verified</span>
                         </>
                       )}
                     </div>
                   </div>
-                  <DropdownMenuSeparator className="bg-gray-200 dark:bg-[#3F3F46]" />
-                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuItem onClick={() => router.push('/dashboard/settings')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                     <User className="mr-2 h-4 w-4" />
                     Profile Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-gray-500 dark:text-[#A1A1AA] hover:text-gray-900 dark:hover:text-[#FAFAFA] hover:bg-gray-100 dark:hover:bg-[#27272A]">
+                  <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground hover:bg-foreground hover:text-background">
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>
@@ -632,7 +624,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="flex-1 overflow-y-auto bg-white dark:bg-[#09090B]"
+          className="flex-1 overflow-y-auto bg-background"
         >
           <div className="p-6 lg:p-8">
             <AnimatePresence mode="wait">
@@ -652,72 +644,72 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Search Dialog */}
       <Dialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
-        <DialogContent className="sm:max-w-2xl bg-white dark:bg-[#09090B] border-gray-200 dark:border-[#3F3F46]">
+        <DialogContent className="sm:max-w-2xl bg-background border-2 border-foreground">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 dark:text-[#FAFAFA]">Search Results</DialogTitle>
+            <DialogTitle className="text-foreground">Search Results</DialogTitle>
           </DialogHeader>
-          
+
           <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-[#A1A1AA]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-gray-100 dark:bg-[#27272A] border-gray-200 dark:border-[#3F3F46] text-gray-900 dark:text-[#FAFAFA] placeholder:text-gray-500 dark:placeholder:text-[#A1A1AA]"
+              className="pl-9 border-2 border-foreground bg-background text-foreground placeholder:text-muted-foreground focus:bg-foreground focus:text-background"
               autoFocus
             />
           </div>
 
           {searching ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-[#DFE104]" />
+              <Loader2 className="h-8 w-8 animate-spin text-foreground" />
             </div>
           ) : searchResults.length === 0 && searchQuery.length > 0 ? (
             <div className="text-center py-8">
-              <Search className="h-12 w-12 text-gray-300 dark:text-[#3F3F46] mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-[#A1A1AA]">No results found for "{searchQuery}"</p>
+              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No results found for &quot;{searchQuery}&quot;</p>
             </div>
           ) : searchResults.length > 0 ? (
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {searchResults.map((result, index) => (
                 <div
                   key={`${result.type}-${result.id}`}
-                  className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer transition-colors"
+                  className="p-3 hover:bg-foreground hover:text-background cursor-pointer transition-colors"
                   onClick={() => handleResultClick(result)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs border-gray-200 dark:border-[#3F3F46] text-gray-500 dark:text-[#A1A1AA]">
+                        <Badge variant="outline" className="text-xs border-2 border-foreground text-muted-foreground">
                           {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                         </Badge>
-                        <span className="text-sm font-medium text-gray-900 dark:text-[#FAFAFA]">{result.title}</span>
+                        <span className="text-sm font-medium text-foreground">{result.title}</span>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-[#A1A1AA] line-clamp-1">{result.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{result.description}</p>
                       {result.company && (
-                        <p className="text-xs text-gray-500 dark:text-[#A1A1AA] mt-1">{result.company}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{result.company}</p>
                       )}
                     </div>
-                    <ExternalLink className="h-4 w-4 text-gray-500 dark:text-[#A1A1AA] flex-shrink-0 ml-2" />
+                    <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
                   </div>
                 </div>
               ))}
             </div>
           ) : recentSearches.length > 0 ? (
             <div>
-              <p className="text-sm text-gray-500 dark:text-[#A1A1AA] mb-2">Recent Searches</p>
+              <p className="text-sm text-muted-foreground mb-2 font-mono">Recent Searches</p>
               <div className="space-y-1">
                 {recentSearches.map((search, index) => (
                   <div
                     key={index}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer flex items-center gap-2"
+                    className="p-2 hover:bg-foreground hover:text-background cursor-pointer flex items-center gap-2"
                     onClick={() => {
                       setSearchQuery(search);
                       performSearch();
                     }}
                   >
-                    <Search className="h-3 w-3 text-gray-500 dark:text-[#A1A1AA]" />
-                    <span className="text-sm text-gray-900 dark:text-[#FAFAFA]">{search}</span>
+                    <Search className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-sm text-foreground">{search}</span>
                   </div>
                 ))}
               </div>

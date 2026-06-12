@@ -1,64 +1,58 @@
-// app/privacy-policy/page.tsx
 "use client"
 
-import { Footer } from "@/page_components/home/footer"
-import { Navbar } from "@/page_components/home/navbar"
 import { motion } from "framer-motion"
-import { Shield, Lock, Eye, Mail, Phone, FileText, Users, Building, ExternalLink } from "lucide-react"
+import { Shield, Lock, Eye, Mail, Phone, FileText, Building } from "lucide-react"
 import Link from "next/link"
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-background pt-32 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="mb-12 text-center"
         >
-          <div className="inline-flex p-3 border border-[#DFE104] mb-6">
-            <Shield size={40} className="text-[#DFE104]" />
+          <div className="inline-flex p-3 border-2 border-foreground mb-6">
+            <Shield size={40} className="text-foreground" />
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter text-[#FAFAFA] mb-4">
+          <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground mb-4">
             Privacy Policy
           </h1>
-          <p className="text-[#A1A1AA] text-lg">
+          <p className="font-mono text-muted-foreground text-lg">
             Last Updated: December 2024
           </p>
         </motion.div>
 
-        {/* Introduction */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-10 p-6 border border-[#3F3F46] bg-[#09090B]"
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mb-10 border-2 border-foreground p-6 bg-muted"
         >
-          <p className="text-[#A1A1AA] leading-relaxed">
-            At <span className="text-[#DFE104] font-bold">CO-PROFILES by SQROCK IT Solutions</span>, we take your privacy seriously. 
+          <p className="font-serif text-muted-foreground leading-relaxed">
+            At <span className="text-foreground font-bold">CO-PROFILES by SQROCK IT Solutions</span>, we take your privacy seriously.
             This policy explains how we collect, use, and share your information when you use our internship and hiring platform.
           </p>
         </motion.div>
 
-        {/* What Data We Collect */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
           className="mb-10"
         >
           <div className="flex items-center gap-3 mb-4">
-            <FileText size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <FileText size={24} className="text-foreground" />
+            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
               What Data We Collect
             </h2>
           </div>
-          <div className="border-l-2 border-[#DFE104] pl-6 space-y-4">
+          <div className="border-l-2 border-foreground pl-6 space-y-4">
             <div>
-              <h3 className="text-lg font-bold uppercase text-[#FAFAFA] mb-2">Student Profile Data</h3>
-              <ul className="list-disc list-inside text-[#A1A1AA] space-y-1">
+              <h3 className="font-mono text-lg font-bold text-foreground mb-2">Student Profile Data</h3>
+              <ul className="list-disc list-inside text-muted-foreground font-serif space-y-1">
                 <li>Full Name & Contact Information (Email, Phone Number)</li>
                 <li>Resume/CV & Professional Portfolio Links</li>
                 <li>Educational Background & Skills</li>
@@ -69,22 +63,21 @@ export default function PrivacyPolicyPage() {
           </div>
         </motion.div>
 
-        {/* How We Use Data */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
           className="mb-10"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Eye size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <Eye size={24} className="text-foreground" />
+            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
               How We Use Your Data
             </h2>
           </div>
-          <div className="border-l-2 border-[#DFE104] pl-6 space-y-4">
-            <p className="text-[#A1A1AA]">We use your information to:</p>
-            <ul className="list-disc list-inside text-[#A1A1AA] space-y-1">
+          <div className="border-l-2 border-foreground pl-6 space-y-4">
+            <p className="font-serif text-muted-foreground">We use your information to:</p>
+            <ul className="list-disc list-inside text-muted-foreground font-serif space-y-1">
               <li>Process your internship applications</li>
               <li>Conduct compulsory examinations and assessments</li>
               <li>Generate internship certificates upon completion</li>
@@ -95,30 +88,29 @@ export default function PrivacyPolicyPage() {
           </div>
         </motion.div>
 
-        {/* Data Sharing - Important Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="mb-10 p-6 border-2 border-[#DFE104] bg-[#DFE104]/5"
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="mb-10 border-2 border-foreground p-6 bg-foreground text-background"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Building size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <Building size={24} className="text-background" />
+            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-tighter text-background">
               Data Shared With Hiring Partners
             </h2>
           </div>
-          
+
           <div className="space-y-4">
-            <p className="text-[#FAFAFA] font-bold">ONLY the following information is shared with other companies for hiring purposes:</p>
-            
+            <p className="font-serif font-bold text-background">ONLY the following information is shared with other companies for hiring purposes:</p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div className="border border-[#3F3F46] p-4 bg-[#09090B]">
+              <div className="border-2 border-background p-4 bg-background text-foreground">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-[#DFE104]" />
-                  <span className="text-[#DFE104] font-bold uppercase text-sm">Shared ✓</span>
+                  <div className="w-2 h-2 bg-foreground" />
+                  <span className="font-mono text-foreground font-bold text-sm">Shared ✓</span>
                 </div>
-                <ul className="space-y-2 text-sm text-[#A1A1AA]">
+                <ul className="space-y-2 text-sm text-muted-foreground font-serif">
                   <li>• Resume/CV</li>
                   <li>• Email Address</li>
                   <li>• Phone Number</li>
@@ -127,13 +119,13 @@ export default function PrivacyPolicyPage() {
                   <li>• Project Portfolio</li>
                 </ul>
               </div>
-              
-              <div className="border border-[#3F3F46] p-4 bg-[#09090B]">
+
+              <div className="border-2 border-background p-4 bg-background text-foreground">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 bg-red-500" />
-                  <span className="text-red-500 font-bold uppercase text-sm">NOT Shared ✗</span>
+                  <div className="w-2 h-2 bg-foreground" />
+                  <span className="font-mono text-foreground font-bold text-sm">NOT Shared ✗</span>
                 </div>
-                <ul className="space-y-2 text-sm text-[#A1A1AA]">
+                <ul className="space-y-2 text-sm text-muted-foreground font-serif">
                   <li>• Government ID Numbers</li>
                   <li>• Bank Account Details</li>
                   <li>• Home Address</li>
@@ -143,29 +135,28 @@ export default function PrivacyPolicyPage() {
                 </ul>
               </div>
             </div>
-            
-            <p className="text-xs text-[#A1A1AA] mt-4 italic">
+
+            <p className="font-mono text-xs text-background opacity-70 mt-4 italic">
               Note: Your data is ONLY shared with verified hiring partners when you apply for their positions or explicitly opt-in.
             </p>
           </div>
         </motion.div>
 
-        {/* Your Rights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
+          transition={{ duration: 0.3, delay: 0.5 }}
           className="mb-10"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Lock size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <Lock size={24} className="text-foreground" />
+            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
               Your Rights & Choices
             </h2>
           </div>
-          <div className="border-l-2 border-[#DFE104] pl-6 space-y-3">
-            <p className="text-[#A1A1AA]">You have the right to:</p>
-            <ul className="list-disc list-inside text-[#A1A1AA] space-y-1">
+          <div className="border-l-2 border-foreground pl-6 space-y-3">
+            <p className="font-serif text-muted-foreground">You have the right to:</p>
+            <ul className="list-disc list-inside text-muted-foreground font-serif space-y-1">
               <li>Access all personal data we hold about you</li>
               <li>Correct inaccurate or incomplete information</li>
               <li>Delete your account and all associated data</li>
@@ -176,71 +167,68 @@ export default function PrivacyPolicyPage() {
           </div>
         </motion.div>
 
-        {/* Data Security */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
           className="mb-10"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Shield size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <Shield size={24} className="text-foreground" />
+            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
               Data Security
             </h2>
           </div>
-          <div className="border-l-2 border-[#DFE104] pl-6">
-            <p className="text-[#A1A1AA]">
-              We implement industry-standard security measures including encryption, secure servers, 
-              and regular security audits to protect your information from unauthorized access, 
+          <div className="border-l-2 border-foreground pl-6">
+            <p className="font-serif text-muted-foreground">
+              We implement industry-standard security measures including encryption, secure servers,
+              and regular security audits to protect your information from unauthorized access,
               alteration, or destruction.
             </p>
           </div>
         </motion.div>
 
-        {/* Contact Information */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-          className="mb-10 p-6 border border-[#3F3F46] bg-[#09090B]"
+          transition={{ duration: 0.3, delay: 0.7 }}
+          className="mb-10 border-2 border-foreground p-6 bg-muted"
         >
           <div className="flex items-center gap-3 mb-4">
-            <Mail size={24} className="text-[#DFE104]" />
-            <h2 className="text-2xl font-bold uppercase tracking-tighter text-[#FAFAFA]">
+            <Mail size={24} className="text-foreground" />
+            <h2 className="font-serif text-2xl font-bold tracking-tighter text-foreground">
               Contact Us
             </h2>
           </div>
-          <p className="text-[#A1A1AA] mb-4">
+          <p className="font-serif text-muted-foreground mb-4">
             For privacy-related questions, data deletion requests, or concerns about your information:
           </p>
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <Mail size={16} className="text-[#DFE104]" />
-              <a href="mailto:privacy@sqrock.cloud" className="text-[#DFE104] hover:underline">
+              <Mail size={16} className="text-foreground" />
+              <a href="mailto:privacy@sqrock.cloud" className="font-mono text-foreground hover:underline">
                 privacy@sqrock.cloud
               </a>
             </div>
             <div className="flex items-center gap-3">
-              <Phone size={16} className="text-[#DFE104]" />
-              <a href="tel:+918619819400" className="text-[#DFE104] hover:underline">
+              <Phone size={16} className="text-foreground" />
+              <a href="tel:+918619819400" className="font-mono text-foreground hover:underline">
                 +91 86198 19400
               </a>
             </div>
           </div>
         </motion.div>
 
-        {/* Consent Banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.8 }}
-          className="text-center pt-8 border-t border-[#3F3F46]"
+          transition={{ duration: 0.3, delay: 0.8 }}
+          className="text-center pt-8 border-t-2 border-foreground"
         >
-          <p className="text-xs text-[#A1A1AA]">
+          <p className="font-mono text-xs text-muted-foreground">
             By using CO-PROFILES, you consent to this Privacy Policy. We may update this policy periodically.
           </p>
-          <Link href="/" className="inline-block mt-4 text-[#DFE104] hover:underline text-sm uppercase tracking-wide">
+          <Link href="/" className="inline-block mt-4 text-foreground hover:underline text-sm font-mono tracking-wide">
             ← Back to Home
           </Link>
         </motion.div>

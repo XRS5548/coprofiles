@@ -65,8 +65,8 @@ export function Rating({
               sizeClasses[size],
               "fill-current transition-colors",
               (hoverValue >= rating || value >= rating)
-                ? "text-yellow-400 fill-yellow-400"
-                : "text-gray-300 fill-gray-300 dark:text-gray-600 dark:fill-gray-600"
+                ? "text-foreground fill-foreground"
+                : "text-muted-foreground fill-muted-foreground"
             )}
           />
         </button>

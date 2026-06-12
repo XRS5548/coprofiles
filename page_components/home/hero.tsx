@@ -1,50 +1,54 @@
-// components/hero.tsx
 "use client"
 
-import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
-import { AnimatedBgText } from "./animated-bg-text"
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <AnimatedBgText />
-      
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+      {/* Decorative elements */}
+      <div className="absolute top-24 left-12 w-px h-32 bg-foreground/20" />
+      <div className="absolute bottom-24 right-12 w-px h-32 bg-foreground/20" />
+      <div className="absolute top-1/3 right-16 w-16 h-16 border border-foreground/10" />
+
+      {/* Subtle texture */}
+      <div className="absolute inset-0 bg-texture-noise pointer-events-none" />
+      <div className="absolute inset-0 bg-texture-lines pointer-events-none" />
+
       <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-[clamp(4rem,10vw,12rem)] font-bold leading-[0.9] tracking-tighter mb-6 text-[#FAFAFA]"
-        >
-          BUILD.<br />
-          LEARN.<br />
-          GET HIRED.
-        </motion.h1>
+        <div className="inline-block mb-6">
+          <span className="text-xs font-mono uppercase tracking-[0.2em] text-muted-foreground">
+            SQROCK IT Solutions
+          </span>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-          className="text-[#A1A1AA] text-lg md:text-xl max-w-2xl mx-auto mb-10"
-        >
-          The Official Internship & Hiring Platform of SQROCK IT Solutions.
-        </motion.p>
+        <h1 className="font-serif text-[clamp(3.5rem,12vw,10rem)] font-bold leading-[0.88] tracking-tighter text-foreground mb-8">
+          BUILD.
+          <br />
+          LEARN.
+          <br />
+          <span className="bg-foreground text-background px-4 inline-block">GET HIRED.</span>
+        </h1>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <button className="group px-8 py-4 bg-[#DFE104] text-black font-medium text-base uppercase tracking-wide hover:bg-[#DFE104]/90 transition-all duration-200">
+        <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-12 font-serif leading-relaxed">
+          The Official Internship & Hiring Platform of SQROCK IT Solutions — bridging academic learning with industry excellence.
+        </p>
+
+        {/* Decorative rule */}
+        <div className="flex items-center justify-center gap-4 mb-10">
+          <div className="w-8 h-px bg-foreground" />
+          <div className="w-2 h-2 border border-foreground rotate-45" />
+          <div className="w-8 h-px bg-foreground" />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button className="group px-10 py-4 bg-foreground text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground transition-none duration-0">
             Apply For Internship
-            <ArrowRight className="inline ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="inline ml-2 w-4 h-4" />
           </button>
-          <button className="px-8 py-4 border border-[#3F3F46] text-[#FAFAFA] font-medium text-base uppercase tracking-wide hover:border-[#DFE104] hover:text-[#DFE104] transition-all duration-200">
+          <button className="px-10 py-4 border-2 border-foreground text-foreground font-mono text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-none duration-0">
             Explore Opportunities
           </button>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

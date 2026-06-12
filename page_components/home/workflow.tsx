@@ -1,120 +1,78 @@
-// components/workflow.tsx
-'use client'
+"use client"
 
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import { 
-  Building2, FileEdit, Users, ClipboardCheck, UserCheck, ArrowRight 
-} from 'lucide-react'
+import { useRef } from "react"
+import { motion, useInView } from "framer-motion"
+import { Building2, FileEdit, Users, ClipboardCheck, UserCheck } from "lucide-react"
 
 const steps = [
-  {
-    icon: Building2,
-    title: 'Create Company Profile',
-    description: 'Set up your company profile with branding, requirements, and hiring preferences.',
-    color: 'from-purple-500 to-blue-500',
-  },
-  {
-    icon: FileEdit,
-    title: 'Post Internship or Job',
-    description: 'Create detailed job listings with requirements, skills, and assessment criteria.',
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    icon: Users,
-    title: 'Receive Applications',
-    description: 'Get applications from qualified students with detailed profiles and portfolios.',
-    color: 'from-cyan-500 to-teal-500',
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Conduct Exams',
-    description: 'Run secure assessments through ExaminerMax with automated evaluation.',
-    color: 'from-teal-500 to-green-500',
-  },
-  {
-    icon: UserCheck,
-    title: 'Shortlist & Hire',
-    description: 'Review candidates, conduct interviews, and make data-driven hiring decisions.',
-    color: 'from-green-500 to-emerald-500',
-  },
+  { icon: Building2, title: "Create Company Profile", description: "Set up your company profile with branding, requirements, and hiring preferences." },
+  { icon: FileEdit, title: "Post Internship or Job", description: "Create detailed job listings with requirements, skills, and assessment criteria." },
+  { icon: Users, title: "Receive Applications", description: "Get applications from qualified students with detailed profiles and portfolios." },
+  { icon: ClipboardCheck, title: "Conduct Exams", description: "Run secure assessments through ExaminerMax with automated evaluation." },
+  { icon: UserCheck, title: "Shortlist & Hire", description: "Review candidates, conduct interviews, and make data-driven hiring decisions." },
 ]
 
 export function Workflow() {
-  return (
-    <section className="relative py-32 overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-500/5 rounded-full blur-[120px]" />
-      </div>
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, amount: 0.1 })
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+  return (
+    <section ref={ref} className="py-32 px-6 bg-background">
+      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
+
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.3 }}
           className="text-center mb-20"
         >
-          <h2 className="text-4xl md:text-5xl font-bold font-space mb-6">
-            <span className="text-white">How </span>
-            <span className="gradient-text">CoProfiles</span>
-            <span className="text-white"> Works</span>
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
+            How It Works
+          </p>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
+            How CoProfiles Works
           </h2>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          <div className="w-16 h-px bg-foreground mx-auto mt-6" />
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mt-6 font-serif">
             Streamline your hiring process with our intelligent workflow system.
           </p>
         </motion.div>
 
-        {/* Timeline */}
-        <div className="relative">
-          {/* Connecting Line */}
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500/50 via-blue-500/50 to-purple-500/50 hidden lg:block" />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            {steps.map((step, index) => (
-              <WorkflowStep key={step.title} step={step} index={index} />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+          {steps.map((step, index) => (
+            <StepCard key={step.title} step={step} index={index} isInView={isInView} />
+          ))}
         </div>
       </div>
     </section>
   )
 }
 
-function WorkflowStep({ step, index }: { step: any; index: number }) {
+function StepCard({ step, index, isInView }: { step: typeof steps[0]; index: number; isInView: boolean }) {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
-      className="relative flex flex-col items-center text-center"
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.3, delay: index * 0.08 }}
+      className="text-center"
     >
-      {/* Step Number */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={isInView ? { scale: 1 } : { scale: 0 }}
-        transition={{ duration: 0.4, delay: index * 0.2 + 0.2 }}
-        className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-6 glow relative z-10`}
-      >
-        <step.icon className="w-8 h-8 text-white" />
-      </motion.div>
-
-      {/* Content */}
-      <div className="glass rounded-xl p-6 w-full">
-        <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
-        <p className="text-sm text-gray-400">{step.description}</p>
+      <div className="w-16 h-16 mx-auto border-2 border-foreground flex items-center justify-center mb-6">
+        <step.icon size={28} className="text-foreground" />
       </div>
-
-      {/* Arrow for mobile */}
+      <div className="relative">
+        <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest block mb-2">
+          Step {String(index + 1).padStart(2, "0")}
+        </span>
+        <h3 className="font-serif text-lg font-bold tracking-tight text-foreground mb-2">{step.title}</h3>
+        <p className="font-serif text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+      </div>
       {index < steps.length - 1 && (
-        <div className="lg:hidden mt-4">
-          <ArrowRight className="w-6 h-6 text-purple-400" />
+        <div className="hidden md:block absolute top-8 right-0 translate-x-1/2 text-foreground/30">
+          <span className="text-2xl">&rarr;</span>
         </div>
       )}
     </motion.div>

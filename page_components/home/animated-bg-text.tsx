@@ -1,7 +1,5 @@
-// components/animated-bg-text.tsx
 "use client"
 
-import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
 
 const words = ["DEVELOPERS", "INTERNS", "ENGINEERS", "DESIGNERS", "SQROCK"]
@@ -24,28 +22,16 @@ export function AnimatedBgText() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {words.map((word, index) => (
-        <motion.div
+        <div
           key={word}
-          className="absolute text-7xl md:text-9xl font-bold text-white/5 whitespace-nowrap uppercase tracking-tighter"
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0.03, 0.08, 0.03],
-            x: [0, 30, -30, 0],
-            y: [0, -20, 20, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-            delay: index * 2,
-          }}
+          className="absolute text-7xl md:text-9xl font-bold text-foreground/5 whitespace-nowrap uppercase tracking-tighter font-serif"
           style={{
             top: positions[index]?.top,
             left: positions[index]?.left,
           }}
         >
           {word}
-        </motion.div>
+        </div>
       ))}
     </div>
   )

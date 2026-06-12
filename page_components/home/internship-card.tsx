@@ -1,9 +1,4 @@
-// components/internship-card.tsx
 "use client"
-
-import { motion, useInView } from "framer-motion"
-import { useRef } from "react"
-import { Briefcase, MapPin, Award, Lock } from "lucide-react"
 
 interface InternshipCardProps {
   id: number
@@ -16,66 +11,70 @@ interface InternshipCardProps {
   isLoggedIn: boolean
 }
 
-export function InternshipCard({ 
-  id, 
-  title, 
-  duration, 
-  location, 
-  certificate, 
-  skills, 
-  index, 
-  isLoggedIn 
+export function InternshipCard({
+  id,
+  title,
+  duration,
+  location,
+  certificate,
+  skills,
+  index,
+  isLoggedIn,
 }: InternshipCardProps) {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.3 })
-
   const handleApplyClick = () => {
     if (isLoggedIn) {
-      // Proceed with application
-      console.log(`Applying for ${title}`)
-      // You can redirect to application form or show modal
       window.location.href = `/apply/${id}`
     } else {
-      // Redirect to login page
       window.location.href = "/login"
     }
   }
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ backgroundColor: "#DFE104", y: -4 }}
-      className="group p-6 border border-[#3F3F46] bg-[#09090B] transition-all duration-300 cursor-pointer"
+    <div
+      className="group p-8 border border-foreground bg-background transition-colors duration-100 hover:bg-foreground hover:text-background cursor-pointer"
     >
-      <h3 className="text-2xl font-bold uppercase tracking-tight mb-4 group-hover:text-black transition-colors duration-300 text-[#FAFAFA]">
+      <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 tracking-widest">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+
+      <h3 className="font-serif text-2xl font-bold tracking-tight text-foreground group-hover:text-background transition-colors duration-100 mt-2 mb-6">
         {title}
       </h3>
 
-      <div className="space-y-3 mb-4">
-        <div className="flex items-center gap-2 text-[#A1A1AA] group-hover:text-black/70 transition-colors duration-300">
-          <Briefcase size={16} />
-          <span className="text-sm uppercase tracking-wide">{duration}</span>
+      <div className="space-y-2 mb-6">
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+            Duration
+          </span>
+          <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+            {duration}
+          </span>
         </div>
-        <div className="flex items-center gap-2 text-[#A1A1AA] group-hover:text-black/70 transition-colors duration-300">
-          <MapPin size={16} />
-          <span className="text-sm uppercase tracking-wide">{location}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+            Location
+          </span>
+          <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+            {location}
+          </span>
         </div>
         {certificate && (
-          <div className="flex items-center gap-2 text-[#DFE104] group-hover:text-black transition-colors duration-300">
-            <Award size={16} />
-            <span className="text-sm uppercase tracking-wide">Certificate Available</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+              Certificate
+            </span>
+            <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+              Available
+            </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-8">
         {skills.map((skill) => (
           <span
             key={skill}
-            className="px-2 py-1 text-xs uppercase tracking-wide border border-[#3F3F46] group-hover:border-black/30 group-hover:text-black/80 transition-colors duration-300 text-[#A1A1AA]"
+            className="px-3 py-1 font-mono text-xs uppercase tracking-widest border border-foreground text-foreground group-hover:border-background group-hover:text-background transition-colors duration-100"
           >
             {skill}
           </span>
@@ -84,26 +83,16 @@ export function InternshipCard({
 
       <button
         onClick={handleApplyClick}
-        className="w-full py-3 text-center border border-[#DFE104] bg-transparent uppercase tracking-wide text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
+        className="w-full py-3 font-mono text-sm uppercase tracking-widest border-2 border-foreground text-foreground bg-transparent group-hover:border-background group-hover:text-background transition-colors duration-100"
       >
-        {isLoggedIn ? (
-          <>
-            Apply Now
-            <Briefcase size={14} />
-          </>
-        ) : (
-          <>
-            <Lock size={14} />
-            Login to Apply
-          </>
-        )}
+        {isLoggedIn ? "Apply Now" : "Login to Apply"}
       </button>
 
       {!isLoggedIn && (
-        <p className="text-xs text-center mt-3 text-[#A1A1AA] group-hover:text-black/60 transition-colors duration-300">
+        <p className="font-mono text-xs text-center mt-3 text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
           Login required to apply
         </p>
       )}
-    </motion.div>
+    </div>
   )
 }

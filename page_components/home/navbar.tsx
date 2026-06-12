@@ -1,8 +1,6 @@
-// components/navbar.tsx
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 
@@ -10,7 +8,7 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "Internships", href: "/#internships" },
   { label: "About", href: "/about" },
-  { label: "Hiring Process", href: "/#hiring-process" },
+  { label: "Process", href: "/#hiring-process" },
   { label: "Contact", href: "/contact" },
 ]
 
@@ -27,30 +25,26 @@ export function Navbar() {
   }, [])
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 border-b border-[#3F3F46] transition-all duration-300 ${
-        isScrolled ? "bg-[#09090B]/95 backdrop-blur-sm" : "bg-[#09090B]"
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-100 ${
+        isScrolled ? "bg-background border-b border-foreground" : "bg-background"
       }`}
     >
       <div className="mx-auto max-w-7xl px-6 py-4">
         <div className="flex items-center justify-between">
-          <motion.a
+          <Link
             href="/"
-            className="text-2xl font-bold tracking-tighter text-[#FAFAFA]"
-            whileHover={{ scale: 1.02 }}
+            className="font-serif text-2xl font-bold tracking-tight text-foreground"
           >
             CO-PROFILES
-          </motion.a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-sm font-medium text-[#A1A1AA] hover:text-[#DFE104] transition-colors duration-200 uppercase tracking-wide"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-100 uppercase tracking-widest"
               >
                 {item.label}
               </Link>
@@ -58,50 +52,60 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/login" className="px-5 py-2 text-sm font-medium text-[#FAFAFA] border border-[#3F3F46] hover:border-[#DFE104] hover:text-[#DFE104] transition-all duration-200 uppercase tracking-wide">
+            <Link
+              href="/login"
+              className="px-5 py-2 text-sm font-medium text-foreground border border-foreground hover:bg-foreground hover:text-background transition-colors duration-100 uppercase tracking-widest"
+            >
               Login
             </Link>
-            <Link href="/register" className="px-5 py-2 text-sm font-medium bg-[#DFE104] text-black hover:bg-[#DFE104]/90 transition-all duration-200 uppercase tracking-wide">
+            <Link
+              href="/register"
+              className="px-5 py-2 text-sm font-medium bg-foreground text-background hover:bg-background hover:text-foreground hover:border hover:border-foreground transition-colors duration-100 uppercase tracking-widest"
+            >
               Apply Now
             </Link>
           </div>
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-[#FAFAFA]"
+            className="md:hidden text-foreground"
+            aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden mt-4 pt-4 border-t border-[#3F3F46]"
-          >
+          <div className="md:hidden mt-4 pt-4 border-t border-foreground">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="block py-3 text-base text-[#A1A1AA] hover:text-[#DFE104] transition-colors duration-200 uppercase"
+                className="block py-3 text-base text-muted-foreground hover:text-foreground transition-colors duration-100 uppercase tracking-widest"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.label}
               </Link>
             ))}
             <div className="flex flex-col gap-3 pt-4">
-              <Link href="/login" className="w-full px-5 py-2 text-sm font-medium text-center text-[#FAFAFA] border border-[#3F3F46] hover:border-[#DFE104] hover:text-[#DFE104] transition-all duration-200 uppercase" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/login"
+                className="w-full px-5 py-2 text-sm font-medium text-center text-foreground border border-foreground hover:bg-foreground hover:text-background transition-colors duration-100 uppercase tracking-widest"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Login
               </Link>
-              <Link href="/register" className="w-full px-5 py-2 text-sm font-medium text-center bg-[#DFE104] text-black hover:bg-[#DFE104]/90 transition-all duration-200 uppercase" onClick={() => setIsMobileMenuOpen(false)}>
+              <Link
+                href="/register"
+                className="w-full px-5 py-2 text-sm font-medium text-center bg-foreground text-background hover:bg-background hover:text-foreground hover:border hover:border-foreground transition-colors duration-100 uppercase tracking-widest"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Apply Now
               </Link>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
-    </motion.nav>
+    </nav>
   )
 }

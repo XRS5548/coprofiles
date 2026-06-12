@@ -1,8 +1,7 @@
-// components/internships-section.tsx
 "use client"
 
-import { motion, useInView } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
+import { motion, useInView } from "framer-motion"
 import { InternshipCard } from "./internship-card"
 
 const internships = [
@@ -12,7 +11,6 @@ const internships = [
   { id: 4, title: "UI/UX Designer", duration: "2 months", location: "Remote", certificate: true, skills: ["Figma", "Adobe XD", "Prototyping"] },
   { id: 5, title: "Graphic Designer", duration: "2 months", location: "Remote", certificate: true, skills: ["Photoshop", "Illustrator", "Branding"] },
   { id: 6, title: "AI Developer", duration: "4 months", location: "Remote", certificate: true, skills: ["Python", "TensorFlow", "NLP"] },
-  { id: 7, title: "Digital Marketing", duration: "2 months", location: "Remote", certificate: true, skills: ["SEO", "Social Media", "Analytics"] },
 ]
 
 export function InternshipsSection() {
@@ -21,52 +19,66 @@ export function InternshipsSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem("auth_token")
     const user = localStorage.getItem("user")
     setIsLoggedIn(!!(token || user))
   }, [])
 
   return (
-    <section id="internships" className="py-24 px-6" ref={ref}>
+    <section id="internships" className="py-32 px-6 bg-background" ref={ref}>
+      {/* Thick rule */}
+      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
+
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="mb-16"
         >
-          <h2 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-4 text-[#FAFAFA]">
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
+            Featured Opportunities
+          </p>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
             Featured Internships
           </h2>
-          <p className="text-[#A1A1AA] text-lg max-w-2xl">
+          <div className="w-16 h-px bg-foreground mt-6" />
+          <p className="text-muted-foreground text-lg max-w-2xl mt-6 font-serif">
             Launch your career with real-world experience at SQROCK IT Solutions.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {internships.map((internship, index) => (
-            <InternshipCard 
-              key={internship.title} 
-              {...internship} 
-              index={index}
-              isLoggedIn={isLoggedIn}
-            />
+            <motion.div
+              key={internship.title}
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+            >
+              <InternshipCard
+                {...internship}
+                index={index}
+                isLoggedIn={isLoggedIn}
+              />
+            </motion.div>
           ))}
         </div>
 
-        {/* Show login prompt if not logged in */}
         {!isLoggedIn && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-12 text-center p-6 border border-[#DFE104] bg-[#DFE104]/5"
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="mt-12 text-center p-8 border-2 border-foreground bg-muted"
           >
-            <p className="text-[#A1A1AA] mb-4">
-                Login to apply for internships and build your professional profile
+            <p className="text-muted-foreground mb-4 font-serif">
+              Login to apply for internships and build your professional profile
             </p>
-            <button className="px-6 py-3 bg-[#DFE104] text-black font-medium uppercase tracking-wide hover:bg-[#DFE104]/90 transition-all duration-200">
+            <button
+              onClick={() => window.location.href = "/login"}
+              className="px-8 py-3 bg-foreground text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground transition-none duration-0"
+            >
               Login Now
             </button>
           </motion.div>

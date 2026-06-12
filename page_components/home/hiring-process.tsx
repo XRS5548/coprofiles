@@ -1,97 +1,97 @@
-// components/hiring-process.tsx
 "use client"
 
+import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
-import { useRef, useState } from "react"
-import { FileText, Users, Briefcase, Award, Star, GraduationCap, Mail } from "lucide-react"
+import { FileText, Users, Briefcase, Award, GraduationCap } from "lucide-react"
 
 const steps = [
-  { title: "APPLICATION", icon: FileText },
-  { title: "PROFILE REVIEW", icon: Users },
-  { title: "COMPULSORY EXAM", icon: GraduationCap, description: "Must pass to qualify" },
-  { title: "INTERNSHIP", icon: Briefcase },
-  { title: "BASIC CERTIFICATE", icon: Award, description: "Auto-generated after completion" },
-  { title: "JOB OFFER", icon: Star, description: "Top performers only" },
+  { title: "Application", icon: FileText, description: "Submit your profile" },
+  { title: "Profile Review", icon: Users, description: "We assess your fit" },
+  { title: "Compulsory Exam", icon: GraduationCap, description: "Must pass to qualify" },
+  { title: "Internship", icon: Briefcase, description: "Real project work" },
+  { title: "Certificate", icon: Award, description: "Auto-generated" },
+  { title: "Job Offer", icon: Award, description: "Top performers only" },
 ]
 
 export function HiringProcess() {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, amount: 0.3 })
-  const [showCertificateModal, setShowCertificateModal] = useState(false)
 
   return (
-    <section id="hiring-process" className="py-24 px-6 border-t border-[#3F3F46]" ref={ref}>
+    <section id="hiring-process" className="py-32 px-6 bg-background" ref={ref}>
+      {/* Thick rule */}
+      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
+
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.3 }}
           className="mb-16 text-center"
         >
-          <h2 className="text-5xl md:text-7xl font-bold uppercase tracking-tighter mb-4 text-[#FAFAFA]">
+          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
+            Step by Step
+          </p>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
             Hiring Process
           </h2>
-          <p className="text-[#A1A1AA] text-lg max-w-2xl mx-auto">
+          <div className="w-16 h-px bg-foreground mx-auto mt-6" />
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mt-6 font-serif">
             Your journey from application to full-time role at SQROCK.
           </p>
         </motion.div>
 
-        {/* Timeline */}
-        <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mb-16">
+        {/* Process steps */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-16">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="flex flex-col items-center relative"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className="text-center"
             >
-              <div className={`w-20 h-20 md:w-24 md:h-24 border flex items-center justify-center mb-3 ${
-                step.title === "COMPULSORY EXAM" ? "border-[#DFE104] bg-[#DFE104]/10" : "border-[#DFE104]"
-              }`}>
-                <step.icon size={32} className="text-[#DFE104]" />
+              <div className="w-16 h-16 mx-auto border-2 border-foreground flex items-center justify-center mb-4 bg-background group-hover:bg-foreground transition-colors duration-100">
+                <step.icon size={24} className="text-foreground" />
               </div>
-              <span className="text-xs md:text-sm font-bold uppercase tracking-wide text-center text-[#FAFAFA]">
+              <span className="font-mono text-xs text-muted-foreground block mb-1 uppercase tracking-widest">
+                Step {index + 1}
+              </span>
+              <span className="font-mono text-sm font-bold uppercase tracking-wider text-foreground block">
                 {step.title}
               </span>
               {step.description && (
-                <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wide mt-1">
+                <span className="font-serif text-xs text-muted-foreground mt-1 block">
                   {step.description}
                 </span>
-              )}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute transform translate-x-32 text-[#DFE104] text-2xl">
-                  ↓
-                </div>
               )}
             </motion.div>
           ))}
         </div>
 
-        {/* Exam Details Card */}
+        {/* Exam Details */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="border border-[#DFE104] p-8 mb-12"
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="border-2 border-foreground p-8 mb-12 bg-foreground text-background"
         >
           <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
-            <div className="p-3 border border-[#DFE104] bg-[#DFE104]/5">
-              <GraduationCap size={32} className="text-[#DFE104]" />
+            <div className="p-3 border-2 border-background">
+              <GraduationCap size={32} className="text-background" />
             </div>
             <div className="flex-1">
-              <h3 className="text-2xl font-bold uppercase tracking-tight text-[#FAFAFA] mb-2">
+              <h3 className="font-serif text-2xl font-bold tracking-tight text-background mb-2">
                 Compulsory Examination
               </h3>
-              <p className="text-[#A1A1AA] mb-4">
-                All applicants must pass the compulsory technical and aptitude exam. 
-                Only candidates who clear the exam will be eligible for the internship.
+              <p className="text-background/80 mb-4 font-serif">
+                All applicants must pass the compulsory technical and aptitude exam. Only candidates who clear the exam will be eligible for the internship.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="px-6 py-2 bg-[#DFE104] text-black font-medium uppercase tracking-wide text-sm hover:bg-[#DFE104]/90 transition-all">
+                <button className="px-6 py-2 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
                   Take Sample Exam
                 </button>
-                <button className="px-6 py-2 border border-[#3F3F46] text-[#FAFAFA] font-medium uppercase tracking-wide text-sm hover:border-[#DFE104] hover:text-[#DFE104] transition-all">
+                <button className="px-6 py-2 border-2 border-background text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground transition-none duration-0">
                   View Syllabus
                 </button>
               </div>
@@ -99,67 +99,51 @@ export function HiringProcess() {
           </div>
         </motion.div>
 
-        {/* Certificate Section */}
+        {/* Certificate types */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Certificate */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="border border-[#3F3F46] p-6"
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="border-2 border-foreground p-8"
           >
             <div className="flex items-center gap-3 mb-4">
-              <Award size={28} className="text-[#DFE104]" />
-              <h3 className="text-xl font-bold uppercase tracking-tight text-[#FAFAFA]">
+              <Award size={24} className="text-foreground" />
+              <h3 className="font-serif text-xl font-bold tracking-tight text-foreground">
                 Basic Certificate
               </h3>
             </div>
-            <p className="text-[#A1A1AA] text-sm mb-4">
+            <p className="text-muted-foreground font-serif mb-4">
               Automatically generated upon internship completion. No additional steps required.
             </p>
-            <div className="inline-block px-3 py-1 border border-[#DFE104] text-[#DFE104] text-xs uppercase tracking-wide">
-              AUTO-GENERATED
-            </div>
+            <span className="inline-block px-3 py-1 border border-foreground text-foreground font-mono text-xs uppercase tracking-widest">
+              Auto-Generated
+            </span>
           </motion.div>
 
-          {/* Custom Certificate */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="border border-[#3F3F46] p-6"
+            transition={{ duration: 0.3, delay: 0.35 }}
+            className="border-2 border-foreground p-8"
           >
             <div className="flex items-center gap-3 mb-4">
-              <Mail size={28} className="text-[#DFE104]" />
-              <h3 className="text-xl font-bold uppercase tracking-tight text-[#FAFAFA]">
+              <Award size={24} className="text-foreground" />
+              <h3 className="font-serif text-xl font-bold tracking-tight text-foreground">
                 Custom Certificate
               </h3>
             </div>
-            <p className="text-[#A1A1AA] text-sm mb-4">
+            <p className="text-muted-foreground font-serif mb-4">
               Need a custom certificate with specific details? Email us your request.
             </p>
-            <a 
+            <a
               href="mailto:hr@sqrock.cloud"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-[#DFE104] text-[#DFE104] text-sm uppercase tracking-wide hover:bg-[#DFE104] hover:text-black transition-all duration-200"
+              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-foreground text-foreground font-mono text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-none duration-0"
             >
-              <Mail size={14} />
               hr@sqrock.cloud
             </a>
           </motion.div>
         </div>
-
-        {/* Exam Pass Requirement Note */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-8 text-center p-4 border border-[#DFE104]/30 bg-[#DFE104]/5"
-        >
-          <p className="text-[#A1A1AA] text-sm uppercase tracking-wide">
-            ⚠️ IMPORTANT: You must pass the compulsory exam to qualify for the internship. 
-            Basic certificate is auto-generated. For custom certificates, email <span className="text-[#DFE104]">hr@sqrock.cloud</span>
-          </p>
-        </motion.div>
       </div>
     </section>
   )

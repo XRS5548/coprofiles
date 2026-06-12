@@ -32,7 +32,6 @@ import {
   Plus,
   Send,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -162,7 +161,6 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
   ]);
 
   useEffect(() => {
-    // Fetch user data
     const fetchUser = async () => {
       try {
         const response = await fetch('/api/user/profile', {
@@ -219,18 +217,17 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
         <div>
           <button
             onClick={() => toggleExpand(item.name)}
-            className={cn(
-              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+            className={`w-full flex items-center justify-between px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
               active
-                ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-                : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            )}
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:bg-foreground hover:text-background"
+            }`}
           >
             <div className="flex items-center gap-3">
               <item.icon className="h-4 w-4" />
               <span>{item.name}</span>
             </div>
-            <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+            <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
           </button>
           {isExpanded && (
             <div className="ml-6 mt-1 space-y-1">
@@ -239,12 +236,11 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
                   key={child.href}
                   href={child.href}
                   onClick={() => isMobile && setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors",
+                  className={`flex items-center gap-3 px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
                     isActive(child.href)
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-                      : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                  )}
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:bg-foreground hover:text-background"
+                  }`}
                 >
                   <child.icon className="h-3.5 w-3.5" />
                   <span>{child.name}</span>
@@ -260,19 +256,18 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
       <Link
         href={item.href}
         onClick={() => isMobile && setSidebarOpen(false)}
-        className={cn(
-          "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+        className={`flex items-center justify-between px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
           active
-            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-            : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-        )}
+            ? "bg-foreground text-background"
+            : "text-muted-foreground hover:bg-foreground hover:text-background"
+        }`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="h-4 w-4" />
           <span>{item.name}</span>
         </div>
         {item.badge !== undefined && item.badge > 0 && (
-          <Badge variant="secondary" className="ml-auto">
+          <Badge className="ml-auto border-2 border-foreground text-foreground font-mono text-xs">
             {item.badge}
           </Badge>
         )}
@@ -281,18 +276,16 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-white dark:border-gray-800 dark:bg-gray-900 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r-2 border-foreground bg-background lg:block">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center border-b px-4 dark:border-gray-800">
-            <Link href="/manager" className="flex items-center gap-2 font-bold text-xl">
-              <GraduationCap className="h-6 w-6 text-indigo-600" />
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Coprofiles
-              </span>
-              <Badge variant="secondary" className="ml-2 text-xs">Manager</Badge>
+          <div className="flex h-16 items-center border-b-2 border-foreground px-4">
+            <Link href="/manager" className="flex items-center gap-2 font-serif font-bold tracking-tighter text-foreground">
+              <GraduationCap className="h-6 w-6 text-foreground" />
+              <span>Coprofiles</span>
+              <Badge className="border-2 border-foreground text-foreground font-mono text-xs">Manager</Badge>
             </Link>
           </div>
 
@@ -304,36 +297,36 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
           </nav>
 
           {/* User Footer */}
-          <div className="border-t p-4 dark:border-gray-800">
+          <div className="border-t-2 border-foreground p-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-                  <Avatar className="h-8 w-8">
+                <button className="flex w-full items-center gap-3 px-3 py-2 hover:bg-foreground hover:text-background">
+                  <Avatar className="h-8 w-8 border-2 border-foreground">
                     <AvatarImage src={user?.profileImgUrl} />
-                    <AvatarFallback className="bg-indigo-600 text-white">
+                    <AvatarFallback className="bg-foreground text-background">
                       {user?.name?.charAt(0) || 'M'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-medium">{user?.name || 'Manager'}</p>
-                    <p className="text-xs text-gray-500">Company Admin</p>
+                    <p className="font-serif text-foreground">{user?.name || 'Manager'}</p>
+                    <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Company Admin</p>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/manager/settings')}>
+              <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-foreground">
+                <DropdownMenuLabel className="font-serif text-foreground">My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-foreground" />
+                <DropdownMenuItem onClick={() => router.push('/manager/settings')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                <DropdownMenuItem onClick={() => router.push('/dashboard')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
                   User Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuSeparator className="bg-foreground" />
+                <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground hover:bg-foreground hover:text-background">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
@@ -349,19 +342,19 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden fixed left-4 top-4 z-40"
+            className="lg:hidden fixed left-4 top-4 z-40 hover:bg-foreground hover:text-background"
           >
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
+        <SheetContent side="left" className="w-64 p-0 bg-background border-r-2 border-foreground">
           <div className="flex h-full flex-col">
-            <div className="flex h-16 items-center justify-between border-b px-4">
-              <Link href="/manager" className="flex items-center gap-2 font-bold text-xl">
-                <GraduationCap className="h-6 w-6 text-indigo-600" />
+            <div className="flex h-16 items-center justify-between border-b-2 border-foreground px-4">
+              <Link href="/manager" className="flex items-center gap-2 font-serif font-bold tracking-tighter text-foreground">
+                <GraduationCap className="h-6 w-6 text-foreground" />
                 <span>Coprofiles</span>
               </Link>
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
+              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="hover:bg-foreground hover:text-background">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -377,60 +370,60 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Top Header */}
-        <header className="sticky top-0 z-20 border-b bg-white dark:border-gray-800 dark:bg-gray-900">
+        <header className="sticky top-0 z-20 border-b-2 border-foreground bg-background">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="lg:hidden hover:bg-foreground hover:text-background"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
               <div className="hidden md:block">
-                <h1 className="text-lg font-semibold">
+                <h1 className="font-serif text-foreground">
                   Welcome back, {user?.name?.split(' ')[0] || 'Manager'}!
                 </h1>
-                <p className="text-sm text-gray-500">Manage your company and internships</p>
+                <p className="font-serif text-muted-foreground">Manage your company and internships</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Search */}
               <div className="hidden md:block relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search..."
-                  className="pl-9 w-64"
+                  className="pl-9 w-64 border-2 border-foreground bg-background text-foreground font-serif"
                 />
               </div>
 
               {/* Notifications */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
+                  <Button variant="ghost" size="icon" className="relative hover:bg-foreground hover:text-background">
                     <Bell className="h-5 w-5" />
                     {notifications.filter(n => !n.read).length > 0 && (
-                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
+                      <span className="absolute top-1 right-1 h-2 w-2 bg-foreground" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <DropdownMenuLabel className="flex items-center justify-between">
+                <DropdownMenuContent align="end" className="w-80 bg-background border-2 border-foreground">
+                  <DropdownMenuLabel className="flex items-center justify-between font-serif text-foreground">
                     <span>Notifications</span>
-                    <Button variant="ghost" size="sm" className="text-xs">
+                    <Button variant="ghost" size="sm" className="text-xs hover:bg-foreground hover:text-background">
                       Mark all as read
                     </Button>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-foreground" />
                   {notifications.map((notification) => (
-                    <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3">
+                    <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3 text-muted-foreground hover:bg-foreground hover:text-background">
                       <div className="flex items-center gap-2">
-                        {!notification.read && <div className="h-2 w-2 rounded-full bg-blue-500" />}
-                        <span className="text-sm font-medium">{notification.title}</span>
+                        {!notification.read && <div className="h-2 w-2 bg-foreground" />}
+                        <span className="text-sm">{notification.title}</span>
                       </div>
-                      <span className="text-xs text-gray-500">{notification.time}</span>
+                      <span className="text-xs text-muted-foreground">{notification.time}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -439,28 +432,28 @@ export function ManagerLayout({ children }: ManagerLayoutProps) {
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="hover:bg-foreground hover:text-background">
+                    <Avatar className="h-8 w-8 border-2 border-foreground">
                       <AvatarImage src={user?.profileImgUrl} />
-                      <AvatarFallback className="bg-indigo-600 text-white">
+                      <AvatarFallback className="bg-foreground text-background">
                         {user?.name?.charAt(0) || 'M'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/manager/settings')}>
+                <DropdownMenuContent align="end" className="w-56 bg-background border-2 border-foreground">
+                  <DropdownMenuLabel className="font-serif text-foreground">My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuItem onClick={() => router.push('/manager/settings')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                  <DropdownMenuItem onClick={() => router.push('/dashboard')} className="text-muted-foreground hover:bg-foreground hover:text-background">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
                     User Dashboard
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuSeparator className="bg-foreground" />
+                  <DropdownMenuItem onClick={handleLogout} className="text-muted-foreground hover:bg-foreground hover:text-background">
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>

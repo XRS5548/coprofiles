@@ -1,10 +1,11 @@
 "use client"
 
-import { useRef } from "react"
+import { useState, useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { Users, Target, Clock } from "lucide-react"
 
 export function DashboardShowcase() {
+  const [activePeriod, setActivePeriod] = useState("1M")
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
 
@@ -50,8 +51,9 @@ export function DashboardShowcase() {
                 {["1W", "1M", "3M", "1Y"].map((period) => (
                   <button
                     key={period}
+                    onClick={() => setActivePeriod(period)}
                     className={`px-3 py-1 font-mono text-xs border ${
-                      period === "1M" ? "bg-foreground text-background border-foreground" : "text-muted-foreground border-foreground/20 hover:border-foreground"
+                      period === activePeriod ? "bg-foreground text-background border-foreground" : "text-muted-foreground border-foreground/20 hover:border-foreground"
                     } transition-colors duration-100`}
                   >
                     {period}

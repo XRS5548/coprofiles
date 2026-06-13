@@ -1,10 +1,11 @@
 "use client"
 
+import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background pt-20">
       {/* Decorative elements */}
       <div className="absolute top-24 left-12 w-px h-32 bg-foreground/20" />
       <div className="absolute bottom-24 right-12 w-px h-32 bg-foreground/20" />
@@ -41,13 +42,13 @@ export function Hero() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="group px-10 py-4 bg-foreground text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground transition-none duration-0">
+          <Link href="/register" className="group px-10 py-4 bg-foreground text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground transition-none duration-0">
             Apply For Internship
             <ArrowRight className="inline ml-2 w-4 h-4" />
-          </button>
-          <button className="px-10 py-4 border-2 border-foreground text-foreground font-mono text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-none duration-0">
+          </Link>
+          <Link href="/#internships" className="px-10 py-4 border-2 border-foreground text-foreground font-mono text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-none duration-0">
             Explore Opportunities
-          </button>
+          </Link>
         </div>
       </div>
     </section>

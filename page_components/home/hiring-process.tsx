@@ -2,6 +2,7 @@
 
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
+import Link from "next/link"
 import { FileText, Users, Briefcase, Award, GraduationCap } from "lucide-react"
 
 const steps = [
@@ -88,12 +89,12 @@ export function HiringProcess() {
                 All applicants must pass the compulsory technical and aptitude exam. Only candidates who clear the exam will be eligible for the internship.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button className="px-6 py-2 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
+                <Link href="/register" className="px-6 py-2 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
                   Take Sample Exam
-                </button>
-                <button className="px-6 py-2 border-2 border-background text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground transition-none duration-0">
+                </Link>
+                <span className="px-6 py-2 border-2 border-background text-background font-mono text-sm uppercase tracking-widest transition-none duration-0">
                   View Syllabus
-                </button>
+                </span>
               </div>
             </div>
           </div>

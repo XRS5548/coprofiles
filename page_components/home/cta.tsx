@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { ArrowRight } from "lucide-react"
@@ -33,13 +34,13 @@ export function CTASection() {
           transition={{ duration: 0.3, delay: 0.1 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <button className="group px-10 py-5 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
+          <Link href="/register" className="group px-10 py-5 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
             Apply Now
             <ArrowRight className="inline ml-2 w-5 h-5" />
-          </button>
-          <button className="px-10 py-5 border-2 border-background text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground transition-none duration-0">
+          </Link>
+          <Link href="/contact" className="px-10 py-5 border-2 border-background text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground transition-none duration-0">
             Contact Us
-          </button>
+          </Link>
         </motion.div>
       </div>
     </section>

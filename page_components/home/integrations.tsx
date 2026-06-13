@@ -45,7 +45,7 @@ export function Integrations() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="group border-2 border-foreground p-8 text-center bg-background transition-colors duration-100 hover:bg-foreground hover:text-background cursor-pointer"
+              className="group border-2 border-foreground p-8 text-center bg-background transition-colors duration-100 hover:bg-foreground hover:text-background"
             >
               <integration.icon size={32} className="text-foreground group-hover:text-background transition-colors duration-100 mb-6 mx-auto" />
               <h3 className="font-serif text-xl font-bold tracking-tight text-foreground group-hover:text-background transition-colors duration-100 mb-3">

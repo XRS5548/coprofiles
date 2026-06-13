@@ -31,6 +31,7 @@ export function InternshipCard({
 
   return (
     <div
+      onClick={handleApplyClick}
       className="group p-8 border border-foreground bg-background transition-colors duration-100 hover:bg-foreground hover:text-background cursor-pointer"
     >
       <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 tracking-widest">
@@ -81,12 +82,9 @@ export function InternshipCard({
         ))}
       </div>
 
-      <button
-        onClick={handleApplyClick}
-        className="w-full py-3 font-mono text-sm uppercase tracking-widest border-2 border-foreground text-foreground bg-transparent group-hover:border-background group-hover:text-background transition-colors duration-100"
-      >
+      <div className="w-full py-3 font-mono text-sm uppercase tracking-widest border-2 border-foreground text-foreground bg-transparent group-hover:border-background group-hover:text-background transition-colors duration-100 text-center">
         {isLoggedIn ? "Apply Now" : "Login to Apply"}
-      </button>
+      </div>
 
       {!isLoggedIn && (
         <p className="font-mono text-xs text-center mt-3 text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">

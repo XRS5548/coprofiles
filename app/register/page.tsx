@@ -55,49 +55,45 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-luxury-bg">
-      <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.03] to-transparent pointer-events-none" />
-      <div className="absolute inset-x-0 top-1/3 text-center text-[18vw] font-bold uppercase leading-none tracking-tighter text-white/[0.02] pointer-events-none select-none">
+     <main className="relative min-h-screen overflow-hidden bg-black">
+       <div className="absolute inset-0 bg-gradient-to-b from-[#CD7F32]/10 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-1/3 text-center text-[18vw] font-black uppercase tracking-tight text-[#CD7F32]/5 pointer-events-none select-none">
         CO-PROFILES
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6">
-        <Link href="/" className="w-fit pt-8 text-2xl font-bold tracking-tight text-white font-serif">
+        <Link href="/" className="w-fit pt-8 text-3xl font-serif font-bold tracking-wide text-[#CD7F32]" >
           CO-PROFILES
         </Link>
 
         <div className="grid flex-1 items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] py-12">
           <section>
-            <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans mb-4 block">
-              Apply Now
+            <span className="mb-4 block text-xs uppercase tracking-[0.35em] text-[#CD7F32]"> 
+              APPLY NOW
             </span>
-            <h1 className="max-w-3xl font-serif text-5xl font-bold leading-[0.95] tracking-tighter text-white md:text-7xl">
-              Build Your Profile
-            </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-white/40 font-sans">
-              Create your account to apply for internships, showcase your work, and start your hiring journey with CO-PROFILES.
-            </p>
+             <h1 className="max-w-3xl font-serif text-5xl font-bold leading-none tracking-tight text-[#CD7F32] md:text-7xl"> Build Your Profile </h1>
+             <p className="mt-8 max-w-xl text-lg leading-8 text-white/80"> Create your account to apply for internships, showcase your work, and begin your professional journey with CO-PROFILES. </p>
           </section>
 
-          <section className="border border-white/10 bg-white/[0.02] p-8 backdrop-blur-sm">
+          <section className="rounded-2xl border border-[#CD7F32]/20 bg-[#0A0A0A] p-8 backdrop-blur-xl shadow-[0_0_35px_rgba(205,127,50,0.08)]">
             <div className="mb-8">
-              <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Register</span>
-              <h2 className="mt-2 font-serif text-3xl font-bold tracking-tighter text-white">Sign Up</h2>
-            </div>
+               <span className="text-xs uppercase tracking-[0.35em] text-[#CD7F32]"> REGISTER </span> 
+               <h2 className="mt-2 font-serif text-4xl font-bold text-[#CD7F32]"> Sign Up </h2>
+            </div>  
 
             {error && (
-              <div className="mb-5 border border-gold/30 bg-gold/10 p-3">
-                <p className="text-center text-xs tracking-widest text-gold font-sans">{error}</p>
+              <div className="mb-6 rounded-lg border border-[#CD7F32]/30 bg-[#CD7F32]/10 p-4"> <p className="text-center text-sm
+               text-[#CD7F32]"> </p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
+                <label  className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/70">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <User  className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#CD7F32]/70" />
                   <input
                     type="text"
                     value={formData.name}
@@ -126,47 +122,64 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-12 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
-                    placeholder="Password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors duration-300"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
+              
+ <div>
+  <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
+    Password
+  </label>
 
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
-                    placeholder="Confirm password"
-                    required
-                  />
-                </div>
-              </div>
+  <div className="relative">
+    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+
+    <input
+      type={showPassword ? "text" : "password"}
+      value={formData.password}
+      onChange={(e) =>
+        setFormData({ ...formData, password: e.target.value })
+      }
+      className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-12 text-white placeholder:text-white/20 outline-none focus:border-[#CD7F32] transition-colors duration-300 font-sans"
+      placeholder="Password"
+      required
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors duration-300"
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      {showPassword ? (
+        <EyeOff className="h-5 w-5" />
+      ) : (
+        <Eye className="h-5 w-5" />
+      )}
+    </button>
+  </div>
+</div>
+
+<div>
+  <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
+    Confirm Password
+  </label>
+
+  <div className="relative">
+    <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+
+    <input
+      type={showPassword ? "text" : "password"}
+      value={formData.confirmPassword}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          confirmPassword: e.target.value,
+        })
+      }
+      className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-[#CD7F32] transition-colors duration-300 font-sans"
+      placeholder="Confirm password"
+      required
+    />
+  </div>
+</div>
 
               <button
                 type="submit"

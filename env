@@ -1,0 +1,27 @@
+# keep Neon credentials secure: do not expose them to client-side code
+
+DATABASE_URL='postgresql://neondb_owner:npg_PzfWTxt6L0cZ@ep-muddy-rain-a9186lwc-pooler.gwc.azure.neon.tech/neondb?sslmode=require&channel_binding=require'
+JWT_SECRET = "supersecretkey8548574485"
+
+CLOUDINARY_CLOUD_NAME = "dktfgs8ib"
+CLOUDINARY_API_KEY = "181796677913885" 
+CLOUDINARY_API_SECRET = "gEeoq0Zj7SZ09-Luj-z7KUjevyE"
+
+
+
+RAZORPAY_KEY_ID=rzp_live_Stbd5GgljezRS4
+RAZORPAY_KEY_SECRET=MB4R9DbHK4Li0P7cmyo0SCN5
+NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_Stbd5GgljezRS4
+
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=sqrock.business@gmail.com
+EMAIL_PASS="lzxerisacxokoubt"
+
+
+
+NEXT_PUBLIC_APP_URL=coprofiles.sqrock.cloud
+
+
+WHATSAPP_VERIFY_TOKEN="mysecret123Rohit"

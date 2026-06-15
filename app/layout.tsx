@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
-import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
+ import type { Metadata } from "next";
+import {
+  Playfair_Display,
+  Manrope,
+  JetBrains_Mono,
+} from "next/font/google";
+
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Toaster } from 'sonner';
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -11,7 +16,7 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
@@ -32,47 +37,47 @@ export const metadata: Metadata = {
     default: "CO-PROFILES — Luxury Fashion & Lifestyle",
     template: "%s | CO-PROFILES",
   },
+
   description:
-    "Discover premium fashion at CO-PROFILES. Curated collections of luxury apparel, accessories, and bespoke designs crafted for the modern individual.",
+    "Discover premium fashion at CO-PROFILES. Curated collections of luxury apparel and timeless lifestyle experiences.",
+
+  metadataBase: new URL(BASE_URL),
+
   keywords: [
-    "luxury fashion",
-    "premium clothing",
-    "designer wear",
+    "Luxury",
+    "Fashion",
     "CO-PROFILES",
-    "fashion brand",
-    "streetwear",
-    "ethical fashion",
-    "made in India",
+    "Designer",
+    "Premium",
+    "Streetwear",
+    "Lifestyle",
+    "India",
   ],
+
   authors: [{ name: "SQROCK IT Solutions" }],
   creator: "SQROCK IT Solutions",
   publisher: "SQROCK IT Solutions",
-  metadataBase: new URL(BASE_URL),
+
   openGraph: {
     type: "website",
     locale: "en_IN",
     siteName: "CO-PROFILES",
     title: "CO-PROFILES — Luxury Fashion & Lifestyle",
     description:
-      "Dress in your story. Explore our premium collections of luxury apparel and accessories.",
+      "Premium fashion crafted with elegance and timeless design.",
     url: BASE_URL,
   },
+
   twitter: {
     card: "summary_large_image",
     title: "CO-PROFILES",
     description:
-      "Dress in your story. Premium fashion crafted for the modern individual.",
+      "Premium fashion crafted with elegance and timeless design.",
   },
+
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
   },
 };
 
@@ -84,22 +89,30 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         "h-full antialiased",
         playfair.variable,
-        inter.variable,
-        jetbrainsMono.variable,
+        manrope.variable,
+        jetbrainsMono.variable
       )}
     >
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="dark"
-        enableSystem={false}
-        disableTransitionOnChange
-      >
-        <body className="min-h-full flex flex-col">{children}</body>
-      </ThemeProvider>
-      <Toaster richColors position="top-right" />
+      <body className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+
+          <Toaster
+            richColors
+            position="top-right"
+            theme="dark"
+          />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

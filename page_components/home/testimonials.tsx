@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { motion } from "framer-motion"
 
@@ -6,69 +6,105 @@ const testimonials = [
   {
     name: "Rahul Sharma",
     role: "Full Stack Intern → Developer",
-    text: "The mentorship and real projects at SQROCK transformed my career. I got a full-time offer right after my internship.",
+    text: "The mentorship and real projects at SQROCK transformed my career. I received a full-time offer immediately after completing my internship.",
   },
   {
     name: "Priya Patel",
     role: "UI/UX Intern",
-    text: "Working on real client projects gave me portfolio pieces that helped me land multiple job offers.",
+    text: "Working on real client projects helped me build a strong portfolio that attracted multiple job opportunities.",
   },
   {
     name: "Amit Kumar",
     role: "AI Developer Intern",
-    text: "The certificate from SQROCK opened doors I never thought possible. Highly recommended for serious developers.",
+    text: "The experience and certification from SQROCK gave me confidence and opened new career opportunities.",
   },
   {
     name: "Neha Singh",
     role: "Frontend Intern",
-    text: "Best decision I made in college. The skills I learned here are exactly what the industry demands.",
+    text: "One of the best learning experiences of my college life. The skills I gained are directly relevant to the industry.",
   },
 ]
 
 export function Testimonials() {
   return (
-    <section className="py-32 px-6 bg-[#050505] overflow-hidden">
-      <div className="max-w-7xl mx-auto mb-16">
+    <section className="relative overflow-hidden bg-black py-32 px-6">
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#CD7F32]/10 via-transparent to-transparent pointer-events-none" />
+
+      {/* Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="select-none text-[14vw] font-black uppercase tracking-tight text-[#CD7F32]/5">
+          SUCCESS
+        </span>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto mb-20">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Student Success</span>
-          <h2 className="font-serif text-5xl md:text-8xl font-bold tracking-tighter text-white mt-4">
+          <span className="block text-xs uppercase tracking-[0.35em] text-[#CD7F32]">
+            STUDENT SUCCESS
+          </span>
+
+          <h2 className="mt-4 font-serif text-5xl md:text-8xl font-bold tracking-tight text-[#CD7F32]">
             Student
             <br />
-            <span className="text-white/40">Success</span>
+            <span className="text-[#CD7F32]/40">
+              Success
+            </span>
           </h2>
-          <div className="w-16 h-px bg-gold/50 mx-auto mt-6" />
+
+          <div className="mx-auto mt-6 h-px w-20 bg-[#CD7F32]/50" />
+
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-8 text-white/70">
+            Hear from students who transformed their careers through
+            internships, mentorship, and real-world project experience.
+          </p>
         </motion.div>
       </div>
 
+      {/* Marquee Testimonials */}
       <div className="relative overflow-hidden">
-        <div className="flex animate-marquee gap-8" style={{ width: "max-content" }}>
-          {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
-            <div
-              key={idx}
-              className="w-[400px] p-8 border border-white/10 bg-luxury-bg/50 backdrop-blur-sm inline-block whitespace-normal flex-shrink-0"
-            >
-              <div className="font-serif text-7xl leading-none text-gold/20 mb-4 tracking-tighter">
-                &rdquo;
-              </div>
-              <p className="text-white/60 text-base leading-relaxed mb-6 font-sans">
-                {t.text}
-              </p>
-              <div className="border-t border-white/10 pt-4">
-                <p className="font-sans font-bold uppercase text-sm tracking-widest text-white">
-                  {t.name}
+        <div
+          className="flex gap-8 animate-marquee"
+          style={{ width: "max-content" }}
+        >
+          {[...testimonials, ...testimonials, ...testimonials].map(
+            (testimonial, index) => (
+              <div
+                key={index}
+                className="w-[380px] flex-shrink-0 rounded-2xl border border-[#CD7F32]/15 bg-[#0A0A0A] p-8 backdrop-blur-xl transition-all duration-300 hover:border-[#CD7F32]/40 hover:shadow-[0_0_30px_rgba(205,127,50,0.12)]"
+              >
+                {/* Quote */}
+                <div className="mb-4 font-serif text-7xl leading-none text-[#CD7F32]/20">
+                  ”
+                </div>
+
+                {/* Testimonial */}
+                <p className="mb-8 text-base leading-7 text-white/65">
+                  {testimonial.text}
                 </p>
-                <p className="text-white/30 text-xs font-sans uppercase tracking-widest mt-1">
-                  {t.role}
-                </p>
+
+                {/* Divider */}
+                <div className="border-t border-[#CD7F32]/10 pt-5">
+                  <h3 className="font-serif text-lg font-bold text-[#CD7F32]">
+                    {testimonial.name}
+                  </h3>
+
+                  <p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/40">
+                    {testimonial.role}
+                  </p>
+                </div>
+
+                {/* Accent Line */}
+                <div className="mt-5 h-px w-12 bg-[#CD7F32]/30 transition-all duration-300 hover:w-20 hover:bg-[#CD7F32]" />
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
     </section>

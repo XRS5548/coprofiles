@@ -1,53 +1,117 @@
-"use client"
+ "use client"
 
 import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 
 const reasons = [
-  { number: "01", title: "Real Projects", description: "Work on production-ready applications used by real clients and users." },
-  { number: "02", title: "Certification", description: "Earn industry-recognized certificates upon successful completion." },
-  { number: "03", title: "Mentorship", description: "Learn from senior engineers and industry experts 1-on-1." },
-  { number: "04", title: "Placement", description: "Top performers get direct job offers from SQROCK." },
+  {
+    number: "01",
+    title: "Real Projects",
+    description:
+      "Work on production-ready applications used by real clients and users.",
+  },
+  {
+    number: "02",
+    title: "Certification",
+    description:
+      "Earn industry-recognized certificates upon successful completion.",
+  },
+  {
+    number: "03",
+    title: "Mentorship",
+    description:
+      "Learn from senior engineers and industry experts through guided mentorship.",
+  },
+  {
+    number: "04",
+    title: "Placement",
+    description:
+      "Top-performing interns receive direct job opportunities from SQROCK.",
+  },
 ]
 
 export function WhyJoinSection() {
   const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.2 })
+
+  const isInView = useInView(ref, {
+    once: true,
+    amount: 0.2,
+  })
 
   return (
-    <section id="about" className="py-32 px-6 bg-[#050505]" ref={ref}>
-      <div className="max-w-7xl mx-auto">
+    <section
+      id="about"
+      ref={ref}
+      className="relative overflow-hidden bg-black py-32 px-6"
+    >
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#CD7F32]/10 via-transparent to-transparent pointer-events-none" />
+
+      {/* Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="select-none text-[14vw] font-black uppercase tracking-tight text-[#CD7F32]/5">
+          SQROCK
+        </span>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-16"
+          transition={{
+            duration: 0.6,
+            ease: "easeOut",
+          }}
+          className="mb-20"
         >
-          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Why Choose Us</span>
-          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-white mt-4">
+          <span className="block text-xs uppercase tracking-[0.35em] text-[#CD7F32]">
+            WHY CHOOSE US
+          </span>
+
+          <h2 className="mt-4 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#CD7F32]">
             Why Join SQROCK
           </h2>
-          <div className="w-16 h-px bg-gold/50 mt-6" />
+
+          <div className="mt-6 h-px w-20 bg-[#CD7F32]/50" />
+
+          <p className="mt-8 max-w-2xl text-lg leading-8 text-white/70">
+            Gain practical experience, work on real-world projects, earn
+            certifications, and build a strong foundation for your future
+            career.
+          </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        {/* Cards */}
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {reasons.map((reason, index) => (
             <motion.div
               key={reason.number}
-              initial={{ opacity: 0, x: -30 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.05 }}
-              className="border-l border-white/10 pl-6 hover:border-gold/50 transition-colors duration-500"
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+              }}
+              className="group rounded-2xl border border-[#CD7F32]/15 bg-[#0A0A0A] p-8 transition-all duration-300 hover:border-[#CD7F32]/40 hover:shadow-[0_0_30px_rgba(205,127,50,0.12)]"
             >
-              <div className="font-serif text-8xl md:text-9xl font-bold text-white/[0.04] leading-none mb-4">
+              {/* Large Number */}
+              <div className="mb-4 font-serif text-7xl md:text-8xl font-bold leading-none text-[#CD7F32]/10 transition-all duration-300 group-hover:text-[#CD7F32]/20">
                 {reason.number}
               </div>
-              <h3 className="font-serif text-3xl font-bold tracking-tight text-white mb-3">
+
+              {/* Title */}
+              <h3 className="mb-4 font-serif text-3xl font-bold tracking-tight text-[#CD7F32]">
                 {reason.title}
               </h3>
-              <p className="text-white/40 text-base leading-relaxed font-sans">
+
+              {/* Description */}
+              <p className="text-base leading-7 text-white/65">
                 {reason.description}
               </p>
+
+              {/* Bottom Line */}
+              <div className="mt-6 h-px w-12 bg-[#CD7F32]/30 transition-all duration-300 group-hover:w-20 group-hover:bg-[#CD7F32]" />
             </motion.div>
           ))}
         </div>

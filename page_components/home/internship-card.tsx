@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 interface InternshipCardProps {
   id: number
@@ -32,65 +32,92 @@ export function InternshipCard({
   return (
     <div
       onClick={handleApplyClick}
-      className="group p-8 border border-white/10 bg-white/[0.02] transition-all duration-300 hover:bg-white hover:text-luxury-bg cursor-pointer"
+      className="group relative overflow-hidden rounded-2xl border border-[#CD7F32]/15 bg-[#0A0A0A] p-8 cursor-pointer transition-all duration-500 hover:border-[#CD7F32]/40 hover:shadow-[0_0_35px_rgba(205,127,50,0.15)]"
     >
-      <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 tracking-widest font-sans">
-        {String(index + 1).padStart(2, "0")}
-      </span>
+      {/* Glow Effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#CD7F32]/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-      <h3 className="font-serif text-2xl font-bold tracking-tight text-white group-hover:text-luxury-bg transition-colors duration-300 mt-2 mb-6">
+      {/* Number */}
+      <div className="relative z-10 flex items-center justify-between mb-6">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#CD7F32]/60">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+
+        {certificate && (
+          <span className="rounded-full border border-[#CD7F32]/20 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#CD7F32]">
+            Certified
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <h3 className="relative z-10 font-serif text-3xl font-bold tracking-tight text-[#CD7F32] mb-6">
         {title}
       </h3>
 
-      <div className="space-y-2 mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
+      {/* Details */}
+      <div className="relative z-10 space-y-4 mb-8">
+        <div className="flex justify-between border-b border-[#CD7F32]/10 pb-2">
+          <span className="text-xs uppercase tracking-[0.2em] text-white/40">
             Duration
           </span>
-          <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
+
+          <span className="text-sm text-white/75">
             {duration}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
+
+        <div className="flex justify-between border-b border-[#CD7F32]/10 pb-2">
+          <span className="text-xs uppercase tracking-[0.2em] text-white/40">
             Location
           </span>
-          <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
+
+          <span className="text-sm text-white/75">
             {location}
           </span>
         </div>
+
         {certificate && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
+          <div className="flex justify-between border-b border-[#CD7F32]/10 pb-2">
+            <span className="text-xs uppercase tracking-[0.2em] text-white/40">
               Certificate
             </span>
-            <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
+
+            <span className="text-sm text-[#CD7F32]">
               Available
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8">
+      {/* Skills */}
+      <div className="relative z-10 flex flex-wrap gap-2 mb-8">
         {skills.map((skill) => (
           <span
             key={skill}
-            className="px-3 py-1 text-xs uppercase tracking-widest border border-white/20 text-white/60 group-hover:border-luxury-bg/30 group-hover:text-luxury-bg/70 transition-colors duration-300 font-sans"
+            className="rounded-full border border-[#CD7F32]/20 px-3 py-1 text-[11px] uppercase tracking-[0.15em] text-white/60 transition-all duration-300 group-hover:border-[#CD7F32]/40 group-hover:text-[#CD7F32]"
           >
             {skill}
           </span>
         ))}
       </div>
 
-      <div className="w-full py-3 text-sm uppercase tracking-[0.15em] border border-white/20 text-white/60 bg-transparent group-hover:border-luxury-bg group-hover:text-luxury-bg transition-colors duration-300 text-center font-sans font-medium">
-        {isLoggedIn ? "Apply Now" : "Login to Apply"}
-      </div>
+      {/* CTA Button */}
+      <button
+        className="relative z-10 w-full rounded-xl bg-[#CD7F32] py-3 text-sm font-semibold uppercase tracking-[0.15em] text-black transition-all duration-300 hover:bg-[#D89247] hover:shadow-[0_0_20px_rgba(205,127,50,0.35)]"
+      >
+        {isLoggedIn ? "Apply Now" : "Login To Apply"}
+      </button>
 
+      {/* Footer */}
       {!isLoggedIn && (
-        <p className="text-xs text-center mt-3 text-white/20 group-hover:text-luxury-bg/40 transition-colors duration-300 uppercase tracking-widest font-sans">
-          Login required to apply
+        <p className="relative z-10 mt-4 text-center text-[10px] uppercase tracking-[0.2em] text-white/35">
+          Authentication Required
         </p>
       )}
+
+      {/* Bottom Accent Line */}
+      <div className="relative z-10 mt-6 h-px w-12 bg-[#CD7F32]/30 transition-all duration-500 group-hover:w-24 group-hover:bg-[#CD7F32]" />
     </div>
   )
 }

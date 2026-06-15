@@ -1,4 +1,4 @@
-"use client"
+ "use client"
 
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
@@ -17,88 +17,103 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10)
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
   }, [])
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
-          ? "bg-luxury-bg/95 backdrop-blur-md border-b border-white/10"
+          ? "bg-black/95 backdrop-blur-xl border-b border-[#CD7F32]/20 shadow-[0_0_30px_rgba(205,127,50,0.08)]"
           : "bg-transparent"
       }`}
     >
       <div className="mx-auto max-w-7xl px-6">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex h-20 items-center justify-between">
+          
+          {/* Logo */}
           <Link
             href="/"
-            className="font-serif text-2xl font-bold tracking-tight text-white"
+            className="font-serif text-3xl font-bold tracking-wide text-[#CD7F32]"
           >
             CO-PROFILES
           </Link>
 
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-sm text-white/60 hover:text-white transition-colors duration-300 uppercase tracking-[0.15em] font-sans"
+                className="text-sm uppercase tracking-[0.18em] text-white/70 transition-all duration-300 hover:text-[#CD7F32]"
               >
                 {item.label}
               </Link>
             ))}
           </div>
 
+          {/* Desktop Buttons */}
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="px-5 py-2 text-sm text-white/80 border border-white/20 font-sans uppercase tracking-[0.15em] hover:bg-white hover:text-luxury-bg transition-all duration-300"
+              className="rounded-lg border border-[#CD7F32]/20 px-5 py-2 text-sm font-medium uppercase tracking-[0.15em] text-[#CD7F32] transition-all duration-300 hover:border-[#CD7F32] hover:bg-[#CD7F32] hover:text-black"
             >
               Sign In
             </Link>
+
             <Link
               href="/register"
-              className="px-5 py-2 text-sm bg-white text-luxury-bg font-sans uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300"
+              className="rounded-lg bg-[#CD7F32] px-5 py-2 text-sm font-semibold uppercase tracking-[0.15em] text-black transition-all duration-300 hover:bg-[#D89247] hover:shadow-[0_0_20px_rgba(205,127,50,0.35)]"
             >
               Apply Now
             </Link>
           </div>
 
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-white"
+            className="md:hidden text-[#CD7F32]"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-white/10 pb-6">
+          <div className="md:hidden border-t border-[#CD7F32]/10 bg-black/95 backdrop-blur-xl pb-6 pt-4">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="block py-3 text-white/60 hover:text-white text-sm uppercase tracking-[0.15em] font-sans transition-colors duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="block py-3 text-sm uppercase tracking-[0.15em] text-white/70 transition-all duration-300 hover:text-[#CD7F32]"
               >
                 {item.label}
               </Link>
             ))}
-            <div className="flex flex-col gap-3 pt-4">
+
+            <div className="flex flex-col gap-3 pt-5">
               <Link
                 href="/login"
-                className="w-full px-5 py-2 text-sm text-center text-white/80 border border-white/20 font-sans uppercase tracking-[0.15em] hover:bg-white hover:text-luxury-bg transition-all duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full rounded-lg border border-[#CD7F32]/20 px-5 py-3 text-center text-sm uppercase tracking-[0.15em] text-[#CD7F32] transition-all duration-300 hover:border-[#CD7F32] hover:bg-[#CD7F32] hover:text-black"
               >
                 Sign In
               </Link>
+
               <Link
                 href="/register"
-                className="w-full px-5 py-2 text-sm text-center bg-white text-luxury-bg font-sans uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full rounded-lg bg-[#CD7F32] px-5 py-3 text-center text-sm font-semibold uppercase tracking-[0.15em] text-black transition-all duration-300 hover:bg-[#D89247]"
               >
                 Apply Now
               </Link>

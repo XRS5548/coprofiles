@@ -1,65 +1,135 @@
-"use client"
+ "use client"
 
 import { motion } from "framer-motion"
-import { Brain, Sparkles, ShoppingBag, Cog, TrendingUp, BarChart3 } from "lucide-react"
+import {
+  Brain,
+  Sparkles,
+  ShoppingBag,
+  Cog,
+  TrendingUp,
+  BarChart3,
+} from "lucide-react"
 
 const futureFeatures = [
-  { icon: Brain, title: "AI Candidate Analysis", description: "Intelligent candidate evaluation using machine learning algorithms." },
-  { icon: Sparkles, title: "Smart Recommendations", description: "AI-powered hiring recommendations based on company needs." },
-  { icon: ShoppingBag, title: "Freelancer Marketplace", description: "Connect with freelancers and service providers seamlessly." },
-  { icon: Cog, title: "Advanced Automation", description: "End-to-end hiring automation with custom workflows." },
-  { icon: TrendingUp, title: "Performance Intelligence", description: "Predictive analytics for student and candidate performance." },
-  { icon: BarChart3, title: "AI Exam Analytics", description: "Deep insights into exam patterns and candidate capabilities." },
+  {
+    icon: Brain,
+    title: "AI Candidate Analysis",
+    description:
+      "Intelligent candidate evaluation using advanced machine learning algorithms and behavioral insights.",
+  },
+  {
+    icon: Sparkles,
+    title: "Smart Recommendations",
+    description:
+      "AI-powered hiring recommendations tailored to company goals and talent requirements.",
+  },
+  {
+    icon: ShoppingBag,
+    title: "Freelancer Marketplace",
+    description:
+      "Connect with freelancers, agencies, and service providers through a unified ecosystem.",
+  },
+  {
+    icon: Cog,
+    title: "Advanced Automation",
+    description:
+      "Automate hiring workflows, screening processes, onboarding, and candidate communication.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Performance Intelligence",
+    description:
+      "Predictive analytics to identify top-performing candidates and future talent trends.",
+  },
+  {
+    icon: BarChart3,
+    title: "AI Exam Analytics",
+    description:
+      "Gain deep insights into exam performance, strengths, weaknesses, and candidate potential.",
+  },
 ]
 
 export function FutureVision() {
   return (
-    <section className="py-32 px-6 bg-background">
-      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
+    <section className="relative overflow-hidden bg-black py-32 px-6">
+      {/* Background Glow */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#CD7F32]/10 via-transparent to-transparent pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto">
+      {/* Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="select-none text-[14vw] font-black uppercase tracking-tight text-[#CD7F32]/5">
+          FUTURE
+        </span>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Heading */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="inline-block font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
-            Coming Soon
+          <span className="block text-xs uppercase tracking-[0.35em] text-[#CD7F32]">
+            COMING SOON
           </span>
-          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
+
+          <h2 className="mt-4 font-serif text-5xl md:text-7xl font-bold tracking-tight text-[#CD7F32]">
             Future Vision
           </h2>
-          <div className="w-16 h-px bg-foreground mx-auto mt-6" />
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mt-6 font-serif">
-            We&apos;re building the future of intelligent hiring with AI-powered tools and automation.
+
+          <div className="mx-auto mt-6 h-px w-20 bg-[#CD7F32]/50" />
+
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-8 text-white/70">
+            Building the next generation of intelligent hiring through AI,
+            automation, predictive analytics, and advanced talent discovery.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {futureFeatures.map((feature, index) => (
             <motion.div
               key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="group border-2 border-foreground p-8 bg-background transition-colors duration-100 hover:bg-foreground hover:text-background"
+              transition={{
+                duration: 0.5,
+                delay: index * 0.08,
+              }}
+              className="group rounded-2xl border border-[#CD7F32]/15 bg-[#0A0A0A] p-8 transition-all duration-300 hover:border-[#CD7F32]/40 hover:shadow-[0_0_30px_rgba(205,127,50,0.12)]"
             >
-              <feature.icon size={24} className="text-foreground group-hover:text-background transition-colors duration-100 mb-6" />
-              <h3 className="font-serif text-xl font-bold tracking-tight text-foreground group-hover:text-background transition-colors duration-100 mb-3">
+              {/* Icon */}
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-[#CD7F32]/20 bg-[#111111]">
+                <feature.icon
+                  size={26}
+                  className="text-[#CD7F32]"
+                />
+              </div>
+
+              {/* Title */}
+              <h3 className="mb-4 font-serif text-2xl font-bold text-[#CD7F32]">
                 {feature.title}
               </h3>
-              <p className="text-muted-foreground group-hover:text-background/80 transition-colors duration-100 font-serif">
+
+              {/* Description */}
+              <p className="leading-7 text-white/65">
                 {feature.description}
               </p>
-              <div className="mt-4 flex items-center gap-2">
-                <div className="w-2 h-2 bg-foreground group-hover:bg-background transition-colors duration-100" />
-                <span className="font-mono text-xs text-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+
+              {/* Status */}
+              <div className="mt-6 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-[#CD7F32]" />
+
+                <span className="text-xs uppercase tracking-[0.25em] text-white/50">
                   In Development
                 </span>
               </div>
+
+              {/* Bottom Accent */}
+              <div className="mt-6 h-px w-12 bg-[#CD7F32]/30 transition-all duration-300 group-hover:w-24 group-hover:bg-[#CD7F32]" />
             </motion.div>
           ))}
         </div>

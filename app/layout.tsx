@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from 'sonner';
@@ -11,7 +11,7 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
@@ -29,21 +29,20 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL
 
 export const metadata: Metadata = {
   title: {
-    default: "CO-PROFILES by SQROCK IT Solutions — Internships & Tech Careers",
+    default: "CO-PROFILES — Luxury Fashion & Lifestyle",
     template: "%s | CO-PROFILES",
   },
   description:
-    "CO-PROFILES by SQROCK IT Solutions bridges the gap between academic learning and industry. Apply for internships, get certified, and launch your tech career.",
+    "Discover premium fashion at CO-PROFILES. Curated collections of luxury apparel, accessories, and bespoke designs crafted for the modern individual.",
   keywords: [
-    "internships",
-    "tech careers",
-    "SQROCK",
+    "luxury fashion",
+    "premium clothing",
+    "designer wear",
     "CO-PROFILES",
-    "student internships",
-    "IT training",
-    "hiring",
-    "certifications",
-    "Noida internships",
+    "fashion brand",
+    "streetwear",
+    "ethical fashion",
+    "made in India",
   ],
   authors: [{ name: "SQROCK IT Solutions" }],
   creator: "SQROCK IT Solutions",
@@ -53,16 +52,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: "CO-PROFILES",
-    title: "CO-PROFILES by SQROCK IT Solutions — Internships & Tech Careers",
+    title: "CO-PROFILES — Luxury Fashion & Lifestyle",
     description:
-      "Build your tech career with real-world internships and industry mentorship. Apply now at CO-PROFILES.",
+      "Dress in your story. Explore our premium collections of luxury apparel and accessories.",
     url: BASE_URL,
   },
   twitter: {
     card: "summary_large_image",
-    title: "CO-PROFILES by SQROCK IT Solutions",
+    title: "CO-PROFILES",
     description:
-      "Real internships, real projects, real careers. Join CO-PROFILES today.",
+      "Dress in your story. Premium fashion crafted for the modern individual.",
   },
   robots: {
     index: true,
@@ -88,14 +87,14 @@ export default function RootLayout({
       className={cn(
         "h-full antialiased",
         playfair.variable,
-        sourceSerif.variable,
+        inter.variable,
         jetbrainsMono.variable,
       )}
     >
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="dark"
+        enableSystem={false}
         disableTransitionOnChange
       >
         <body className="min-h-full flex flex-col">{children}</body>

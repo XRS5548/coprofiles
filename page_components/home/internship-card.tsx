@@ -32,39 +32,39 @@ export function InternshipCard({
   return (
     <div
       onClick={handleApplyClick}
-      className="group p-8 border border-foreground bg-background transition-colors duration-100 hover:bg-foreground hover:text-background cursor-pointer"
+      className="group p-8 border border-white/10 bg-white/[0.02] transition-all duration-300 hover:bg-white hover:text-luxury-bg cursor-pointer"
     >
-      <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 tracking-widest">
+      <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 tracking-widest font-sans">
         {String(index + 1).padStart(2, "0")}
       </span>
 
-      <h3 className="font-serif text-2xl font-bold tracking-tight text-foreground group-hover:text-background transition-colors duration-100 mt-2 mb-6">
+      <h3 className="font-serif text-2xl font-bold tracking-tight text-white group-hover:text-luxury-bg transition-colors duration-300 mt-2 mb-6">
         {title}
       </h3>
 
       <div className="space-y-2 mb-6">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+          <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
             Duration
           </span>
-          <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+          <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
             {duration}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+          <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
             Location
           </span>
-          <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+          <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
             {location}
           </span>
         </div>
         {certificate && (
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+            <span className="text-xs text-white/30 group-hover:text-luxury-bg/60 transition-colors duration-300 uppercase tracking-widest font-sans">
               Certificate
             </span>
-            <span className="font-mono text-xs text-foreground group-hover:text-background transition-colors duration-100">
+            <span className="text-xs text-white/70 group-hover:text-luxury-bg/80 transition-colors duration-300 font-sans">
               Available
             </span>
           </div>
@@ -75,19 +75,19 @@ export function InternshipCard({
         {skills.map((skill) => (
           <span
             key={skill}
-            className="px-3 py-1 font-mono text-xs uppercase tracking-widest border border-foreground text-foreground group-hover:border-background group-hover:text-background transition-colors duration-100"
+            className="px-3 py-1 text-xs uppercase tracking-widest border border-white/20 text-white/60 group-hover:border-luxury-bg/30 group-hover:text-luxury-bg/70 transition-colors duration-300 font-sans"
           >
             {skill}
           </span>
         ))}
       </div>
 
-      <div className="w-full py-3 font-mono text-sm uppercase tracking-widest border-2 border-foreground text-foreground bg-transparent group-hover:border-background group-hover:text-background transition-colors duration-100 text-center">
+      <div className="w-full py-3 text-sm uppercase tracking-[0.15em] border border-white/20 text-white/60 bg-transparent group-hover:border-luxury-bg group-hover:text-luxury-bg transition-colors duration-300 text-center font-sans font-medium">
         {isLoggedIn ? "Apply Now" : "Login to Apply"}
       </div>
 
       {!isLoggedIn && (
-        <p className="font-mono text-xs text-center mt-3 text-muted-foreground group-hover:text-background/60 transition-colors duration-100 uppercase tracking-widest">
+        <p className="text-xs text-center mt-3 text-white/20 group-hover:text-luxury-bg/40 transition-colors duration-300 uppercase tracking-widest font-sans">
           Login required to apply
         </p>
       )}

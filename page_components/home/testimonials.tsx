@@ -1,3 +1,7 @@
+"use client"
+
+import { motion } from "framer-motion"
+
 const testimonials = [
   {
     name: "Rahul Sharma",
@@ -23,35 +27,43 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-32 px-6 bg-background">
-      {/* Thick rule */}
-      <div className="h-1 bg-foreground mb-32" />
-
+    <section className="py-32 px-6 bg-[#050505] overflow-hidden">
       <div className="max-w-7xl mx-auto mb-16">
-        <h2 className="font-serif text-5xl md:text-8xl font-bold tracking-tighter text-foreground text-center">
-          Student<br />Success
-        </h2>
-        <div className="w-16 h-px bg-foreground mx-auto mt-6" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Student Success</span>
+          <h2 className="font-serif text-5xl md:text-8xl font-bold tracking-tighter text-white mt-4">
+            Student
+            <br />
+            <span className="text-white/40">Success</span>
+          </h2>
+          <div className="w-16 h-px bg-gold/50 mx-auto mt-6" />
+        </motion.div>
       </div>
 
       <div className="relative overflow-hidden">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...testimonials, ...testimonials].map((t, idx) => (
+        <div className="flex animate-marquee gap-8" style={{ width: "max-content" }}>
+          {[...testimonials, ...testimonials, ...testimonials].map((t, idx) => (
             <div
               key={idx}
-              className="w-[380px] md:w-[420px] mx-6 p-8 border border-foreground bg-background inline-block whitespace-normal flex-shrink-0"
+              className="w-[400px] p-8 border border-white/10 bg-luxury-bg/50 backdrop-blur-sm inline-block whitespace-normal flex-shrink-0"
             >
-              <div className="font-serif text-7xl leading-none text-foreground/20 mb-4 tracking-tighter">
+              <div className="font-serif text-7xl leading-none text-gold/20 mb-4 tracking-tighter">
                 &rdquo;
               </div>
-              <p className="text-foreground/80 text-base leading-relaxed mb-6 font-serif italic">
+              <p className="text-white/60 text-base leading-relaxed mb-6 font-sans">
                 {t.text}
               </p>
-              <div className="border-t border-foreground/20 pt-4">
-                <p className="font-mono font-bold uppercase text-sm tracking-widest text-foreground">
+              <div className="border-t border-white/10 pt-4">
+                <p className="font-sans font-bold uppercase text-sm tracking-widest text-white">
                   {t.name}
                 </p>
-                <p className="text-muted-foreground text-xs font-mono uppercase tracking-widest mt-1">
+                <p className="text-white/30 text-xs font-sans uppercase tracking-widest mt-1">
                   {t.role}
                 </p>
               </div>

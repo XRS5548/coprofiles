@@ -15,24 +15,19 @@ export function WhyJoinSection() {
   const isInView = useInView(ref, { once: true, amount: 0.2 })
 
   return (
-    <section id="about" className="py-32 px-6 bg-background" ref={ref}>
-      {/* Thick rule */}
-      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
-
+    <section id="about" className="py-32 px-6 bg-[#050505]" ref={ref}>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-16"
         >
-          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
-            Why Choose Us
-          </p>
-          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
+          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Why Choose Us</span>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-white mt-4">
             Why Join SQROCK
           </h2>
-          <div className="w-16 h-px bg-foreground mt-6" />
+          <div className="w-16 h-px bg-gold/50 mt-6" />
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -41,16 +36,16 @@ export function WhyJoinSection() {
               key={reason.number}
               initial={{ opacity: 0, x: -30 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="border-l-2 border-foreground pl-6"
+              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.05 }}
+              className="border-l border-white/10 pl-6 hover:border-gold/50 transition-colors duration-500"
             >
-              <div className="font-serif text-8xl md:text-9xl font-bold text-foreground/10 leading-none mb-4">
+              <div className="font-serif text-8xl md:text-9xl font-bold text-white/[0.04] leading-none mb-4">
                 {reason.number}
               </div>
-              <h3 className="font-serif text-3xl font-bold tracking-tight text-foreground mb-3">
+              <h3 className="font-serif text-3xl font-bold tracking-tight text-white mb-3">
                 {reason.title}
               </h3>
-              <p className="text-muted-foreground text-base leading-relaxed font-serif">
+              <p className="text-white/40 text-base leading-relaxed font-sans">
                 {reason.description}
               </p>
             </motion.div>

@@ -42,7 +42,6 @@ export default function RegisterPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: formData.email, password: formData.password }),
         })
-
         router.push(loginResponse.ok ? "/dashboard" : "/login")
       } else {
         const data = await response.json()
@@ -56,59 +55,54 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background text-foreground px-4 py-8">
-      {/* Background watermark */}
-      <div className="pointer-events-none absolute inset-0 select-none">
-        <div className="absolute left-1/2 top-10 h-px w-[90vw] -translate-x-1/2 bg-foreground/30" />
-        <div className="absolute -left-16 bottom-24 h-72 w-72 border-2 border-foreground/20" />
-        <div className="absolute -right-20 top-20 h-80 w-80 border-2 border-foreground/10" />
-        <div className="absolute inset-x-0 top-1/3 text-center text-[18vw] font-bold uppercase leading-none tracking-tighter text-foreground/[0.03]">
-          CO-PROFILES
-        </div>
+    <main className="relative min-h-screen overflow-hidden bg-luxury-bg">
+      <div className="absolute inset-0 bg-gradient-to-b from-gold/[0.03] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-1/3 text-center text-[18vw] font-bold uppercase leading-none tracking-tighter text-white/[0.02] pointer-events-none select-none">
+        CO-PROFILES
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-7xl flex-col">
-        <Link href="/" className="w-fit text-2xl font-bold tracking-tighter text-foreground">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6">
+        <Link href="/" className="w-fit pt-8 text-2xl font-bold tracking-tight text-white font-serif">
           CO-PROFILES
         </Link>
 
-        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid flex-1 items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] py-12">
           <section>
-            <p className="mb-4 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans mb-4 block">
               Apply Now
-            </p>
-            <h1 className="max-w-3xl font-serif text-5xl font-bold uppercase leading-[0.95] tracking-tighter text-foreground md:text-7xl">
+            </span>
+            <h1 className="max-w-3xl font-serif text-5xl font-bold leading-[0.95] tracking-tighter text-white md:text-7xl">
               Build Your Profile
             </h1>
-            <p className="mt-6 max-w-xl font-serif text-lg leading-7 text-muted-foreground">
+            <p className="mt-6 max-w-xl text-base leading-7 text-white/40 font-sans">
               Create your account to apply for internships, showcase your work, and start your hiring journey with CO-PROFILES.
             </p>
           </section>
 
-          <section className="border-2 border-foreground bg-background p-8">
+          <section className="border border-white/10 bg-white/[0.02] p-8 backdrop-blur-sm">
             <div className="mb-8">
-              <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Register</p>
-              <h2 className="mt-2 font-serif text-3xl font-bold uppercase tracking-tighter text-foreground">Sign Up</h2>
+              <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Register</span>
+              <h2 className="mt-2 font-serif text-3xl font-bold tracking-tighter text-white">Sign Up</h2>
             </div>
 
             {error && (
-              <div className="mb-5 border-2 border-foreground bg-foreground p-3">
-                <p className="text-center font-mono text-xs tracking-widest text-background">{error}</p>
+              <div className="mb-5 border border-gold/30 bg-gold/10 p-3">
+                <p className="text-center text-xs tracking-widest text-gold font-sans">{error}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border-2 border-foreground bg-background py-3 pl-10 pr-4 font-serif text-foreground outline-none transition-colors duration-100 placeholder:text-muted-foreground/50 focus:bg-foreground focus:text-background"
+                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
                     placeholder="John Doe"
                     required
                   />
@@ -116,16 +110,16 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full border-2 border-foreground bg-background py-3 pl-10 pr-4 font-serif text-foreground outline-none transition-colors duration-100 placeholder:text-muted-foreground/50 focus:bg-foreground focus:text-background"
+                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
                     placeholder="john@example.com"
                     required
                   />
@@ -133,23 +127,23 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full border-2 border-foreground bg-background py-3 pl-10 pr-12 font-serif text-foreground outline-none transition-colors duration-100 placeholder:text-muted-foreground/50 focus:bg-foreground focus:text-background"
+                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-12 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
                     placeholder="Password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-100 hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors duration-300"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -158,16 +152,16 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="mb-2 block font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                <label className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/40 font-sans">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full border-2 border-foreground bg-background py-3 pl-10 pr-4 font-serif text-foreground outline-none transition-colors duration-100 placeholder:text-muted-foreground/50 focus:bg-foreground focus:text-background"
+                    className="w-full border border-white/20 bg-transparent py-3 pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-gold transition-colors duration-300 font-sans"
                     placeholder="Confirm password"
                     required
                   />
@@ -177,16 +171,16 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group flex w-full items-center justify-center gap-2 bg-foreground px-6 py-3 font-mono text-sm font-bold uppercase tracking-widest text-background transition-colors duration-100 hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                className="group flex w-full items-center justify-center gap-2 bg-white px-6 py-3 font-sans text-sm font-medium uppercase tracking-[0.15em] text-luxury-bg transition-colors duration-300 hover:bg-gold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? "Creating Account..." : "Sign Up"}
-                {!loading && <ArrowRight className="h-4 w-4 transition-transform duration-100 group-hover:translate-x-1" />}
+                {!loading && <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />}
               </button>
             </form>
 
-            <p className="mt-6 text-center font-serif text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-white/40 font-sans">
               Already have an account?{" "}
-              <Link href="/login" className="font-mono text-xs uppercase tracking-widest text-foreground underline transition-colors duration-100 hover:text-muted-foreground">
+              <Link href="/login" className="text-gold text-xs uppercase tracking-widest hover:text-gold-light transition-colors duration-300">
                 Sign in
               </Link>
             </p>

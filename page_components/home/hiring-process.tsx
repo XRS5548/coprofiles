@@ -19,50 +19,44 @@ export function HiringProcess() {
   const isInView = useInView(ref, { once: true, amount: 0.3 })
 
   return (
-    <section id="hiring-process" className="py-32 px-6 bg-background" ref={ref}>
-      {/* Thick rule */}
-      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
-
+    <section id="hiring-process" className="py-32 px-6 bg-luxury-bg" ref={ref}>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-16 text-center"
         >
-          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
-            Step by Step
-          </p>
-          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
+          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">Step by Step</span>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-white mt-4">
             Hiring Process
           </h2>
-          <div className="w-16 h-px bg-foreground mx-auto mt-6" />
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mt-6 font-serif">
+          <div className="w-16 h-px bg-gold/50 mx-auto mt-6" />
+          <p className="text-white/40 text-lg max-w-2xl mx-auto mt-6 font-sans">
             Your journey from application to full-time role at SQROCK.
           </p>
         </motion.div>
 
-        {/* Process steps */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-16">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="text-center"
+              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.05 }}
+              className="text-center group"
             >
-              <div className="w-16 h-16 mx-auto border-2 border-foreground flex items-center justify-center mb-4 bg-background group-hover:bg-foreground transition-colors duration-100">
-                <step.icon size={24} className="text-foreground" />
+              <div className="w-16 h-16 mx-auto border border-white/20 flex items-center justify-center mb-4 group-hover:border-gold/50 transition-colors duration-300">
+                <step.icon size={24} className="text-white/60 group-hover:text-gold transition-colors duration-300" />
               </div>
-              <span className="font-mono text-xs text-muted-foreground block mb-1 uppercase tracking-widest">
+              <span className="text-gold text-[10px] font-sans block mb-1 uppercase tracking-[0.2em]">
                 Step {index + 1}
               </span>
-              <span className="font-mono text-sm font-bold uppercase tracking-wider text-foreground block">
+              <span className="text-sm font-bold uppercase tracking-wider text-white font-sans block">
                 {step.title}
               </span>
               {step.description && (
-                <span className="font-serif text-xs text-muted-foreground mt-1 block">
+                <span className="text-xs text-white/30 mt-1 block font-sans">
                   {step.description}
                 </span>
               )}
@@ -74,25 +68,25 @@ export function HiringProcess() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="border-2 border-foreground p-8 mb-12 bg-foreground text-background"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="border border-gold/30 p-8 mb-12 bg-gradient-to-r from-gold/5 to-transparent"
         >
           <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
-            <div className="p-3 border-2 border-background">
-              <GraduationCap size={32} className="text-background" />
+            <div className="p-3 border border-gold/30">
+              <GraduationCap size={32} className="text-gold" />
             </div>
             <div className="flex-1">
-              <h3 className="font-serif text-2xl font-bold tracking-tight text-background mb-2">
+              <h3 className="font-serif text-2xl font-bold tracking-tight text-white mb-2">
                 Compulsory Examination
               </h3>
-              <p className="text-background/80 mb-4 font-serif">
+              <p className="text-white/50 mb-4 font-sans">
                 All applicants must pass the compulsory technical and aptitude exam. Only candidates who clear the exam will be eligible for the internship.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link href="/register" className="px-6 py-2 bg-background text-foreground font-mono text-sm uppercase tracking-widest hover:bg-transparent hover:text-background hover:outline hover:outline-2 hover:outline-background transition-none duration-0">
+                <Link href="/register" className="px-6 py-2 bg-white text-luxury-bg font-sans text-sm uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300">
                   Take Sample Exam
                 </Link>
-                <span className="px-6 py-2 border-2 border-background text-background font-mono text-sm uppercase tracking-widest transition-none duration-0">
+                <span className="px-6 py-2 border border-white/20 text-white/60 font-sans text-sm uppercase tracking-[0.15em] hover:border-white/40 transition-colors duration-300 cursor-default">
                   View Syllabus
                 </span>
               </div>
@@ -105,19 +99,19 @@ export function HiringProcess() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="border-2 border-foreground p-8"
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="border border-white/10 p-8 hover:border-white/20 transition-colors duration-300"
           >
             <div className="flex items-center gap-3 mb-4">
-              <Award size={24} className="text-foreground" />
-              <h3 className="font-serif text-xl font-bold tracking-tight text-foreground">
+              <Award size={24} className="text-gold" />
+              <h3 className="font-serif text-xl font-bold tracking-tight text-white">
                 Basic Certificate
               </h3>
             </div>
-            <p className="text-muted-foreground font-serif mb-4">
+            <p className="text-white/40 font-sans mb-4">
               Automatically generated upon internship completion. No additional steps required.
             </p>
-            <span className="inline-block px-3 py-1 border border-foreground text-foreground font-mono text-xs uppercase tracking-widest">
+            <span className="inline-block px-3 py-1 border border-white/20 text-white/40 font-sans text-xs uppercase tracking-widest">
               Auto-Generated
             </span>
           </motion.div>
@@ -125,21 +119,21 @@ export function HiringProcess() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.3, delay: 0.35 }}
-            className="border-2 border-foreground p-8"
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="border border-white/10 p-8 hover:border-white/20 transition-colors duration-300"
           >
             <div className="flex items-center gap-3 mb-4">
-              <Award size={24} className="text-foreground" />
-              <h3 className="font-serif text-xl font-bold tracking-tight text-foreground">
+              <Award size={24} className="text-gold" />
+              <h3 className="font-serif text-xl font-bold tracking-tight text-white">
                 Custom Certificate
               </h3>
             </div>
-            <p className="text-muted-foreground font-serif mb-4">
+            <p className="text-white/40 font-sans mb-4">
               Need a custom certificate with specific details? Email us your request.
             </p>
             <a
               href="mailto:hr@sqrock.cloud"
-              className="inline-flex items-center gap-2 px-4 py-2 border-2 border-foreground text-foreground font-mono text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-none duration-0"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-white/20 text-white/60 font-sans text-sm uppercase tracking-[0.15em] hover:bg-white hover:text-luxury-bg transition-all duration-300"
             >
               hr@sqrock.cloud
             </a>

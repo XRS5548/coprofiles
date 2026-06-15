@@ -17,24 +17,24 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-100 ${
-        isScrolled ? "bg-background border-b border-foreground" : "bg-background"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? "bg-luxury-bg/95 backdrop-blur-md border-b border-white/10"
+          : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="flex items-center justify-between h-20">
           <Link
             href="/"
-            className="font-serif text-2xl font-bold tracking-tight text-foreground"
+            className="font-serif text-2xl font-bold tracking-tight text-white"
           >
             CO-PROFILES
           </Link>
@@ -44,7 +44,7 @@ export function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-100 uppercase tracking-widest"
+                className="text-sm text-white/60 hover:text-white transition-colors duration-300 uppercase tracking-[0.15em] font-sans"
               >
                 {item.label}
               </Link>
@@ -54,13 +54,13 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="px-5 py-2 text-sm font-medium text-foreground border border-foreground hover:bg-foreground hover:text-background transition-colors duration-100 uppercase tracking-widest"
+              className="px-5 py-2 text-sm text-white/80 border border-white/20 font-sans uppercase tracking-[0.15em] hover:bg-white hover:text-luxury-bg transition-all duration-300"
             >
-              Login
+              Sign In
             </Link>
             <Link
               href="/register"
-              className="px-5 py-2 text-sm font-medium bg-foreground text-background hover:bg-background hover:text-foreground hover:border hover:border-foreground transition-colors duration-100 uppercase tracking-widest"
+              className="px-5 py-2 text-sm bg-white text-luxury-bg font-sans uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300"
             >
               Apply Now
             </Link>
@@ -68,20 +68,20 @@ export function Navbar() {
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-foreground"
+            className="md:hidden text-white"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-foreground">
+          <div className="md:hidden mt-4 pt-4 border-t border-white/10 pb-6">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="block py-3 text-base text-muted-foreground hover:text-foreground transition-colors duration-100 uppercase tracking-widest"
+                className="block py-3 text-white/60 hover:text-white text-sm uppercase tracking-[0.15em] font-sans transition-colors duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.label}
@@ -90,14 +90,14 @@ export function Navbar() {
             <div className="flex flex-col gap-3 pt-4">
               <Link
                 href="/login"
-                className="w-full px-5 py-2 text-sm font-medium text-center text-foreground border border-foreground hover:bg-foreground hover:text-background transition-colors duration-100 uppercase tracking-widest"
+                className="w-full px-5 py-2 text-sm text-center text-white/80 border border-white/20 font-sans uppercase tracking-[0.15em] hover:bg-white hover:text-luxury-bg transition-all duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Login
+                Sign In
               </Link>
               <Link
                 href="/register"
-                className="w-full px-5 py-2 text-sm font-medium text-center bg-foreground text-background hover:bg-background hover:text-foreground hover:border hover:border-foreground transition-colors duration-100 uppercase tracking-widest"
+                className="w-full px-5 py-2 text-sm text-center bg-white text-luxury-bg font-sans uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Apply Now

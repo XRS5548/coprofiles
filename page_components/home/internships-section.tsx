@@ -25,25 +25,22 @@ export function InternshipsSection() {
   }, [])
 
   return (
-    <section id="internships" className="py-32 px-6 bg-background" ref={ref}>
-      {/* Thick rule */}
-      <div className="h-1 bg-foreground mb-32 max-w-7xl mx-auto" />
-
+    <section id="internships" className="py-32 px-6 bg-luxury-bg" ref={ref}>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-16"
         >
-          <p className="font-mono text-xs text-muted-foreground uppercase tracking-[0.2em] mb-4">
+          <span className="text-gold text-xs uppercase tracking-[0.3em] font-sans">
             Featured Opportunities
-          </p>
-          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-foreground">
+          </span>
+          <h2 className="font-serif text-5xl md:text-7xl font-bold tracking-tighter text-white mt-4">
             Featured Internships
           </h2>
-          <div className="w-16 h-px bg-foreground mt-6" />
-          <p className="text-muted-foreground text-lg max-w-2xl mt-6 font-serif">
+          <div className="w-16 h-px bg-gold/50 mt-6" />
+          <p className="text-white/40 text-lg max-w-2xl mt-6 font-sans">
             Launch your career with real-world experience at SQROCK IT Solutions.
           </p>
         </motion.div>
@@ -54,7 +51,7 @@ export function InternshipsSection() {
               key={internship.title}
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.05 }}
             >
               <InternshipCard
                 {...internship}
@@ -69,15 +66,15 @@ export function InternshipsSection() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="mt-12 text-center p-8 border-2 border-foreground bg-muted"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-12 text-center p-8 border border-white/10 bg-white/[0.02]"
           >
-            <p className="text-muted-foreground mb-4 font-serif">
+            <p className="text-white/50 mb-4 font-sans">
               Login to apply for internships and build your professional profile
             </p>
             <button
               onClick={() => window.location.href = "/login"}
-              className="px-8 py-3 bg-foreground text-background font-mono text-sm uppercase tracking-widest hover:bg-background hover:text-foreground hover:outline hover:outline-2 hover:outline-foreground transition-none duration-0"
+              className="px-8 py-3 bg-white text-luxury-bg font-sans text-sm uppercase tracking-[0.15em] font-medium hover:bg-gold transition-colors duration-300"
             >
               Login Now
             </button>
